@@ -1,0 +1,34 @@
+@PACKAGE_INIT@
+
+set(EXPORT_PACKAGE_NAME vectorcxx-vector)
+include("${CMAKE_CURRENT_LIST_DIR}/${EXPORT_PACKAGE_NAME}-targets.cmake")
+
+# add third party dependencies
+
+
+
+
+
+find_package(ZLIB REQUIRED)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+check_required_components(${EXPORT_PACKAGE_NAME})

@@ -1,0 +1,35 @@
+[package]
+name = "vectorcxx"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cxx = "1.0"
+# without disabling default features, cargo will complain `libz-sys` feature is required but vector doesn't have it
+vector = { git = "https://github.com/yanhuangdata/vector.git", branch = "feature/vector-lib", features = [
+    "api",
+    "api-client",
+    "disk-buffer",
+    "enrichment-tables",
+    "rdkafka-plain",
+    "sinks",
+    "sources",
+    "sources-dnstap",
+    "transforms",
+    "unix",
+    "vrl-cli",
+    "vendor-openssl",
+    "vendor-sasl",
+], default-features = false }
+tempfile = "3.2.0"
+futures = "0.3.17"
+tokio = { version = "1.13.0", features = ["test-util"] }
+tokio-test = "0.4.2"
+
+[build-dependencies]
+cxx-build = "1.0"
+
+[lib]
+crate-type = ["staticlib"]

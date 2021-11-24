@@ -1,0 +1,31 @@
+{
+  "namespace": "vectorcxx",
+  "name": "vector",
+  "version": "0.1.0",
+  "portVersion": 0,
+  "dependencies": [
+    {
+      "link": "vectorcxx::vectorcxx"
+    },
+    {
+      "package": "ZLIB",
+      "link": "ZLIB::ZLIB"
+    },
+    {
+      "library": "IOKit",
+      "platform": "Darwin"
+    },
+    {
+      "library": "Security",
+      "platform": "Darwin"
+    },
+    {
+      "library": "CoreServices",
+      "platform": "Darwin"
+    },
+    {
+      "library": "CoreFoundation",
+      "platform": "Darwin"
+    }
+  ]
+}

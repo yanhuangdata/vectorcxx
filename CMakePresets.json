@@ -1,0 +1,110 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default-config-preset",
+      "binaryDir": "${sourceDir}/build-$env{CMAKE_BUILD_TYPE_PLATFORM}-x64-cmake",
+      "generator": "Unix Makefiles",
+      "environment": {
+        "CMAKE_BUILD_TYPE_PLATFORM": "${presetName}"
+      },
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "debug-config-preset",
+      "inherits": "default-config-preset",
+      "displayName": "Debug Preset",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "relwithdebinfo-config-preset",
+      "inherits": "default-config-preset",
+      "displayName": "RelWithDebInfo Preset",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "release-config-preset",
+      "inherits": "default-config-preset",
+      "displayName": "Release Preset",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "debug-osx",
+      "inherits": "debug-config-preset"
+    },
+    {
+      "name": "debug-linux",
+      "inherits": "debug-config-preset"
+    },
+    {
+      "name": "relwithdebinfo-osx",
+      "inherits": "relwithdebinfo-config-preset"
+    },
+    {
+      "name": "relwithdebinfo-linux",
+      "inherits": "relwithdebinfo-config-preset"
+    },
+    {
+      "name": "release-osx",
+      "inherits": "release-config-preset"
+    },
+    {
+      "name": "release-linux",
+      "inherits": "release-config-preset"
+    },
+    {
+      "name": "zld-debug-osx",
+      "inherits": "debug-osx",
+      "environment": {
+        "CMAKE_BUILD_TYPE_PLATFORM": "debug-osx"
+      },
+      "cacheVariables": {
+        "CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=/usr/local/bin/zld"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug-osx-build",
+      "configurePreset": "debug-osx"
+    },
+    {
+      "name": "debug-linux-build",
+      "configurePreset": "debug-linux"
+    },
+    {
+      "name": "relwithdebinfo-osx-build",
+      "configurePreset": "relwithdebinfo-osx"
+    },
+    {
+      "name": "relwithdebinfo-linux-build",
+      "configurePreset": "relwithdebinfo-linux"
+    },
+    {
+      "name": "release-osx-build",
+      "configurePreset": "release-osx"
+    },
+    {
+      "name": "release-linux-build",
+      "configurePreset": "release-linux"
+    },
+    {
+	    "name": "zld-debug-osx-build",
+	    "configurePreset": "zld-debug-osx"
+	  }
+  ]
+}
