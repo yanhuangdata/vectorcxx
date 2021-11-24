@@ -162,7 +162,7 @@ find_library(COREFOUNDATION_LIBRARY NAMES CoreFoundation REQUIRED)
 
     # for source with only header files, there is no need to link
     target_link_libraries(${TARGET_NAME} 
-            PUBLIC
+            PUBLIC 
             
                 vectorcxx::vectorcxx
                 
@@ -205,26 +205,26 @@ find_library(COREFOUNDATION_LIBRARY NAMES CoreFoundation REQUIRED)
 
     # install(FILES ${HEADER_FILES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-#    install(TARGETS ${PROJECT_NAME}
-#        EXPORT ${EXPORT_TARGET_NAME}
-#    )
-#    install(EXPORT
-#        ${EXPORT_TARGET_NAME}
-#        NAMESPACE vectorcxx::
-#        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${VCPKG_PACKAGE_NAME}"
-#    )
-#
-#    if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/Config.cmake.in)
-#        include(CMakePackageConfigHelpers)
-#        configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/Config.cmake.in
-#            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-#            INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${VCPKG_PACKAGE_NAME}
-#        )
-#        install(FILES
-#                "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-#                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${VCPKG_PACKAGE_NAME}
-#        )
-#    endif()
+    install(TARGETS ${PROJECT_NAME}
+        EXPORT ${EXPORT_TARGET_NAME}
+    )
+    install(EXPORT
+        ${EXPORT_TARGET_NAME}
+        NAMESPACE vectorcxx::
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${VCPKG_PACKAGE_NAME}"
+    )
+
+    if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/Config.cmake.in)
+        include(CMakePackageConfigHelpers)
+        configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/Config.cmake.in
+            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+            INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${VCPKG_PACKAGE_NAME}
+        )
+        install(FILES
+                "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${VCPKG_PACKAGE_NAME}
+        )
+    endif()
     
 endfunction()
 setup_src()

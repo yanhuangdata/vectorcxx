@@ -29,37 +29,59 @@ function(add_library_rust)
     ## Set cxxbridge values
 
     set(CXXBRIDGE_BINARY_FOLDER ${CMAKE_BINARY_DIR}/cargo/build/${Rust_CARGO_TARGET}/cxxbridge)
-    set(COMMON_HEADER ${CXXBRIDGE_BINARY_FOLDER}/rust/cxx.h)
-    set(BINDING_HEADER ${CXXBRIDGE_BINARY_FOLDER}/${_LIB_NAME}/src/lib.rs.h)
-    set(BINDING_SOURCE ${CXXBRIDGE_BINARY_FOLDER}/${_LIB_NAME}/src/lib.rs.cc)
-    set(CXX_BINDING_INCLUDE_DIR ${CXXBRIDGE_BINARY_FOLDER})
+    set(ORIGIN_COMMON_HEADER ${CXXBRIDGE_BINARY_FOLDER}/rust/cxx.h)
+    set(ORIGIN_BINDING_HEADER ${CXXBRIDGE_BINARY_FOLDER}/${_LIB_NAME}/src/lib.rs.h)
+    set(ORIGIN_BINDING_SOURCE ${CXXBRIDGE_BINARY_FOLDER}/${_LIB_NAME}/src/lib.rs.cc)
 
     ## Create cxxbridge target
     add_custom_command(
             DEPENDS ${_LIB_NAME}-static
             OUTPUT
-                ${COMMON_HEADER}
-                ${BINDING_HEADER}
-                ${BINDING_SOURCE}
+                ${ORIGIN_COMMON_HEADER}
+                ${ORIGIN_BINDING_HEADER}
+                ${ORIGIN_BINDING_SOURCE}
     )
 
-    set(CXXBRIDGE_TARGET ${_LIB_NAME}_bridge)
+    set(GENERATED_SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/../generated_src)
+    set(CXX_BINDING_INCLUDE_DIR ${GENERATED_SRC_DIR})
+    set(COMMON_HEADER ${GENERATED_SRC_DIR}/rust/cxx.h)
+    set(BINDING_HEADER ${GENERATED_SRC_DIR}/${_LIB_NAME}/src/lib.rs.h)
+    set(BINDING_SOURCE ${GENERATED_SRC_DIR}/${_LIB_NAME}/src/lib.rs.cc)
+
+    add_custom_command(
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ORIGIN_COMMON_HEADER} ${COMMON_HEADER}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ORIGIN_BINDING_HEADER} ${BINDING_HEADER}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ORIGIN_BINDING_SOURCE} ${BINDING_SOURCE}
+            DEPENDS ${ORIGIN_COMMON_HEADER}
+            OUTPUT
+                ${COMMON_HEADER}
+                ${BINDING_SOURCE}
+                ${BINDING_HEADER}
+    )
+
+    set(CXXBRIDGE_TARGET ${_LIB_NAME}-bridge)
     add_library(${CXXBRIDGE_TARGET})
 
+    # *.h/*.hpp/*.cpp/*.cc will be considered as sources
+    file(GLOB_RECURSE TARGET_SOURCES CONFIGURE_DEPENDS
+            ${GENERATED_SRC_DIR}/*.h
+            ${GENERATED_SRC_DIR}/*.hpp
+            ${GENERATED_SRC_DIR}/*.cpp
+            ${GENERATED_SRC_DIR}/*.cc)
+
     target_sources(${CXXBRIDGE_TARGET}
-            PUBLIC
-                ${COMMON_HEADER}
-                ${BINDING_HEADER}
-                ${BINDING_SOURCE}
+            PRIVATE
+                ${TARGET_SOURCES}
             )
     target_include_directories(${CXXBRIDGE_TARGET}
             PUBLIC
-                ${CXX_BINDING_INCLUDE_DIR}
+                $<BUILD_INTERFACE:${CXX_BINDING_INCLUDE_DIR}>
+                $<INSTALL_INTERFACE:include>
             )
 
-    set(CXXBRIDGE_TOTAL_TARGET ${_LIB_NAME}_total)
-
     ## Create total target with alias with given namespace
+    set(CXXBRIDGE_TOTAL_TARGET ${_LIB_NAME}-total)
+
     add_library(${CXXBRIDGE_TOTAL_TARGET} INTERFACE)
     target_link_libraries(${CXXBRIDGE_TOTAL_TARGET}
             INTERFACE
@@ -69,6 +91,16 @@ function(add_library_rust)
     # for end-user to link into project
     message(STATUS "add_library ${_NAMESPACE}::${_LIB_NAME}")
     add_library(${_NAMESPACE}::${_LIB_NAME} ALIAS ${CXXBRIDGE_TOTAL_TARGET})
+
+    install(TARGETS ${_LIB_NAME}
+            EXPORT ${EXPORT_TARGET_NAME}
+            )
+    install(TARGETS ${CXXBRIDGE_TARGET}
+            EXPORT ${EXPORT_TARGET_NAME}
+            )
+    install(TARGETS ${CXXBRIDGE_TOTAL_TARGET}
+            EXPORT ${EXPORT_TARGET_NAME}
+            )
 
 endfunction(add_library_rust)
 
