@@ -62,17 +62,13 @@ function(add_library_rust)
     set(CXXBRIDGE_TARGET ${_LIB_NAME}-bridge)
     add_library(${CXXBRIDGE_TARGET})
 
-    # *.h/*.hpp/*.cpp/*.cc will be considered as sources
-    file(GLOB_RECURSE TARGET_SOURCES CONFIGURE_DEPENDS
-            ${GENERATED_SRC_DIR}/*.h
-            ${GENERATED_SRC_DIR}/*.hpp
-            ${GENERATED_SRC_DIR}/*.cpp
-            ${GENERATED_SRC_DIR}/*.cc)
-
     target_sources(${CXXBRIDGE_TARGET}
             PRIVATE
-                ${TARGET_SOURCES}
+                ${COMMON_HEADER}
+                ${BINDING_HEADER}
+                ${BINDING_SOURCE}
             )
+
     target_include_directories(${CXXBRIDGE_TARGET}
             PUBLIC
                 $<BUILD_INTERFACE:${CXX_BINDING_INCLUDE_DIR}>
