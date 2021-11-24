@@ -9,7 +9,14 @@
     },
     {
       "package": "ZLIB",
-      "link": "ZLIB::ZLIB"
+      "link": "ZLIB::ZLIB",
+      "vcpkg": "zlib"
+    },
+    {
+      "vcpkg": "catch2"
+    },
+    {
+      "vcpkg": "corrosion"
     },
     {
       "library": "IOKit",

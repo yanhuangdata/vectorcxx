@@ -1,0 +1,11 @@
+{
+  "name": "vectorcxx-vector",
+  "version": "0.1.0",
+  "port-version": 0,
+  "description": "vectorcxx vector",
+  "dependencies": [
+    "zlib",
+    "catch2",
+    "corrosion"
+  ]
+}
