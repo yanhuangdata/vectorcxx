@@ -286,10 +286,10 @@ function(setup_tests)
     target_sources(${TARGET_NAME} 
         PRIVATE ${TARGET_SOURCES})
 
-    target_link_libraries(${TARGET_NAME} 
-        PUBLIC 
+    target_link_libraries(${TARGET_NAME}
+        PUBLIC
         ${PROJECT_NAME}
-        
+
         Catch2::Catch2
     )
     target_include_directories(${TARGET_NAME}
