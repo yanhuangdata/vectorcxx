@@ -79,6 +79,34 @@ find_package(ZLIB REQUIRED)
 
 
 
+
+
+
+
+
+
+
+
+find_library(RDKAFKA_LIBRARY NAMES rdkafka REQUIRED)
+    if (RDKAFKA_LIBRARY)
+            message(STATUS "[library found] library=rdkafka path=${RDKAFKA_LIBRARY}")
+        else ()
+            message(FATAL_ERROR "[library not found] library='rdkafka'")
+        endif ()
+    
+
+
+
+find_package(OpenSSL REQUIRED)
+
+
+
+
+
+
+
+
+
 find_library(IOKIT_LIBRARY NAMES IOKit REQUIRED)
     if (IOKIT_LIBRARY)
             message(STATUS "[library found] library=IOKit path=${IOKIT_LIBRARY}")
@@ -169,6 +197,19 @@ find_library(COREFOUNDATION_LIBRARY NAMES CoreFoundation REQUIRED)
             
                 ZLIB::ZLIB
                 
+            
+                
+            
+                
+            ${RDKAFKA_LIBRARY} 
+                
+                
+            
+                ${OPENSSL_SSL_LIBRARY}
+                
+            
+                ${OPENSSL_CRYPTO_LIBRARY}
+                
             ${IOKIT_LIBRARY} 
                 
                 
@@ -245,10 +286,10 @@ function(setup_tests)
     target_sources(${TARGET_NAME} 
         PRIVATE ${TARGET_SOURCES})
 
-    target_link_libraries(${TARGET_NAME} 
-        PUBLIC 
+    target_link_libraries(${TARGET_NAME}
+        PUBLIC
         ${PROJECT_NAME}
-        
+
         Catch2::Catch2
     )
     target_include_directories(${TARGET_NAME}

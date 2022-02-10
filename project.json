@@ -19,6 +19,16 @@
       "vcpkg": "corrosion"
     },
     {
+      "library": "rdkafka"
+    },
+    {
+      "package": "OpenSSL",
+      "link": "${OPENSSL_SSL_LIBRARY}"
+    },
+    {
+      "link": "${OPENSSL_CRYPTO_LIBRARY}"
+    },
+    {
       "library": "IOKit",
       "platform": "Darwin"
     },
