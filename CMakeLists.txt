@@ -106,50 +106,45 @@ find_package(OpenSSL REQUIRED)
 
 
 
-
-find_library(IOKIT_LIBRARY NAMES IOKit REQUIRED)
-    if (IOKIT_LIBRARY)
-            message(STATUS "[library found] library=IOKit path=${IOKIT_LIBRARY}")
-        else ()
-            message(FATAL_ERROR "[library not found] library='IOKit'")
-        endif ()
-    
-
-
-
-
-find_library(SECURITY_LIBRARY NAMES Security REQUIRED)
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+    message(STATUS "find library for Darwin")
+    find_library(IOKIT_LIBRARY NAMES IOKit REQUIRED)
+        if (IOKIT_LIBRARY)
+                message(STATUS "[library found] library=IOKit path=${IOKIT_LIBRARY}")
+            else ()
+                message(FATAL_ERROR "[library not found] library='IOKit'")
+            endif ()
+    find_library(SECURITY_LIBRARY NAMES Security REQUIRED)
     if (SECURITY_LIBRARY)
-            message(STATUS "[library found] library=Security path=${SECURITY_LIBRARY}")
-        else ()
-            message(FATAL_ERROR "[library not found] library='Security'")
-        endif ()
-    
+        message(STATUS "[library found] library=Security path=${SECURITY_LIBRARY}")
+    else ()
+        message(FATAL_ERROR "[library not found] library='Security'")
+    endif ()
 
 
 
 
-find_library(CORESERVICES_LIBRARY NAMES CoreServices REQUIRED)
+
+    find_library(CORESERVICES_LIBRARY NAMES CoreServices REQUIRED)
     if (CORESERVICES_LIBRARY)
-            message(STATUS "[library found] library=CoreServices path=${CORESERVICES_LIBRARY}")
-        else ()
-            message(FATAL_ERROR "[library not found] library='CoreServices'")
-        endif ()
-    
+        message(STATUS "[library found] library=CoreServices path=${CORESERVICES_LIBRARY}")
+    else ()
+        message(FATAL_ERROR "[library not found] library='CoreServices'")
+    endif ()
 
 
 
 
-find_library(COREFOUNDATION_LIBRARY NAMES CoreFoundation REQUIRED)
+
+    find_library(COREFOUNDATION_LIBRARY NAMES CoreFoundation REQUIRED)
     if (COREFOUNDATION_LIBRARY)
-            message(STATUS "[library found] library=CoreFoundation path=${COREFOUNDATION_LIBRARY}")
-        else ()
-            message(FATAL_ERROR "[library not found] library='CoreFoundation'")
-        endif ()
-    
-
-
-
+        message(STATUS "[library found] library=CoreFoundation path=${COREFOUNDATION_LIBRARY}")
+    else ()
+        message(FATAL_ERROR "[library not found] library='CoreFoundation'")
+    endif ()
+elseif ()
+    message(STATUS "find library for Linux")
+endif ()
     
 
     set(TARGET_NAME ${PROJECT_NAME})
@@ -189,7 +184,8 @@ find_library(COREFOUNDATION_LIBRARY NAMES CoreFoundation REQUIRED)
         PRIVATE ${TARGET_SOURCES} ${GENERATED_CPP_SOURCES})
 
     # for source with only header files, there is no need to link
-    target_link_libraries(${TARGET_NAME} 
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+    target_link_libraries(${TARGET_NAME}
             PUBLIC 
             
                 vectorcxx::vectorcxx
@@ -224,7 +220,30 @@ find_library(COREFOUNDATION_LIBRARY NAMES CoreFoundation REQUIRED)
                 
             
         )
+else ()
+    target_link_libraries(${TARGET_NAME}
+            PUBLIC
 
+            vectorcxx::vectorcxx
+
+
+            ZLIB::ZLIB
+
+
+
+
+
+            ${RDKAFKA_LIBRARY}
+
+
+
+            ${OPENSSL_SSL_LIBRARY}
+
+
+            ${OPENSSL_CRYPTO_LIBRARY}
+
+            )
+endif ()
         
     
 
