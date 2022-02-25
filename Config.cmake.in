@@ -8,20 +8,17 @@ message(STATUS "CURRENT_BUILDTREES_DIR=${CURRENT_BUILDTREES_DIR} CURRENT_PACKAGE
 # add third party dependencies
 
 
-
-
-
 find_package(ZLIB REQUIRED)
 # we need below part to set interface lib for `vectorcxx-static`, since the `-static` postfix is brought
 # by corrosion, and will not be found
 add_library(vectorcxx-static INTERFACE IMPORTED)
 
-
-if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-  set(VECTORCXX_LIB "${VCPKG_INSTALLED_DIR}/../buildtrees/vectorcxx-vector/${VCPKG_TARGET_TRIPLET}-dbg/libvectorcxx.a")
-else()
-  set(VECTORCXX_LIB "${VCPKG_INSTALLED_DIR}/../buildtrees/vectorcxx-vector/${VCPKG_TARGET_TRIPLET}-rel/libvectorcxx.a")
-endif()
+find_library(VECTORCXX_LIB NAMES vectorcxx REQUIRED)
+if (VECTORCXX_LIB)
+    message(STATUS "[library found] library=VECTORCXX_LIB path=${VECTORCXX_LIB}")
+else ()
+    message(FATAL_ERROR "[library not found] library='VECTORCXX_LIB'")
+endif ()
 
 message(STATUS "VECTORCXX_LIB: ${VECTORCXX_LIB}, VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}, _HOST_TRIPLET: ${_HOST_TRIPLET}")
 
