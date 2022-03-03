@@ -7,8 +7,10 @@ use vector::{
     test_util::{start_topology, start_topology_new},
     kafka::KafkaCompression,
     sinks::kafka::config::KafkaSinkConfig,
+    sinks::file::{FileSinkConfig, Compression},
     sinks::util::encoding::{EncodingConfig, StandardEncodings},
 };
+use vector::config::SinkConfig;
 
 pub async fn start(file_path: String, data_dir: String) {
     let mut old_config = Config::builder();
@@ -41,12 +43,44 @@ pub async fn start(file_path: String, data_dir: String) {
 }
 
 pub async fn export_json_result_to_kafka(task_id: String, file_path: String, data_dir: String, kafka_server: String, kafka_topic: String) -> (bool, String) {
+    let kafka_sink_config = KafkaSinkConfig {
+        bootstrap_servers: kafka_server,
+        topic: kafka_topic,
+        key_field: None,
+        encoding: EncodingConfig::from(StandardEncodings::Json),
+        batch: Default::default(),
+        compression: KafkaCompression::None,
+        auth: Default::default(),
+        socket_timeout_ms: 60000,
+        message_timeout_ms: 300000,
+        librdkafka_options: Default::default(),
+        headers_field: None,
+    };
+
+    let result = export_json_result_to_sink(task_id, file_path, data_dir, kafka_sink_config).await;
+    return result;
+}
+
+pub async fn export_json_result_to_file(task_id: String, file_path: String, data_dir: String, target_file_path: String) -> (bool, String) {
+    let config = FileSinkConfig {
+        path: target_file_path.try_into().unwrap(),
+        idle_timeout_secs: None,
+        encoding: EncodingConfig::from(vector::sinks::file::Encoding::Ndjson),
+        compression: Compression::None,
+    };
+
+    let result = export_json_result_to_sink(task_id, file_path, data_dir, config).await;
+    return result;
+}
+
+pub async fn export_json_result_to_sink<S: SinkConfig + 'static>(task_id: String, file_path: String, data_dir: String, sink: S) -> (bool, String) {
     // println!("file_path {}, data_dir {}, kafka_server {}, topic {} ", file_path, data_dir, kafka_server, kafka_topic);
     let mut old_config = Config::builder();
+    let sink_type = sink.sink_type().to_string();
 
-    let source_config_name = format!("{}_{}", task_id, "source");
+    let source_config_name = format!("{}_{}_for_{}", task_id, "source", sink_type);
     let remap_config_name = format!("{}_{}", task_id, "remap");
-    let sink_config_name = format!("{}_{}", task_id, "sink");
+    let sink_config_name = format!("{}_{}_to_{}", task_id, "sink", sink_type);
 
 
     let file_config = FileConfig {
@@ -62,24 +96,10 @@ pub async fn export_json_result_to_kafka(task_id: String, file_path: String, dat
         ..Default::default()
     };
 
-    let kafka_sink_config = KafkaSinkConfig {
-        bootstrap_servers: kafka_server,
-        topic: kafka_topic,
-        key_field: None,
-        encoding: EncodingConfig::from(StandardEncodings::Json),
-        batch: Default::default(),
-        compression: KafkaCompression::None,
-        auth: Default::default(),
-        socket_timeout_ms: 60000,
-        message_timeout_ms: 300000,
-        librdkafka_options: Default::default(),
-        headers_field: None,
-    };
-
     old_config.add_sink(
         sink_config_name,
         &[remap_config_name.as_str()],
-        kafka_sink_config,
+        sink,
     );
 
     old_config.add_transform(

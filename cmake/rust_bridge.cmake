@@ -62,6 +62,20 @@ function(add_library_rust)
     set(CXXBRIDGE_TARGET ${_LIB_NAME}-bridge)
     add_library(${CXXBRIDGE_TARGET})
 
+    set_property(
+            TARGET vectorcxx
+            APPEND
+            PROPERTY CORROSION_ENVIRONMENT_VARIABLES
+            "OPENSSL_INCLUDE_DIR=$ENV{VCPKG_ROOT}/installed/x64-osx/include/"
+    )
+
+    set_property(
+            TARGET vectorcxx
+            APPEND
+            PROPERTY CORROSION_ENVIRONMENT_VARIABLES
+            "PKG_CONFIG_PATH=$ENV{VCPKG_ROOT}/installed/x64-osx/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
+    )
+
     target_sources(${CXXBRIDGE_TARGET}
             PRIVATE
                 ${COMMON_HEADER}
