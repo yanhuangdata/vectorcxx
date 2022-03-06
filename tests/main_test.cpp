@@ -2,7 +2,6 @@
 #include "catch2/catch.hpp"
 #include <exception>
 #include <iostream>
-#include <librdkafka/rdkafka.h>
 
 TEST_CASE("vectorcxx api test") {
     try {
@@ -15,7 +14,7 @@ TEST_CASE("vectorcxx api test") {
 
         struct vectorcxx::FileSinkParams file_params {"/tmp/data/result_file.log"};
         auto new_result = vectorcxx::export_to_file("00000", "/tmp/data", "/tmp/data_dir", file_params);
-        auto new_err_msg = result.err_msg.c_str();
+        auto new_err_msg = new_result.err_msg.c_str();
         std::cout << "new result: " << new_result.succeed << ", " << new_err_msg << std::endl;
     } catch (std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;

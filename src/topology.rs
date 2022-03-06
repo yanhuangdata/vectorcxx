@@ -11,6 +11,8 @@ use vector::{
     sinks::util::encoding::{EncodingConfig, StandardEncodings},
 };
 use vector::config::SinkConfig;
+use rdkafka::config::ClientConfig;
+use rdkafka::consumer::{BaseConsumer, Consumer};
 
 pub async fn start(file_path: String, data_dir: String) {
     let mut old_config = Config::builder();
@@ -42,6 +44,36 @@ pub async fn start(file_path: String, data_dir: String) {
     topology.stop().await;
 }
 
+// refer to https://github.com/fede1024/rust-rdkafka/blob/master/examples/metadata.rs for metadata
+fn kafka_healthcheck(config: KafkaSinkConfig) -> (bool, String) {
+    let consumer: BaseConsumer = ClientConfig::new()
+        .set("bootstrap.servers", config.bootstrap_servers)
+        .create()
+        .expect("Consumer creation failed");
+
+    let metadata = consumer
+        .fetch_metadata(Some(config.topic.as_str()), core::time::Duration::from_secs(3));
+
+    // check if server could be connected
+    if metadata.is_err() {
+        return (false, "Failed to connect to kafka server".to_string());
+    }
+
+    let metadata = metadata.unwrap();
+
+    // check if topic exists
+    if metadata.topics().len() != 1 {
+        return (false, "topic not exist".to_string());
+    }
+
+    let topic_meta = metadata.topics().to_owned();
+    if topic_meta.first().unwrap().error().is_some() {
+        return (false, "topic not exist".to_string());
+    }
+
+    (true, "".to_string())
+}
+
 pub async fn export_json_result_to_kafka(task_id: String, file_path: String, data_dir: String, kafka_server: String, kafka_topic: String) -> (bool, String) {
     let kafka_sink_config = KafkaSinkConfig {
         bootstrap_servers: kafka_server,
@@ -56,7 +88,10 @@ pub async fn export_json_result_to_kafka(task_id: String, file_path: String, dat
         librdkafka_options: Default::default(),
         headers_field: None,
     };
-
+    let healthy = kafka_healthcheck(kafka_sink_config.clone());
+    if !healthy.0 {
+        return healthy;
+    }
     let result = export_json_result_to_sink(task_id, file_path, data_dir, kafka_sink_config).await;
     return result;
 }

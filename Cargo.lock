@@ -5015,6 +5015,7 @@ dependencies = [
  "cxx",
  "cxx-build",
  "futures 0.3.19",
+ "rdkafka",
  "tempfile",
  "tokio",
  "tokio-test",
