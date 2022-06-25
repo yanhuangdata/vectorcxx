@@ -1,5 +1,6 @@
+#include "catch2/catch_all.hpp"
+
 #include "vectorcxx/src/lib.rs.h"
-#include "catch2/catch.hpp"
 #include <exception>
 #include <iostream>
 
