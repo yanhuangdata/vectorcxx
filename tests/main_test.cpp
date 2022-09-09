@@ -156,23 +156,61 @@ void consume_events(uint32_t expected) {
 //    consume_thread_1.join();
 //}
 
-TEST_CASE("test cpp poll file source") {
+//TEST_CASE("test cpp poll file source") {
+//    nlohmann::json config_json = nlohmann::json::parse(R"(
+//    {
+//        "sources": {
+//            "my_source_id_1": {
+//                "type": "file",
+//                "include": ["/Users/cj/Playground/vector_test/raw_syslog_output.json"],
+//                "read_from": "beginning",
+//                "data_dir": "/Users/cj/Playground/vector_test/data_dir",
+//                "keep_watching": false
+//            }
+//        },
+//        "transforms": {
+//            "add_some_field": {
+//                "type": "remap",
+//                "inputs": ["my_source_id*"],
+//                "source": "._target_es = \"mock_file_es\""
+//            }
+//        },
+//        "sinks": {
+//            "my_sink_id": {
+//                "inputs": ["add_some_field"],
+//                "type": "memory_queue",
+//                "rate": null
+//            }
+//        }
+//    })");
+//
+//    std::string config_temp = config_json.dump();
+//    auto config = rust::String(config_temp);
+//    auto start_thread = std::thread(vectorcxx::start_ingest_to_vector, config);
+//    std::cout << "config string: " << config_temp << std::endl;
+//    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+//
+//    auto consume_thread = std::thread(consume_events, 1);
+//
+//    consume_thread.join();
+//}
+
+TEST_CASE("test cpp poll with http json array") {
     nlohmann::json config_json = nlohmann::json::parse(R"(
     {
         "sources": {
             "my_source_id_1": {
-                "type": "file",
-                "include": ["/Users/cj/Playground/vector_test/raw_syslog_output.json"],
-                "read_from": "beginning",
-                "data_dir": "/Users/cj/Playground/vector_test/data_dir",
-                "keep_watching": false
+                "type": "http",
+                "address": "0.0.0.0:80",
+                "encoding": "json",
+                "headers": ["-Target-Es"]
             }
         },
         "transforms": {
             "add_some_field": {
                 "type": "remap",
                 "inputs": ["my_source_id*"],
-                "source": "._target_es = \"mock_file_es\""
+                "source": ". = unnest!(.sw_events)\n"
             }
         },
         "sinks": {
@@ -188,10 +226,8 @@ TEST_CASE("test cpp poll file source") {
     auto config = rust::String(config_temp);
     auto start_thread = std::thread(vectorcxx::start_ingest_to_vector, config);
     std::cout << "config string: " << config_temp << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
-    auto consume_thread = std::thread(consume_events, 1);
-
+    auto consume_thread = std::thread(consume_events, 3);
     consume_thread.join();
 }
 

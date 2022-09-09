@@ -273,13 +273,24 @@ pub fn poll_vector_events() -> SwEvents {
     if let Some(rx) = out_rx {
         match rx.try_next() {
             Ok(Some(value)) => {
-                // println!("\nevent is {:?}", value[0].as_log());
-                target_es = value[0].as_log().get("_target_es").unwrap().to_string_lossy();
+                println!("\nevent is {:?}", value[0].as_log());
+                if let Some(target) = value[0].as_log().get("-Target-Es") {
+                    target_es = target.to_string_lossy();
+                } else if let Some(target) = value[0].as_log().get("_target_es") {
+                    target_es = target.to_string_lossy();
+                }
+                // target_es = value[0].as_log().get("_target_es").unwrap().to_string_lossy();
                 // println!("\ntarget eventset is {:?}", target_es);
 
                 for event in value {
-                    let key = vector::config::log_schema().message_key();
-                    let ev = event.as_log().get(key).unwrap().to_string_lossy();
+                    let mut ev = String::new();
+                    if let Some(value) = event.as_log().get("sw_events") {
+                        ev = value.to_string_lossy();
+                    } else {
+                        let key = vector::config::log_schema().message_key();
+                        let ev = event.as_log().get(key).unwrap().to_string_lossy();
+                    }
+
                     let ts_key = vector::config::log_schema().timestamp_key();
                     let ts = event.as_log().get(ts_key).unwrap().as_timestamp().unwrap().timestamp_millis();
 
