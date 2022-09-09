@@ -10,6 +10,9 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
             CACHE STRING "")
 endif()
 
+message(STATUS "[vcpkg root found] path=${VCPKG_ROOT} and env= $ENV{VCPKG_ROOT}")
+
+
 # https://github.com/microsoft/vcpkg/blob/master/docs/users/integration.md#changing-the-triplet-1
 if(DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
   set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "")
@@ -157,9 +160,9 @@ endif ()
     # usually this phase generates some source code
     message(STATUS "[processing resources] cmake=${PROJECT_CMAKE_DIR}/process_resources.cmake")
     include(${PROJECT_CMAKE_DIR}/process_resources.cmake)
-    
 
-    
+
+
 
     # *.h/*.hpp/*.cpp/*.cc will be considered as sources
     file(GLOB_RECURSE TARGET_SOURCES CONFIGURE_DEPENDS 
@@ -192,8 +195,8 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
                 
             
                 ZLIB::ZLIB
-                
-            
+
+
                 
             
                 
@@ -244,15 +247,15 @@ else ()
 
             )
 endif ()
-        
-    
+
+
 
     target_include_directories(${TARGET_NAME}
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${PROJECT_CPP_SOURCES_DIR}>
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${PROJECT_GENERATED_SOURCES_DIR}>
             $<INSTALL_INTERFACE:include>
-            
+
     )
 
     

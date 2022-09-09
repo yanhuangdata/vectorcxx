@@ -32,6 +32,7 @@ function(add_library_rust)
     set(ORIGIN_COMMON_HEADER ${CXXBRIDGE_BINARY_FOLDER}/rust/cxx.h)
     set(ORIGIN_BINDING_HEADER ${CXXBRIDGE_BINARY_FOLDER}/${_LIB_NAME}/src/lib.rs.h)
     set(ORIGIN_BINDING_SOURCE ${CXXBRIDGE_BINARY_FOLDER}/${_LIB_NAME}/src/lib.rs.cc)
+    set(ORIGIN_CPP_HEADER ${CMAKE_CURRENT_LIST_DIR}/../src/sw_utils.h)
 
     ## Create cxxbridge target
     add_custom_command(
@@ -47,11 +48,13 @@ function(add_library_rust)
     set(COMMON_HEADER ${GENERATED_SRC_DIR}/rust/cxx.h)
     set(BINDING_HEADER ${GENERATED_SRC_DIR}/${_LIB_NAME}/src/lib.rs.h)
     set(BINDING_SOURCE ${GENERATED_SRC_DIR}/${_LIB_NAME}/src/lib.rs.cc)
+    set(CPP_HEADER ${GENERATED_SRC_DIR}/${_LIB_NAME}/src/sw_utils.h)
 
     add_custom_command(
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ORIGIN_COMMON_HEADER} ${COMMON_HEADER}
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ORIGIN_BINDING_HEADER} ${BINDING_HEADER}
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ORIGIN_BINDING_SOURCE} ${BINDING_SOURCE}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ORIGIN_CPP_HEADER} ${CPP_HEADER}
             DEPENDS ${ORIGIN_COMMON_HEADER}
             OUTPUT
                 ${COMMON_HEADER}
