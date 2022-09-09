@@ -5,14 +5,36 @@ set(PROJECT_NAME vectorcxx-vector)
 set(CMAKE_CXX_STANDARD 17)
 
 # https://vcpkg.readthedocs.io/en/latest/users/integration/#cmake
-if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-            CACHE STRING "")
-endif()
+if(DEFINED ENV{VCPKG_ROOT}) 
+    message(STATUS "vcpkg found VCPKG_ROOT=$ENV{VCPKG_ROOT}")
+    # https://github.com/microsoft/vcpkg/blob/master/docs/users/integration.md#changing-the-triplet-1
 
-# https://github.com/microsoft/vcpkg/blob/master/docs/users/integration.md#changing-the-triplet-1
-if(DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
-  set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "")
+    if(DEFINED ENV{VCPKG_DEFAULT_TRIPLET})
+        message(STATUS "using VC_DEFAULT_TRIPLET from environment $ENV{VCPKG_DEFAULT_TRIPLET}")
+        set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}")
+    endif()
+
+    if(DEFINED ENV{VCPKG_TARGET_TRIPLET})
+        message(STATUS "using VCPKG_TARGET_TRIPLET from environment $ENV{VCPKG_TARGET_TRIPLET}")
+        set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_TARGET_TRIPLET}")
+    endif()
+
+    if(DEFINED VCPKG_TARGET_TRIPLET)
+        message(STATUS "build with triplet $ENV{VCPKG_ROOT}/triplets/${VCPKG_TARGET_TRIPLET}.cmake")
+        include($ENV{VCPKG_ROOT}/triplets/${VCPKG_TARGET_TRIPLET}.cmake)
+    endif()
+
+    if(DEFINED VCPKG_C_FLAGS)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${VCPKG_C_FLAGS}")
+    endif()
+
+    if(DEFINED VCPKG_CXX_FLAGS)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${VCPKG_CXX_FLAGS}")
+    endif()
+
+    if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+    endif()
 endif()
 
 project(${PROJECT_NAME})
@@ -55,110 +77,80 @@ function(module_binary_dir module RETURN_VALUE)
     set(${RETURN_VALUE} ${module}/${BUILD_DIR_RETURN_VALUE} PARENT_SCOPE)
 endfunction()
 
+########### setup dependencies #############
+macro(setup_dependencies)
+    # add third party dependencies
+# only the top level project will search all dependencies for itself and all its sub projects so that cmake configuration faster
+    
+    find_package(ZLIB REQUIRED)
+    
+    find_library(RDKAFKA_LIBRARY NAMES rdkafka REQUIRED)
+        if (RDKAFKA_LIBRARY)
+            message(STATUS "[library found] library=rdkafka path=${RDKAFKA_LIBRARY}")
+        else ()
+            message(FATAL_ERROR "[library not found] library='rdkafka'")
+        endif ()
+    
+    
+    
+    find_package(OpenSSL REQUIRED)
+    if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+    find_library(IOKIT_LIBRARY NAMES IOKit REQUIRED)
+        if (IOKIT_LIBRARY)
+            message(STATUS "[library found] library=IOKit path=${IOKIT_LIBRARY}")
+        else ()
+            message(FATAL_ERROR "[library not found] library='IOKit'")
+        endif ()
+    
+    endif()
+    if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+    find_library(SECURITY_LIBRARY NAMES Security REQUIRED)
+        if (SECURITY_LIBRARY)
+            message(STATUS "[library found] library=Security path=${SECURITY_LIBRARY}")
+        else ()
+            message(FATAL_ERROR "[library not found] library='Security'")
+        endif ()
+    
+    endif()
+    if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+    find_library(CORESERVICES_LIBRARY NAMES CoreServices REQUIRED)
+        if (CORESERVICES_LIBRARY)
+            message(STATUS "[library found] library=CoreServices path=${CORESERVICES_LIBRARY}")
+        else ()
+            message(FATAL_ERROR "[library not found] library='CoreServices'")
+        endif ()
+    
+    endif()
+    if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+    find_library(COREFOUNDATION_LIBRARY NAMES CoreFoundation REQUIRED)
+        if (COREFOUNDATION_LIBRARY)
+            message(STATUS "[library found] library=CoreFoundation path=${COREFOUNDATION_LIBRARY}")
+        else ()
+            message(FATAL_ERROR "[library not found] library='CoreFoundation'")
+        endif ()
+    
+    endif()
+endmacro()
+setup_dependencies()
+
 # add dependent cmake modules
 # only add the sub directory when it is not added elsewhere
 # most of the cases, using the TARGET like `namespace::name` is sufficient
 # but some module may be lack of src folder which means there is no automatic target generated 
 # at the same time, cmake doesn't support using `:` in target name yet,
 # so we convert the module name's `:` into `_` and use it as a guard as well
-
-
-
 ########### src #############
 function(setup_src)
-    
-        # add third party dependencies
-
-
-
-
-
-find_package(ZLIB REQUIRED)
-
-
-
-
-
-
-
-
-
-
-
-
-
-find_library(RDKAFKA_LIBRARY NAMES rdkafka REQUIRED)
-    if (RDKAFKA_LIBRARY)
-            message(STATUS "[library found] library=rdkafka path=${RDKAFKA_LIBRARY}")
-        else ()
-            message(FATAL_ERROR "[library not found] library='rdkafka'")
-        endif ()
-    
-
-
-
-find_package(OpenSSL REQUIRED)
-
-
-
-
-
-
-
-
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
-    message(STATUS "find library for Darwin")
-    find_library(IOKIT_LIBRARY NAMES IOKit REQUIRED)
-        if (IOKIT_LIBRARY)
-                message(STATUS "[library found] library=IOKit path=${IOKIT_LIBRARY}")
-            else ()
-                message(FATAL_ERROR "[library not found] library='IOKit'")
-            endif ()
-    find_library(SECURITY_LIBRARY NAMES Security REQUIRED)
-    if (SECURITY_LIBRARY)
-        message(STATUS "[library found] library=Security path=${SECURITY_LIBRARY}")
-    else ()
-        message(FATAL_ERROR "[library not found] library='Security'")
-    endif ()
-
-
-
-
-
-    find_library(CORESERVICES_LIBRARY NAMES CoreServices REQUIRED)
-    if (CORESERVICES_LIBRARY)
-        message(STATUS "[library found] library=CoreServices path=${CORESERVICES_LIBRARY}")
-    else ()
-        message(FATAL_ERROR "[library not found] library='CoreServices'")
-    endif ()
-
-
-
-
-
-    find_library(COREFOUNDATION_LIBRARY NAMES CoreFoundation REQUIRED)
-    if (COREFOUNDATION_LIBRARY)
-        message(STATUS "[library found] library=CoreFoundation path=${COREFOUNDATION_LIBRARY}")
-    else ()
-        message(FATAL_ERROR "[library not found] library='CoreFoundation'")
-    endif ()
-elseif ()
-    message(STATUS "find library for Linux")
-endif ()
-    
-
     set(TARGET_NAME ${PROJECT_NAME})
 
-
     add_library(${TARGET_NAME} )
+        set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
     
 
     # extension for processing resources phase
     # usually this phase generates some source code
     message(STATUS "[processing resources] cmake=${PROJECT_CMAKE_DIR}/process_resources.cmake")
     include(${PROJECT_CMAKE_DIR}/process_resources.cmake)
-    
-
     
 
     # *.h/*.hpp/*.cpp/*.cc will be considered as sources
@@ -184,67 +176,34 @@ endif ()
         PRIVATE ${TARGET_SOURCES} ${GENERATED_CPP_SOURCES})
 
     # for source with only header files, there is no need to link
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
-    target_link_libraries(${TARGET_NAME}
-            PUBLIC 
-            
-                vectorcxx::vectorcxx
-                
-            
-                ZLIB::ZLIB
-                
-            
-                
-            
-                
-            ${RDKAFKA_LIBRARY} 
-                
-                
-            
-                ${OPENSSL_SSL_LIBRARY}
-                
-            
-                ${OPENSSL_CRYPTO_LIBRARY}
-                
-            ${IOKIT_LIBRARY} 
-                
-                
-            ${SECURITY_LIBRARY} 
-                
-                
-            ${CORESERVICES_LIBRARY} 
-                
-                
-            ${COREFOUNDATION_LIBRARY} 
-                
-                
-            
-        )
-else ()
-    target_link_libraries(${TARGET_NAME}
+    # https://cmake.org/cmake/help/v3.15/manual/cmake-buildsystem.7.html#transitive-usage-requirements
+    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+        target_link_libraries(${TARGET_NAME} 
             PUBLIC
-
-            vectorcxx::vectorcxx
-
-
-            ZLIB::ZLIB
-
-
-
-
-
-            ${RDKAFKA_LIBRARY}
-
-
-
-            ${OPENSSL_SSL_LIBRARY}
-
-
-            ${OPENSSL_CRYPTO_LIBRARY}
-
-            )
-endif ()
-        
+                vectorcxx::vectorcxx
+                ZLIB::ZLIB
+                ${OPENSSL_SSL_LIBRARY}
+                ${OPENSSL_CRYPTO_LIBRARY}
+                ${IOKIT_LIBRARY}
+                ${SECURITY_LIBRARY}
+                ${CORESERVICES_LIBRARY}
+                ${COREFOUNDATION_LIBRARY}
+            INTERFACE      
+            PRIVATE
+                ${RDKAFKA_LIBRARY}                    
+        )
+    else ()
+        target_link_libraries(${TARGET_NAME} 
+            PUBLIC
+                vectorcxx::vectorcxx
+                ZLIB::ZLIB
+                ${OPENSSL_SSL_LIBRARY}
+                ${OPENSSL_CRYPTO_LIBRARY}
+            INTERFACE      
+            PRIVATE
+                ${RDKAFKA_LIBRARY}                    
+        )
+    endif ()
     
 
     target_include_directories(${TARGET_NAME}
@@ -257,13 +216,7 @@ endif ()
 
     
 
-    # file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS
-    #     ${PROJECT_CPP_SOURCES_DIR}/*.h
-    #     ${PROJECT_CPP_SOURCES_DIR}/*.hpp
-    #     ${PROJECT_GENERATED_SOURCES_DIR}/*.h
-    #     ${PROJECT_GENERATED_SOURCES_DIR}/*.hpp)
-
-    # install(FILES ${HEADER_FILES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    
 
     install(TARGETS ${PROJECT_NAME}
         EXPORT ${EXPORT_TARGET_NAME}
@@ -293,22 +246,22 @@ setup_src()
 ########### tests #############
 function(setup_tests)
     find_package(Catch2 REQUIRED)
-
     
     find_package(Threads REQUIRED)
 
     set(TARGET_NAME vector-tests)
     
     add_executable(${TARGET_NAME})
+    
 
     file(GLOB_RECURSE TARGET_SOURCES CONFIGURE_DEPENDS ${PROJECT_TESTS_DIR}/*.h ${PROJECT_TESTS_DIR}/*.cpp)
     target_sources(${TARGET_NAME} 
         PRIVATE ${TARGET_SOURCES})
 
-    target_link_libraries(${TARGET_NAME}
-        PUBLIC
+    target_link_libraries(${TARGET_NAME} 
+        PUBLIC 
         ${PROJECT_NAME}
-
+        
         Catch2::Catch2
     )
     target_include_directories(${TARGET_NAME}
@@ -336,6 +289,5 @@ endfunction()
 
 enable_testing()
 setup_tests()
-
 
 

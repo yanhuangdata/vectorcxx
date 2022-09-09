@@ -2,7 +2,7 @@
   "namespace": "vectorcxx",
   "name": "vector",
   "version": "0.1.0",
-  "portVersion": 0,
+  "portVersion": 1,
   "dependencies": [
     {
       "link": "vectorcxx::vectorcxx"
@@ -19,10 +19,13 @@
       "vcpkg": "corrosion"
     },
     {
-      "library": "rdkafka"
+      "library": "rdkafka",
+      "vcpkg": "librdkafka",
+      "scope": "PRIVATE"
     },
     {
       "package": "OpenSSL",
+      "vcpkg": "openssl",
       "link": "${OPENSSL_SSL_LIBRARY}"
     },
     {

@@ -1,9 +1,10 @@
+#include <catch2/catch_test_macros.hpp>
+
 #include "vectorcxx/src/lib.rs.h"
-#include "catch2/catch.hpp"
 #include <exception>
 #include <iostream>
 
-TEST_CASE("vectorcxx api test") {
+TEST_CASE("vectorcxx api test", "[vector]") {
     try {
         struct vectorcxx::KafkaSinkParams kafka_params {
             "host.docker.internal:9092", "quickstart-events-1", "", ""
