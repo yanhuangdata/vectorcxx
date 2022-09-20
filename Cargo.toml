@@ -8,8 +8,9 @@ edition = "2021"
 [dependencies]
 cxx = "1.0.73"
 # without disabling default features, cargo will complain `libz-sys` feature is required but vector doesn't have it
+# for release, use "vector = { git = "https://github.com/yanhuangdata/vector.git", branch = "feature/vector-lib" }"
 # for local repo test, use "vector = { path = "{path_to_local_vector_repo}" }"
-vector = { git = "https://github.com/yanhuangdata/vector.git", branch = "feature/vector-lib", features = [
+vector = { path = "vector", features = [
     "api",
     "api-client",
     "disk-buffer",

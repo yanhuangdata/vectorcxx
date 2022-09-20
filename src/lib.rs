@@ -71,7 +71,7 @@ mod ffi {
         fn export_to_file(task_id: String, file_path: String, data_dir: String, sink_config: FileSinkParams) -> ExportResult;
         fn start_sw_sink_vec_test() -> ExportResult;
         fn start_ingest_to_vector(config: String) -> ExportResult;
-        fn crud_vector_config(action: String, id: String, config_str: String) -> bool;
+        fn crud_vector_config(action: String, ids: Vec<String>, config_str: String) -> bool;
         fn poll_vector_events() -> SwEvents;
     }
 }
@@ -81,11 +81,12 @@ enum ConfigAction {
     ADD,
     UPDATE,
     DELETE,
+    EXIT,
 }
 
 pub struct ConfigEvent {
     action: ConfigAction,
-    config_id: String,
+    config_ids: Vec<String>,
     config_str: String,
 }
 
@@ -280,7 +281,7 @@ pub fn poll_vector_events() -> SwEvents {
                     target_es = target.to_string_lossy();
                 }
                 // target_es = value[0].as_log().get("_target_es").unwrap().to_string_lossy();
-                // println!("\ntarget eventset is {:?}", target_es);
+                // println!("message key is {:?}", vector::config::log_schema().message_key());
 
                 for event in value {
                     let mut ev = String::new();
@@ -288,7 +289,7 @@ pub fn poll_vector_events() -> SwEvents {
                         ev = value.to_string_lossy();
                     } else {
                         let key = vector::config::log_schema().message_key();
-                        let ev = event.as_log().get(key).unwrap().to_string_lossy();
+                        ev = event.as_log().get(key).unwrap().to_string_lossy();
                     }
 
                     let ts_key = vector::config::log_schema().timestamp_key();
@@ -303,10 +304,11 @@ pub fn poll_vector_events() -> SwEvents {
             },
             Ok(None) => {
                 std::thread::sleep(ten_millis);
+                println!("polling channel closed");
             }
             Err(e) => {
                 std::thread::sleep(ten_millis);
-                // print!("error is {:?}\n", e);
+                println!("polling vector events error: {:?}\n", e);
             }
         }
     }
@@ -318,9 +320,47 @@ pub fn poll_vector_events() -> SwEvents {
 }
 
 pub fn start_ingest_to_vector(config: String) -> ffi::ExportResult {
-    unsafe {
-        let (succeed, err_msg) = block_on(start_vector_service(config));
-        return ffi::ExportResult {succeed:succeed, err_msg: err_msg};
+    // unsafe {
+    //     let (succeed, err_msg) = block_on(start_vector_service(config));
+    //     return ffi::ExportResult {succeed:succeed, err_msg: err_msg};
+    // }
+
+    let global_buffer = Arc::new(Mutex::new(String::new()));
+    let old_hook = panic::take_hook();
+
+    panic::set_hook({
+        let global_buffer = global_buffer.clone();
+        Box::new(move |info| {
+            let mut global_buffer = global_buffer.lock().unwrap();
+
+            if let Some(s) = info.payload().downcast_ref::<&str>() {
+                let panic_msg = format!("{} in file {}, line {}", s, info.location().unwrap().file(), info.location().unwrap().line());
+                global_buffer.push_str(panic_msg.as_str());
+            }
+        })
+    });
+
+    let result = panic::catch_unwind(|| {
+        unsafe {
+            let (succeed, err_msg) = block_on(
+                start_vector_service(config)
+            );
+            if succeed {
+                return ffi::ExportResult {succeed:true, err_msg: "".to_string()};
+            }
+            return ffi::ExportResult {succeed: false, err_msg};
+        }
+    });
+
+    panic::set_hook(old_hook);
+
+    match result {
+        Ok(res) => {
+            ffi::ExportResult {succeed: res.succeed, err_msg: res.err_msg}
+        },
+        Err(err) => {
+            ffi::ExportResult {succeed: false, err_msg: format!("panic in start_ingest_to_vector: {:?}", global_buffer.lock().unwrap())}
+        }
     }
 }
 
@@ -339,18 +379,30 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
             if new_builder.transforms.len() > 0 {
                 config_builder_new.transforms.extend(new_builder.transforms);
             }
+            println!("ConfigBuilder sources {:?}", config_builder_new.sources);
+            println!("ConfigBuilder transforms {:?}", config_builder_new.transforms);
+            println!("ConfigBuilder sinks {:?}", config_builder_new.sinks);
             topology.reload_config_and_respawn(config_builder_new.build().unwrap()).await.unwrap();
         },
         ConfigAction::DELETE => {
             // source and transform can not use same name in vector
-            let key = &ComponentKey::from(&config_event.config_id);
-            if config_builder.sources.get(key).is_some() {
-                config_builder.sources.remove(key);
-            } else if config_builder.transforms.get(key).is_some() {
-                config_builder.transforms.remove(key);
-            }
             let mut config_builder_new = config_builder.clone();
+
+            for id in &config_event.config_ids {
+                let key = &ComponentKey::from(&id);
+                if config_builder_new.sources.get(key).is_some() {
+                    config_builder_new.sources.remove(key);
+                } else if config_builder_new.transforms.get(key).is_some() {
+                    config_builder_new.transforms.remove(key);
+                }
+            }
+            println!("ConfigBuilder sources {:?}", config_builder_new.sources);
+            println!("ConfigBuilder transforms {:?}", config_builder_new.transforms);
+            println!("ConfigBuilder sinks {:?}", config_builder_new.sinks);
             topology.reload_config_and_respawn(config_builder_new.build().unwrap()).await.unwrap();
+        },
+        ConfigAction::EXIT => {
+            // should not go here
         }
     }
     // let new_builder: ConfigBuilder = config::format::deserialize(config_str.as_str(), Some(config::Format::Json)).unwrap();
@@ -376,6 +428,10 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
         GLOBAL_CONFIG_RX = Some(Box::leak(g_config_rx_box));
     }
     let config_builder: ConfigBuilder = config::format::deserialize(config_str.as_str(), Some(config::Format::Json)).unwrap();
+    println!("ConfigBuilder sources {:?}", config_builder.sources);
+    println!("ConfigBuilder transforms {:?}", config_builder.transforms);
+    println!("ConfigBuilder sinks {:?}", config_builder.sinks);
+
     let mut config_builder_copy = config_builder.clone();
 
     let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
@@ -385,8 +441,17 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
     loop {
         tokio::select! {
             Some(config_event) = config_rx.as_mut().unwrap().recv() => {
-                // println!("got config event: {:?}", config_event);
-                reload_vector(config_event, &mut config_builder_copy, &mut topology).await;
+                println!("got config event: {:?}",  config_event.config_str);
+               
+                match config_event.action {
+                    ConfigAction::EXIT => {
+                        println!("received exit request");
+                        break;
+                    },
+                    _ => {
+                        reload_vector(config_event, &mut config_builder_copy, &mut topology).await;
+                    }
+                }
             }
             _ = &mut sources_finished => {
                 println!("source finished");
@@ -399,19 +464,20 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
         std::thread::sleep(std::time::Duration::from_millis(1000));
     }
 
-    topology.sources_finished().await;
+    // topology.sources_finished().await;
     topology.stop().await;
 
     (true, "whatever".to_string())
 }
 
-pub fn crud_vector_config(action: String, id: String, config_str: String) -> bool {
+pub fn crud_vector_config(action: String, ids: Vec<String>, config_str: String) -> bool {
     let get_action = |action| {
         match action {
             "init" => ConfigAction::INIT,
             "add" => ConfigAction::ADD,
             "update" => ConfigAction::UPDATE,
             "delete" => ConfigAction::DELETE,
+            "exit" => ConfigAction::EXIT,
             _ => ConfigAction::INIT,
         }
     };
@@ -421,7 +487,7 @@ pub fn crud_vector_config(action: String, id: String, config_str: String) -> boo
         if let Some(sender) = &mut GLOBAL_CONFIG_TX {
             sender.try_send(ConfigEvent{
                 action: get_action(action.as_str()),
-                config_id: id,
+                config_ids: ids,
                 config_str,
             });
         }
