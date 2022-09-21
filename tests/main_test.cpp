@@ -235,12 +235,12 @@ TEST_CASE("test cpp poll with http json array") {
         "sources": {
             "my_source_id_2": {
                 "type": "http",
-                "address": "0.0.0.0:8088",
-                "encoding": "text"
+                "address": "0.0.0.0:8089",
+                "encoding": "json"
             }
         },
         "transforms": {
-            "add_some_field_2": {
+            "sw_transform_2": {
                 "type": "remap",
                 "inputs": ["my_source_id_2"],
                 "source": ". = unnest!(.sw_events)\n"
@@ -253,19 +253,20 @@ TEST_CASE("test cpp poll with http json array") {
     rust::Vec<rust::String> ids;
     auto new_config = rust::String(new_config_json.dump());
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    vectorcxx::crud_vector_config("add", ids, new_config);
-
-    auto consume_thread = std::thread(consume_events, 2);
-    consume_thread.join();
+    vectorcxx::crud_vector_config("add", ids, new_config, 2);
+    consume_events(2);
+    // auto consume_thread = std::thread(consume_events, 2);
+    // consume_thread.join();
 
     ids.push_back("my_source_id_2");
     ids.push_back("add_some_field_2");
-    vectorcxx::crud_vector_config("delete", ids, rust::String());
-    auto new_consume_thread = std::thread(consume_events, 1);
-    new_consume_thread.join();
+    vectorcxx::crud_vector_config("delete", ids, rust::String(), 3);
+    consume_events(1);
+    // auto new_consume_thread = std::thread(consume_events, 1);
+    // new_consume_thread.join();
 
     rust::String config_str;
-    vectorcxx::crud_vector_config("exit", ids, config_str);
+    vectorcxx::crud_vector_config("exit", ids, config_str, 4);
     start_thread.join();
 }
 
