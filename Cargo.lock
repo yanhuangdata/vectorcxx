@@ -433,7 +433,6 @@ dependencies = [
 [[package]]
 name = "buffers"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "bytes 1.1.0",
  "core_common",
@@ -748,7 +747,6 @@ checksum = "5827cebf4670468b8772dd191856768aedcb1b0278a04f989f7766351917b9dc"
 [[package]]
 name = "core_common"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "metrics",
  "serde_json",
@@ -1024,7 +1022,6 @@ checksum = "3ee2393c4a91429dffb4bedf19f4d6abf27d8a732c8ce4980305d782e5426d57"
 [[package]]
 name = "datadog-grok"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "bytes 1.1.0",
  "chrono",
@@ -1054,7 +1051,6 @@ dependencies = [
 [[package]]
 name = "datadog-search-syntax"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "itertools",
  "lazy_static",
@@ -1171,7 +1167,6 @@ dependencies = [
 [[package]]
 name = "dnsmsg-parser"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "data-encoding",
  "thiserror",
@@ -1242,7 +1237,6 @@ checksum = "c34f04666d835ff5d62e058c3995147c06f42fe86ff053337632bca83e42702d"
 [[package]]
 name = "enrichment"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "arc-swap",
  "chrono",
@@ -1352,7 +1346,6 @@ checksum = "e88a8acf291dafb59c2d96e8f59828f3838bb1a70398823ade51a84de6a6deed"
 [[package]]
 name = "fakedata"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "chrono",
  "fakedata_generator",
@@ -1409,7 +1402,6 @@ checksum = "ec54ac60a7f2ee9a97cad9946f9bf629a3bc6a7ae59e68983dc9318f5a54b81a"
 [[package]]
 name = "file-source"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "bstr",
  "bytes 1.1.0",
@@ -1960,6 +1952,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "hyper-timeout"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbb958482e8c7be4bc3cf272a766a2b0bf1a6755e7a6ae777f017a31d11b13b1"
+dependencies = [
+ "hyper",
+ "pin-project-lite",
+ "tokio",
+ "tokio-io-timeout",
+]
+
+[[package]]
 name = "hyper-tls"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2295,6 +2299,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "listenfd"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "809e514e2cb8a9624701346ea3e694c1766d76778e343e537d873c1c366e79a7"
+dependencies = [
+ "libc",
+ "uuid",
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2322,7 +2337,6 @@ dependencies = [
 [[package]]
 name = "lookup"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "inherent",
  "lalrpop",
@@ -2582,7 +2596,7 @@ dependencies = [
  "log",
  "memchr",
  "mime",
- "spin",
+ "spin 0.9.2",
  "version_check",
 ]
 
@@ -3148,7 +3162,6 @@ checksum = "58893f751c9b0412871a09abd62ecd2a00298c6c83befa223ef98c52aef40cbe"
 [[package]]
 name = "portpicker"
 version = "1.0.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "rand 0.8.4",
 ]
@@ -3576,6 +3589,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring"
+version = "0.16.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3053cf52e236a3ed746dfc745aa9cacf1b791d846bdaf412f60a8d7d6e17c8fc"
+dependencies = [
+ "cc",
+ "libc",
+ "once_cell",
+ "spin 0.5.2",
+ "untrusted",
+ "web-sys",
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "roxmltree"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3626,6 +3654,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
 dependencies = [
  "semver",
+]
+
+[[package]]
+name = "rustls"
+version = "0.19.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "35edb675feee39aec9c99fa5ff985081995a06d594114ae14cbe797ad7b7a6d7"
+dependencies = [
+ "base64",
+ "log",
+ "ring",
+ "sct",
+ "webpki",
 ]
 
 [[package]]
@@ -3721,6 +3762,16 @@ name = "scratch"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96311ef4a16462c757bb6a39152c40f58f31cd2602a40fceb937e2bc34e6cbab"
+
+[[package]]
+name = "sct"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b362b83898e0e69f38515b82ee15aa80636befe47c3b6d3d89a911e78fc228ce"
+dependencies = [
+ "ring",
+ "untrusted",
+]
 
 [[package]]
 name = "seahash"
@@ -3897,7 +3948,6 @@ dependencies = [
 [[package]]
 name = "shared"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "bytes 1.1.0",
  "chrono",
@@ -4018,6 +4068,12 @@ dependencies = [
  "libc",
  "winapi 0.3.9",
 ]
+
+[[package]]
+name = "spin"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "spin"
@@ -4322,6 +4378,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-io-timeout"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30b74022ada614a1b4834de765f9bb43877f910cc8ce4be40e89042c9223a8bf"
+dependencies = [
+ "pin-project-lite",
+ "tokio",
+]
+
+[[package]]
 name = "tokio-macros"
 version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4352,6 +4418,17 @@ dependencies = [
  "openssl",
  "openssl-sys",
  "tokio",
+]
+
+[[package]]
+name = "tokio-rustls"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc6844de72e57df1980054b38be3a9f4702aba4858be64dd700181a8a6d0e1b6"
+dependencies = [
+ "rustls",
+ "tokio",
+ "webpki",
 ]
 
 [[package]]
@@ -4445,6 +4522,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "tonic"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "796c5e1cd49905e65dd8e700d4cb1dffcbfdb4fc9d017de08c1a537afd83627c"
+dependencies = [
+ "async-stream",
+ "async-trait",
+ "base64",
+ "bytes 1.1.0",
+ "futures-core",
+ "futures-util",
+ "h2",
+ "http",
+ "http-body",
+ "hyper",
+ "hyper-timeout",
+ "percent-encoding",
+ "pin-project 1.0.10",
+ "prost",
+ "prost-derive",
+ "tokio",
+ "tokio-rustls",
+ "tokio-stream",
+ "tokio-util 0.6.9",
+ "tower",
+ "tower-layer",
+ "tower-service",
+ "tracing 0.1.29",
+ "tracing-futures 0.2.5",
+]
+
+[[package]]
 name = "tonic-build"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4464,9 +4573,13 @@ checksum = "5651b5f6860a99bd1adb59dbfe1db8beb433e73709d9032b413a77e2fb7c066a"
 dependencies = [
  "futures-core",
  "futures-util",
+ "indexmap",
  "pin-project 1.0.10",
  "pin-project-lite",
+ "rand 0.8.4",
+ "slab",
  "tokio",
+ "tokio-stream",
  "tokio-util 0.6.9",
  "tower-layer",
  "tower-service",
@@ -4570,7 +4683,6 @@ dependencies = [
 [[package]]
 name = "tracing-limit"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "ansi_term",
  "dashmap",
@@ -4850,6 +4962,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "untrusted"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
+
+[[package]]
 name = "url"
 version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4899,7 +5017,6 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "vector"
 version = "0.19.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "async-compression",
  "async-graphql",
@@ -4942,6 +5059,7 @@ dependencies = [
  "inventory 0.1.11",
  "itertools",
  "lazy_static",
+ "listenfd",
  "lookup",
  "metrics",
  "metrics-tracing-context",
@@ -4984,6 +5102,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util 0.6.9",
  "toml",
+ "tonic",
  "tonic-build",
  "tower",
  "tower-layer",
@@ -5013,7 +5132,6 @@ dependencies = [
 [[package]]
 name = "vector-api-client"
 version = "0.1.2"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -5036,7 +5154,6 @@ dependencies = [
 [[package]]
 name = "vector_core"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "async-graphql",
  "async-trait",
@@ -5117,7 +5234,6 @@ checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 [[package]]
 name = "vrl"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "bytes 1.1.0",
  "indoc",
@@ -5133,7 +5249,6 @@ dependencies = [
 [[package]]
 name = "vrl-cli"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "bytes 1.1.0",
  "exitcode",
@@ -5154,7 +5269,6 @@ dependencies = [
 [[package]]
 name = "vrl-compiler"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "bitflags",
  "bytes 1.1.0",
@@ -5177,7 +5291,6 @@ dependencies = [
 [[package]]
 name = "vrl-diagnostic"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "codespan-reporting",
  "termcolor",
@@ -5186,7 +5299,6 @@ dependencies = [
 [[package]]
 name = "vrl-parser"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "lalrpop",
  "lalrpop-util",
@@ -5200,7 +5312,6 @@ dependencies = [
 [[package]]
 name = "vrl-stdlib"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#998e7b67df0c88aa80e14f665d4a74474015201f"
 dependencies = [
  "base64",
  "bytes 1.1.0",
@@ -5418,6 +5529,16 @@ dependencies = [
  "web-sys",
  "widestring",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "webpki"
+version = "0.21.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8e38c0608262c46d4a56202ebabdeb094cef7e560ca7a226c6bf055188aa4ea"
+dependencies = [
+ "ring",
+ "untrusted",
 ]
 
 [[package]]

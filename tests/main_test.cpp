@@ -223,7 +223,53 @@ TEST_CASE("test cpp poll with http json array") {
     //     }
     // })");
 
-    auto config_json = nlohmann::json::parse(R"({"sinks":{"sw_default_sink":{"inputs":["sw_transform_*"],"rate":null,"type":"memory_queue"}},"sources":{"sw_source_df_sw_vector":{"address":"0.0.0.0:8088","encoding":"json","headers":["-Target-Es"],"type":"http"}},"transforms":{"sw_transform_df_sw_vector":{"inputs":["sw_source_df_sw_vector"],"source":". = unnest!(.sw_events)\n","type":"remap"}}})");
+    nlohmann::json config_json = nlohmann::json::parse(R"({
+    "sinks": {
+        "sw_default_sink": {
+            "inputs": [
+                "sw_transform_*"
+            ],
+            "rate": null,
+            "type": "memory_queue"
+        }
+    },
+    "sources": {
+        "sw_source_df_sw_vector": {
+            "address": "0.0.0.0:9088",
+            "encoding": "json",
+            "headers": [
+                "-Target-Es"
+            ],
+            "type": "http"
+        },
+        "sw_source_kafka_input_0": {
+            "bootstrap_servers": "localhost:5432",
+            "group_id": "whatever",
+            "topics": [
+                "test_topic"
+            ],
+            "type": "kafka"
+        }
+    },
+    "transforms": {
+        "sw_transform_df_sw_vector": {
+            "inputs": [
+                "sw_source_df_sw_vector*"
+            ],
+            "source": ". = unnest!(.sw_events)\n",
+            "type": "remap"
+        },
+        "sw_transform_kafka_input_0": {
+            "inputs": [
+                "sw_source_kafka_input_0"
+            ],
+            "source": "._target_es = \"table_a\"\n",
+            "type": "remap"
+        }
+    }
+})");
+
+    // auto config_json = nlohmann::json::parse(R"({"sinks":{"sw_default_sink":{"inputs":["sw_transform_*"],"rate":null,"type":"memory_queue"}},"sources":{"sw_source_df_sw_vector":{"address":"0.0.0.0:8088","encoding":"json","headers":["-Target-Es"],"type":"http"}},"transforms":{"sw_transform_df_sw_vector":{"inputs":["sw_source_df_sw_vector"],"source":". = unnest!(.sw_events)\n","type":"remap"}}})");
 
     std::string config_temp = config_json.dump();
     auto config = rust::String(config_temp);
