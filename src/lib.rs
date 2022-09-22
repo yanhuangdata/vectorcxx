@@ -464,6 +464,8 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
     let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
     let mut sources_finished = topology.sources_finished();
     let config_rx = unsafe { &mut GLOBAL_CONFIG_RX };
+    let mut exit_status: bool = true;
+    let mut exit_msg: String = "".to_string();
 
     GLOBAL_STAGE_ID.store(1, Ordering::Relaxed);
     loop {
@@ -475,6 +477,8 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
                     ConfigAction::EXIT => {
                         println!("received exit request");
                         GLOBAL_STAGE_ID.store(config_event.stage_id, Ordering::Relaxed);
+                        exit_status = true;
+                        exit_msg = "receive exit request from sw".to_string();
                         break;
                     },
                     _ => {
@@ -484,6 +488,8 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
             }
             _ = &mut sources_finished => {
                 println!("sources finished");
+                exit_status = true;
+                exit_msg = "sources finished".to_string();
                 break;
             },
             else => {
@@ -496,7 +502,7 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
     // topology.sources_finished().await;
     topology.stop().await;
 
-    (true, "whatever".to_string())
+    (exit_status, exit_msg)
 }
 
 pub fn crud_vector_config(action: String, ids: Vec<String>, config_str: String, stage_id: u32) -> bool {
