@@ -74,7 +74,7 @@ mod ffi {
         fn start_ingest_to_vector(config: String) -> ExportResult;
         fn crud_vector_config(action: String, ids: Vec<String>, config_str: String, stage_id: u32) -> bool;
         fn poll_vector_events() -> SwEvents;
-        fn ready_to_poll(stage_id: u32) -> bool;
+        fn get_stage_id() -> u32;
     }
 }
 
@@ -322,8 +322,8 @@ pub fn poll_vector_events() -> SwEvents {
     }
 }
 
-fn ready_to_poll(stage_id: u32) -> bool {
-    stage_id == GLOBAL_STAGE_ID.load(Ordering::Relaxed)
+fn get_stage_id() -> u32 {
+    GLOBAL_STAGE_ID.load(Ordering::Relaxed)
 }
 
 pub fn start_ingest_to_vector(config: String) -> ffi::ExportResult {
@@ -428,15 +428,17 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
 pub async fn start_vector_service(config_str: String) -> (bool, String) {
     println!("start vector service");
     let (g_config_tx, g_cofing_rx) = tokio::sync::mpsc::channel(2);
-
+    println!("start vector service 1");
     let g_config_tx_box = Box::new(g_config_tx);
     let g_config_rx_box = Box::new(g_cofing_rx);
-
+    println!("start vector service 2");
     unsafe {
         GLOBAL_CONFIG_TX = Some(Box::leak(g_config_tx_box));
         GLOBAL_CONFIG_RX = Some(Box::leak(g_config_rx_box));
     }
+    println!("start vector service 3");
     let config_builder: ConfigBuilder = config::format::deserialize(config_str.as_str(), Some(config::Format::Json)).unwrap();
+    println!("start vector service 4");
     println!("ConfigBuilder sources {:?}", config_builder.sources);
     println!("ConfigBuilder transforms {:?}", config_builder.transforms);
     println!("ConfigBuilder sinks {:?}", config_builder.sinks);
