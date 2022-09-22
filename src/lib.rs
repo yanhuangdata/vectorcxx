@@ -296,7 +296,14 @@ pub fn poll_vector_events() -> SwEvents {
                     }
 
                     let ts_key = vector::config::log_schema().timestamp_key();
-                    let ts = event.as_log().get(ts_key).unwrap().as_timestamp().unwrap().timestamp_millis();
+                    //let ts = event.as_log().get(ts_key).unwrap().as_timestamp().unwrap().timestamp_millis();
+                    let mut ts = 0;
+
+                    if let Some(value) = event.as_log().get(ts_key) {
+                        if let Some(timestamp) = value.as_timestamp() {
+                            ts = timestamp.timestamp_millis();
+                        }
+                    }
 
                     let new_event = ffi::SwEvent {
                         message: ev,
