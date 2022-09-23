@@ -1,5 +1,3 @@
-#![feature(extern_types)]
-
 mod topology;
 use tokio_test::block_on;
 use std::panic;
