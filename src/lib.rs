@@ -24,6 +24,7 @@ use std::net::{Ipv4Addr, SocketAddr};
 use cxx::{CxxString, SharedPtr};
 use vector::topology::RunningTopology;
 use std::sync::atomic::{Ordering, AtomicU32};
+use serde_json;
 
 
 #[cxx::bridge(namespace = "vectorcxx")]
@@ -48,12 +49,27 @@ mod ffi {
     pub struct SwEvent {
         // pub target: String,
         pub message: String,
-        pub timestamp: i64
+        pub timestamp: i64,
     }
 
     pub struct SwEvents {
         pub target: String,
         pub events: Vec<SwEvent>,
+    }
+
+
+    pub struct SwSharedEvent {
+        // pub target: String,
+        // pub message: String,
+        pub timestamp: i64,
+        keys: Vec<String>,
+        values: Vec<String>
+    }
+
+
+    pub struct SwSharedEvents {
+        pub target: String,
+        pub events: Vec<SwSharedEvent>,
     }
 
 
@@ -273,6 +289,7 @@ pub fn poll_vector_events() -> SwEvents {
     let ten_millis = std::time::Duration::from_millis(1000);
     let mut events_list: Vec<ffi::SwEvent> = Vec::new();
     let mut target_es = String::new();
+    // let default_msg_key = vector::config::log_schema().message_key();
 
     if let Some(rx) = out_rx {
         match rx.try_next() {
@@ -286,11 +303,15 @@ pub fn poll_vector_events() -> SwEvents {
 
                 for event in value {
                     let mut ev = String::new();
+                    // for now, no extra json decoding, will add soon
                     if let Some(value) = event.as_log().get("sw_events") {
                         ev = value.to_string_lossy();
+                    // } else if let Some(value) = event.as_log().get(default_msg_key){
+                    //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
+                    // } else if let Some(value) = event.as_log().get("_message"){
+                    //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
                     } else {
-                        let key = vector::config::log_schema().message_key();
-                        ev = event.as_log().get(key).unwrap().to_string_lossy();
+                        ev = serde_json::to_string(event.as_log()).unwrap();
                     }
 
                     let ts_key = vector::config::log_schema().timestamp_key();

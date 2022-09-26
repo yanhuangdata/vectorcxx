@@ -5228,6 +5228,7 @@ dependencies = [
  "cxx-build",
  "futures 0.3.19",
  "rdkafka",
+ "serde_json",
  "tempfile",
  "tokio",
  "tokio-test",

@@ -256,7 +256,7 @@ TEST_CASE("test cpp poll with http json array") {
             "inputs": [
                 "sw_source_df_sw_vector*"
             ],
-            "source": ". = unnest!(.sw_events)\n",
+            "source": "del(.path)\ndel(.source_type)\nif exists(.sw_events) {. = unnest!(.sw_events)}\n",
             "type": "remap"
         },
         "sw_transform_kafka_input_0": {
