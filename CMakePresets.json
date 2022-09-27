@@ -23,7 +23,8 @@
       "inherits": "default-config-preset",
       "displayName": "Debug Preset",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_VERBOSE_BUILD": "true"
       }
     },
     {

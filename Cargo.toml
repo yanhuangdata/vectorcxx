@@ -6,8 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cxx = "1.0"
+cxx = "1.0.73"
 # without disabling default features, cargo will complain `libz-sys` feature is required but vector doesn't have it
+# for release, use "vector = { git = "https://github.com/yanhuangdata/vector.git", branch = "feature/vector-lib" }"
 # for local repo test, use "vector = { path = "{path_to_local_vector_repo}" }"
 vector = { git = "https://github.com/yanhuangdata/vector.git", branch = "feature/vector-lib", features = [
     "api",
@@ -29,12 +30,14 @@ futures = "0.3.17"
 tokio = { version = "1.13.0", features = ["test-util"] }
 tokio-test = "0.4.2"
 rdkafka = { version = "0.27.0", default-features = false, features = ["tokio", "libz", "ssl", "zstd", "dynamic-linking"]}
+concurrent-queue = "1.2.4"
+serde_json = { version = "1.0.68" }
 
 [build]
 jobs = 12
 
 [build-dependencies]
-cxx-build = "1.0"
+cxx-build = "1.0.73"
 
 [lib]
 crate-type = ["staticlib"]
