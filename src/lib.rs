@@ -49,10 +49,11 @@ mod ffi {
     pub struct SwEvent {
         // pub target: String,
         pub message: String,
-        pub timestamp: i64,
+        // pub timestamp: i64,
     }
 
     pub struct SwEvents {
+        pub parsed: bool,
         pub target: String,
         pub events: Vec<SwEvent>,
     }
@@ -253,11 +254,11 @@ pub async fn ingest_to_blackhole(f: fn(v: Vec<ffi::SwEvent>) -> bool) -> (bool, 
                     for event in value {
                         let key = vector::config::log_schema().message_key();
                         let ev = event.as_log().get(key).unwrap().to_string_lossy();
-                        let ts_key = vector::config::log_schema().timestamp_key();
-                        let ts = event.as_log().get(ts_key).unwrap().as_timestamp().unwrap().timestamp_millis();
+                        // let ts_key = vector::config::log_schema().timestamp_key();
+                        // let ts = event.as_log().get(ts_key).unwrap().as_timestamp().unwrap().timestamp_millis();
                         let new_event = ffi::SwEvent {
                             message: ev,
-                            timestamp: ts
+                            // timestamp: ts
                         };
                         events_list.push(new_event);
                         // print!("\nsingle value is {:?}, ts is {:?}\n", ev, ts);
@@ -289,6 +290,7 @@ pub fn poll_vector_events() -> SwEvents {
     let ten_millis = std::time::Duration::from_millis(1000);
     let mut events_list: Vec<ffi::SwEvent> = Vec::new();
     let mut target_es = String::new();
+    let mut parsed: bool = false;
     // let default_msg_key = vector::config::log_schema().message_key();
 
     if let Some(rx) = out_rx {
@@ -300,6 +302,10 @@ pub fn poll_vector_events() -> SwEvents {
                 } else if let Some(target) = value[0].as_log().get("_target_es") {
                     target_es = target.to_string_lossy();
                 }
+
+                if let Some(event) = value[0].as_log().get("sw_events") {
+                    parsed = true;
+                } 
 
                 for event in value {
                     let mut ev = String::new();
@@ -314,19 +320,18 @@ pub fn poll_vector_events() -> SwEvents {
                         ev = serde_json::to_string(event.as_log()).unwrap();
                     }
 
-                    let ts_key = vector::config::log_schema().timestamp_key();
-                    //let ts = event.as_log().get(ts_key).unwrap().as_timestamp().unwrap().timestamp_millis();
-                    let mut ts = 0;
+                    // let ts_key = vector::config::log_schema().timestamp_key();
+                    // //let ts = event.as_log().get(ts_key).unwrap().as_timestamp().unwrap().timestamp_millis();
+                    // let mut ts = 0;
 
-                    if let Some(value) = event.as_log().get(ts_key) {
-                        if let Some(timestamp) = value.as_timestamp() {
-                            ts = timestamp.timestamp_millis();
-                        }
-                    }
+                    // if let Some(value) = event.as_log().get(ts_key) {
+                    //     if let Some(timestamp) = value.as_timestamp() {
+                    //         ts = timestamp.timestamp_millis();
+                    //     }
+                    // }
 
                     let new_event = ffi::SwEvent {
                         message: ev,
-                        timestamp: ts
                     };
                     events_list.push(new_event);
                 }
@@ -343,6 +348,7 @@ pub fn poll_vector_events() -> SwEvents {
     }
 
     SwEvents {
+        parsed,
         target: target_es,
         events: events_list,
     }
@@ -452,17 +458,14 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
 }
 
 pub async fn start_vector_service(config_str: String) -> (bool, String) {
-    println!("start vector service");
     let (g_config_tx, g_cofing_rx) = tokio::sync::mpsc::channel(2);
-    println!("start vector service 1");
     let g_config_tx_box = Box::new(g_config_tx);
     let g_config_rx_box = Box::new(g_cofing_rx);
-    println!("start vector service 2");
     unsafe {
         GLOBAL_CONFIG_TX = Some(Box::leak(g_config_tx_box));
         GLOBAL_CONFIG_RX = Some(Box::leak(g_config_rx_box));
     }
-    println!("start vector service 3, config {:?}", config_str);
+    println!("start vector service, config {:?}", config_str);
 
     // let mut res = match config::format::deserialize(config_str.as_str(), Some(config::Format::Json)) {
     //     // 打开文件成功，将file句柄赋值给f
@@ -480,12 +483,15 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
         return (false, "failed to deserialize config string for".to_string());
     }
     let config_builder : ConfigBuilder = res.unwrap();
-    println!("start vector service 4");
     println!("ConfigBuilder sources {:?}", config_builder.sources);
     println!("ConfigBuilder transforms {:?}", config_builder.transforms);
     println!("ConfigBuilder sinks {:?}", config_builder.sinks);
+    println!("ConfigBuilder globals {:?}", config_builder.global);
 
     let mut config_builder_copy = config_builder.clone();
+    let builder_for_shema = config_builder.clone();
+    vector::config::init_log_schema_from_builder(builder_for_shema, true);
+
 
     let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
     let mut sources_finished = topology.sources_finished();
