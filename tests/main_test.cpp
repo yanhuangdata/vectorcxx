@@ -97,10 +97,10 @@ void consume_events(uint32_t expected) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
             auto target_es = result.target;
-            std::cout << " target_es: " << target_es << std::endl;
-            for (auto ev : result.events) {
+            std::cout << " target_es: " << target_es << ", parsed: " << result.parsed << std::endl;
+            for (auto& ev : result.events) {
                 std::cout << ev.message << std::endl;
-                std::cout << ev.timestamp << std::endl;
+                // std::cout << ev.timestamp << std::endl;
             }
             --expected;
         }
@@ -224,6 +224,9 @@ TEST_CASE("test cpp poll with http json array") {
     // })");
 
     nlohmann::json config_json = nlohmann::json::parse(R"({
+    "log_schema": {
+        "timestamp_key": "_time"
+    },
     "sinks": {
         "sw_default_sink": {
             "inputs": [
@@ -275,6 +278,8 @@ TEST_CASE("test cpp poll with http json array") {
     auto config = rust::String(config_temp);
     auto start_thread = std::thread(vectorcxx::start_ingest_to_vector, config);
     std::cout << "config string: " << config_temp << std::endl;
+
+    consume_events(2);
 
     nlohmann::json new_config_json = nlohmann::json::parse(R"(
     {
