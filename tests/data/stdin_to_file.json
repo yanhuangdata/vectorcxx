@@ -1,0 +1,23 @@
+{
+  "data_dir": "/var/lib/vector/",
+  "sources": {
+    "stdin_input": {
+      "type": "stdin",
+      "decoding": {
+        "codec": "bytes"
+      }
+    }
+  },
+  "sinks": {
+    "file_sink": {
+      "type": "file",
+      "inputs": [
+        "stdin_input"
+      ],
+      "encoding": {
+        "codec": "ndjson"
+      },
+      "path": "/tmp/vector_test.log"
+    }
+  }
+}

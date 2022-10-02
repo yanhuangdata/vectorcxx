@@ -1,0 +1,30 @@
+{
+  "data_dir": "/var/lib/vector/",
+  "sources": {
+    "stdin_input": {
+      "type": "stdin",
+      "decoding": {
+        "codec": "bytes"
+      }
+    }
+  },
+  "transforms": {
+    "contains_filter": {
+      "type": "filter",
+      "inputs": ["stdin_input"],
+      "condition": "contains!(.message, \"200\")"
+    }
+  },
+  "sinks": {
+    "file_sink": {
+      "type": "file",
+      "inputs": [
+        "contains_filter"
+      ],
+      "encoding": {
+        "codec": "ndjson"
+      },
+      "path": "/tmp/vector_test.log"
+    }
+  }
+}

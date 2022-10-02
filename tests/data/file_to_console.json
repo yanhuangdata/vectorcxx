@@ -1,0 +1,23 @@
+{
+  "data_dir": "/var/lib/vector/",
+  "sources": {
+    "file_input": {
+      "type": "file",
+      "include": [
+        "/var/log/system.log"
+      ]
+    }
+  },
+  "sinks": {
+    "console_sink": {
+      "type": "console",
+      "inputs": [
+        "file_input"
+      ],
+      "target": "stdout",
+      "encoding": {
+        "codec": "ndjson"
+      }
+    }
+  }
+}
