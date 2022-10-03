@@ -96,8 +96,8 @@ void consume_events(uint32_t expected) {
         if (result.events.empty()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
-            auto target_es = result.target;
-            std::cout << " target_es: " << target_es << ", parsed: " << result.parsed << std::endl;
+            // auto target_es = result.target;
+            // std::cout << " target_es: " << target_es << ", parsed: " << result.parsed  << std::endl;
             for (auto& ev : result.events) {
                 std::cout << ev.message << std::endl;
                 // std::cout << ev.timestamp << std::endl;
@@ -105,6 +105,31 @@ void consume_events(uint32_t expected) {
             --expected;
         }
     }
+}
+
+void consume_and_verify_events(uint32_t expected) {
+    uint32_t cnt_a = 0;
+    uint32_t cnt_b = 0;
+    uint32_t cnt_wrong = 0;
+    while (expected) {
+        auto result = vectorcxx::poll_vector_events();
+        if (result.events.empty()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        } else {
+            // auto target_es = result.target;
+            // std::cout << " target_es: " << target_es << ", parsed: " << result.parsed  << std::endl;
+            for (auto& ev : result.events) {
+                // std::cout << "expectec:  " << expected << "cnt_a:  " << cnt_a << ", cnt_b:  " << cnt_b << ", cnt_wrong:  " << cnt_wrong << std::endl;
+                cnt_a += (ev.target == "table_a" ? 1 : 0);
+                cnt_b += (ev.target == "table_b" ? 1 : 0);
+                // cnt_wrong += (ev.target != target_es ? 1 : 0);
+                std::cout << ev.message << std::endl;
+                // std::cout << ev.timestamp << std::endl;
+                --expected;
+            }
+        }
+    }
+    std::cout << "cnt_a:  " << cnt_a << ", cnt_b:  " << cnt_b << ", cnt_wrong:  " << 0 << std::endl;
 }
 
 // TEST_CASE("test cpp poll with json config change") {
@@ -230,7 +255,7 @@ TEST_CASE("test cpp poll with http json array") {
     "sinks": {
         "sw_default_sink": {
             "inputs": [
-                "sw_transform_*"
+                "sw_final_transform"
             ],
             "rate": null,
             "type": "memory_queue"
@@ -246,31 +271,54 @@ TEST_CASE("test cpp poll with http json array") {
             "type": "http"
         },
         "sw_source_kafka_input_0": {
-            "bootstrap_servers": "localhost:5432",
-            "group_id": "whatever",
+            "type": "kafka",
+            "bootstrap_servers": "host.docker.internal:9092",
+            "group_id": "consumer_from_vector",
             "topics": [
-                "test_topic"
-            ],
-            "type": "kafka"
+            "vector-test-topic"
+            ]
+        },
+        "sw_source_vector_input_0": {
+            "address": "0.0.0.0:9000",
+            "type": "vector"
         }
     },
     "transforms": {
         "sw_transform_df_sw_vector": {
             "inputs": [
-                "sw_source_df_sw_vector*"
+                "sw_source_df_sw_vector"
             ],
             "source": "del(.path)\ndel(.source_type)\nif exists(.sw_events) {. = unnest!(.sw_events)}\n",
             "type": "remap"
         },
         "sw_transform_kafka_input_0": {
+            "type": "remap",
+            "inputs": ["sw_source_kafka_input_0"],
+            "source": "._target_es = \"_internal\""
+        },
+        "sw_transform_vector_input_0": {
             "inputs": [
-                "sw_source_kafka_input_0"
+                "sw_source_vector_input_0"
             ],
-            "source": "._target_es = \"table_a\"\n",
+            "source": "._target_es = \"table_d\"",
+            "type": "remap"
+        },
+        "sw_final_transform": {
+            "inputs": [
+                "sw_source_df_sw_vector"
+            ],
+            "source": "if (._datatype == \"nginx__access_log\") {\nstructured=parse_regex!(.message, r'^(?P<remote>[^ ]*) (?P<host>[^ ]*) (?P<user>[^ ]*) \\[(?P<time>[^\\]]*)\\] \"(?P<method>\\S+)(?: +(?P<path>[^\"]*?)(?: +\\S*)?)?\" (?P<code>[^ ]*) (?P<size>[^ ]*)(?: \"(?P<referer>[^\"]*)\" \"(?P<agent>[^\"]*)\"(?:\\s+\"?(?P<http_x_forwarded_for>[^\"]*)\"?)?)?$')\n.=merge(.,structured) \n} else if (._datatype == \"json\") {\nstructured=parse_json!(.message)\n.=merge!(.,structured) \n}\n",
             "type": "remap"
         }
     }
 })");
+
+            // "source": "if (._datatype == \"syslog\") {\nstructured=parse_regex(.message,r'^(?:<(?P<pri>\\d{1,3})>\\d{1,3})?\\s*(?P<time>(?:\\d\\d){1,2}-(?:0?[1-9]|1[0-2])-(?:(?:0[1-9])|(?:[12][0-9])|(?:3[01])|[1-9])[T ](?:2[0123]|[01]?[0-9]):?(?:[0-5][0-9])(?::?(?:(?:[0-5][0-9]|60)(?:[:.,][0-9]+)?))?(?:Z|[+-](?:2[0123]|[01]?[0-9])(?::?(?:[0-5][0-9])))?) (?P<host>[!-~]{1,255}) (?P<ident>[!-~]{1,48}) (?P<pid>[!-~]{1,128}) (?P<msgid>[!-~]{1,32}) (?P<extradata>(?:\\-|(?:\\[.*?\\])+)) *(?s:(?P<message>.+))?$') ?? \nparse_syslog!(.message)\n.=merge(.,structured)\n.a=1 \n } else if (._datatype == \"json\") {\nparse_json!(.message)\n.=merge(.,structured)\n.a=2 \n} else {\n.a=3\n}\n",
+
+
+            // "source": "if (._datatype == \"syslog\") {\nstructured=parse_syslog!(.message)\n.=merge(.,structured) }\nelse if (._datatype == \"json\") {\nstructured=parse_json!(.message)\n.=merge(.,structured) }\n",
+
+            // "source": "if (._datatype == \"syslog\") {\nstructured=parse_regex(.message,r'^(?:<(?P<pri>\\d{1,3})>\\d{1,3})?\\s*(?P<time>(?:\\d\\d){1,2}-(?:0?[1-9]|1[0-2])-(?:(?:0[1-9])|(?:[12][0-9])|(?:3[01])|[1-9])[T ](?:2[0123]|[01]?[0-9]):?(?:[0-5][0-9])(?::?(?:(?:[0-5][0-9]|60)(?:[:.,][0-9]+)?))?(?:Z|[+-](?:2[0123]|[01]?[0-9])(?::?(?:[0-5][0-9])))?) (?P<host>[!-~]{1,255}) (?P<ident>[!-~]{1,48}) (?P<pid>[!-~]{1,128}) (?P<msgid>[!-~]{1,32}) (?P<extradata>(?:\\-|(?:\\[.*?\\])+)) *(?s:(?P<message>.+))?$') ?? \nparse_syslog!(.message)\n.=merge(.,structured) }\nelse if (._datatype == \"yhp__log\") {\nparse_regex!(.message, r'^\\[[^\\]]*\\]\\s*\\[(?P<log_level>[^\\]]*)\\]\\s*\\[(?P<process_id>[^\\]]*)\\]\\s*\\[(?P<thread_id>[^\\]]*)\\]\\s*\\[(?P<logger_name>[^\\]]*)\\]')\n.=merge(.,structured) }\nelse if (._datatype == \"nginx__access_log\") {\nparse_regex!(.message, r'^(?P<remote>[^ ]*) (?P<host>[^ ]*) (?P<user>[^ ]*) \\[(?P<time>[^\\]]*)\\] \"(?P<method>\\S+)(?: +(?P<path>[^\\\"]*?)(?: +\\S*)?)?\" (?P<code>[^ ]*) (?P<size>[^ ]*)(?: \"(?P<referer>[^\\\"]*)\" \"(?P<agent>[^\\\"]*)\"(?:\\s+\\\"?(?P<http_x_forwarded_for>[^\\\"]*)\\\"?)?)?$')\n.=merge(.,structured) }\nelse if (._datatype == \"json\") {\nparse_json!(.message)\n.=merge(.,structured) }\n",
 
     // auto config_json = nlohmann::json::parse(R"({"sinks":{"sw_default_sink":{"inputs":["sw_transform_*"],"rate":null,"type":"memory_queue"}},"sources":{"sw_source_df_sw_vector":{"address":"0.0.0.0:8088","encoding":"json","headers":["-Target-Es"],"type":"http"}},"transforms":{"sw_transform_df_sw_vector":{"inputs":["sw_source_df_sw_vector"],"source":". = unnest!(.sw_events)\n","type":"remap"}}})");
 
@@ -279,45 +327,46 @@ TEST_CASE("test cpp poll with http json array") {
     auto start_thread = std::thread(vectorcxx::start_ingest_to_vector, config);
     std::cout << "config string: " << config_temp << std::endl;
 
-    consume_events(2);
+    consume_and_verify_events(200000);
+    // consume_events(100);
 
-    nlohmann::json new_config_json = nlohmann::json::parse(R"(
-    {
-        "sources": {
-            "my_source_id_2": {
-                "type": "http",
-                "address": "0.0.0.0:8089",
-                "encoding": "json"
-            }
-        },
-        "transforms": {
-            "sw_transform_2": {
-                "type": "remap",
-                "inputs": ["my_source_id_2"],
-                "source": ". = unnest!(.sw_events)\n"
-            }
-        }
-    })");
+    // nlohmann::json new_config_json = nlohmann::json::parse(R"(
+    // {
+    //     "sources": {
+    //         "my_source_id_2": {
+    //             "type": "http",
+    //             "address": "0.0.0.0:8089",
+    //             "encoding": "json"
+    //         }
+    //     },
+    //     "transforms": {
+    //         "sw_transform_2": {
+    //             "type": "remap",
+    //             "inputs": ["my_source_id_2"],
+    //             "source": ". = unnest!(.sw_events)\n"
+    //         }
+    //     }
+    // })");
 
-    std::cout << "new config string: " << new_config_json << std::endl;
+    // std::cout << "new config string: " << new_config_json << std::endl;
 
-    rust::Vec<rust::String> ids;
-    auto new_config = rust::String(new_config_json.dump());
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    vectorcxx::crud_vector_config("add", ids, new_config, 2);
-    consume_events(2);
-    // auto consume_thread = std::thread(consume_events, 2);
-    // consume_thread.join();
+    // rust::Vec<rust::String> ids;
+    // auto new_config = rust::String(new_config_json.dump());
+    // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    // vectorcxx::crud_vector_config("add", ids, new_config, 2);
+    // consume_events(2);
+    // // auto consume_thread = std::thread(consume_events, 2);
+    // // consume_thread.join();
 
-    ids.push_back("my_source_id_2");
-    ids.push_back("add_some_field_2");
-    vectorcxx::crud_vector_config("delete", ids, rust::String(), 3);
-    consume_events(1);
-    // auto new_consume_thread = std::thread(consume_events, 1);
-    // new_consume_thread.join();
+    // ids.push_back("my_source_id_2");
+    // ids.push_back("add_some_field_2");
+    // vectorcxx::crud_vector_config("delete", ids, rust::String(), 3);
+    // consume_events(1);
+    // // auto new_consume_thread = std::thread(consume_events, 1);
+    // // new_consume_thread.join();
 
-    rust::String config_str;
-    vectorcxx::crud_vector_config("exit", ids, config_str, 4);
+    // rust::String config_str;
+    // vectorcxx::crud_vector_config("exit", ids, config_str, 4);
     start_thread.join();
 }
 
