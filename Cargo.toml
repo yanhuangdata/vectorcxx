@@ -13,9 +13,7 @@ cxx = "1.0.73"
 vector = { git = "https://github.com/yanhuangdata/vector.git", branch = "feature/vector-lib", features = [
     "api",
     "api-client",
-    "disk-buffer",
     "enrichment-tables",
-    "rdkafka-plain",
     "sinks",
     "sources",
     "sources-dnstap",

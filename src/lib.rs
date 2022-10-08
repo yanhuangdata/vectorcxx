@@ -1,20 +1,23 @@
 mod topology;
 use tokio_test::block_on;
+// use tokio::{
+//     runtime::{self, Runtime}};
 use std::panic;
 use std::sync::{Arc, Mutex};
 use crate::ffi::{ExportResult, KafkaSinkParams, send_event_to_sw, SwEvent, SwEvents};
 // use futures::executor::block_on;
 use vector::{
     config::Config, config::format,
-    sinks::console::{ConsoleSinkConfig, Encoding, Target},
+    sinks::console::{ConsoleSinkConfig, Target},
     sources::file::FileConfig, sources::demo_logs::DemoLogsConfig, sources::http::SimpleHttpConfig,
     sources::util, transforms::remap::RemapConfig, kafka::KafkaCompression,
     sinks::kafka::config::KafkaSinkConfig, sinks::file::{FileSinkConfig, Compression},
     sinks::util::encoding::{EncodingConfig, StandardEncodings}, sinks::blackhole::BlackholeConfig,
     sinks::memory_queue::MemoryQueueConfig,
     topology::{GLOBAL_RX, GLOBAL_VEC_RX},
-    serde::{default_decoding, default_framing_stream_based}, config};
+    serde::{default_decoding}, config};
 
+use vector::test_util::runtime;
 use vector::config::SinkConfig;
 use vector::config::ConfigBuilder;
 use vector::config::ComponentKey;
@@ -115,19 +118,21 @@ static GLOBAL_STAGE_ID: AtomicU32 = AtomicU32::new(0);
 
 
 pub fn start_sw_sink_vec_test() -> ffi::ExportResult {
-    unsafe {
-        // ffi::send_event_to_sw("something".to_string());
-        let (succeed, err_msg) = block_on(ingest_to_blackhole(ffi::send_events_to_sw));
-        return ffi::ExportResult {succeed:succeed, err_msg: err_msg};
-    }
+    // unsafe {
+    //     // ffi::send_event_to_sw("something".to_string());
+    //     let (succeed, err_msg) = block_on(ingest_to_blackhole(ffi::send_events_to_sw));
+    //     return ffi::ExportResult {succeed:succeed, err_msg: err_msg};
+    // }
+    return ffi::ExportResult {succeed: false, err_msg: "".to_string()};
 }
 
 pub fn start_topology(file_path: String, data_dir: String) -> bool {
     println!("starting topology with await with params");
-    let result = panic::catch_unwind(|| {
-        block_on(topology::start(file_path, data_dir))
-    });
-    return !result.is_err();
+    // let result = panic::catch_unwind(|| {
+    //     block_on(topology::start(file_path, data_dir))
+    // });
+    // return !result.is_err();
+    return true;
 }
 
 pub fn export_to_kafka(task_id: String, file_path: String, data_dir: String, sink_config: KafkaSinkParams) -> ffi::ExportResult {
@@ -206,88 +211,89 @@ pub fn export_to_file(task_id: String, file_path: String, data_dir: String, sink
     }
 }
 
-pub async fn ingest_to_blackhole(f: fn(v: Vec<ffi::SwEvent>) -> bool) -> (bool, String) {
-    // http start
-    let http_config = SimpleHttpConfig {
-        address: SocketAddr::new(Ipv4Addr::new(0, 0, 0, 0).into(), 80),
-        encoding: None,
-        headers: Vec::new(),
-        query_parameters: Vec::new(),
-        tls: None,
-        auth: None,
-        path_key: "path".to_string(),
-        path: "/".to_string(),
-        strict_path: true,
-        framing: Some(default_framing_stream_based()),
-        decoding: Some(default_decoding()),
-    };
-    // http end
+// pub async fn ingest_to_blackhole(f: fn(v: Vec<ffi::SwEvent>) -> bool) -> (bool, String) {
+//     // http start
+//     let http_config = SimpleHttpConfig {
+//         address: SocketAddr::new(Ipv4Addr::new(0, 0, 0, 0).into(), 80),
+//         encoding: None,
+//         headers: Vec::new(),
+//         query_parameters: Vec::new(),
+//         tls: None,
+//         auth: None,
+//         path_key: "path".to_string(),
+//         path: "/".to_string(),
+//         strict_path: true,
+//         framing: None,
+//         decoding: Some(default_decoding()),
+//     };
+//     // http end
 
-    let source_path: String = "/tmp/data".to_string();
-    let data_dir: String = "/tmp/data_dir".to_string();
-    let file_config = FileConfig {
-        include: vec![std::path::Path::new(&source_path).join("*.json")],
-        data_dir: Some(std::path::Path::new(&data_dir).to_path_buf()),
-        // keep_watching: false,
-        ..Default::default()
-    };
+//     let source_path: String = "/tmp/data".to_string();
+//     let data_dir: String = "/tmp/data_dir".to_string();
+//     let file_config = FileConfig {
+//         include: vec![std::path::Path::new(&source_path).join("*.json")],
+//         data_dir: Some(std::path::Path::new(&data_dir).to_path_buf()),
+//         // keep_watching: false,
+//         ..Default::default()
+//     };
 
-    let mut config = Config::builder();
-    config.add_source("in1", http_config);
+//     let mut config = Config::builder();
+//     config.add_source("in1", http_config);
 
-    let sink_config = MemoryQueueConfig {
-        rate: None,
-        // out_sender: Some(out_tx),
-    };
-    config.add_sink("cxx_sink", &["in1"], sink_config);
+//     let sink_config = MemoryQueueConfig {
+//         rate: None,
+//         acknowledgements: Default::default(),
+//         // out_sender: Some(out_tx),
+//     };
+//     config.add_sink("cxx_sink", &["in1"], sink_config);
 
-    let (topology, _crash) = vector::test_util::start_topology(config.build().unwrap(), false).await;
+//     let (topology, _crash) = vector::test_util::start_topology(config.build().unwrap(), false).await;
 
-    let out_rx = unsafe { &mut GLOBAL_VEC_RX };
-    let ten_millis = std::time::Duration::from_millis(1000);
+//     let out_rx = unsafe { &mut GLOBAL_VEC_RX };
+//     let ten_millis = std::time::Duration::from_millis(1000);
 
-    std::thread::spawn(move || loop {
-        if let Some(rx) = out_rx {
-            match rx.try_next() {
-                Ok(Some(value)) => {
-                    let mut events_list: Vec<ffi::SwEvent> = Vec::new();
+//     std::thread::spawn(move || loop {
+//         if let Some(rx) = out_rx {
+//             match rx.try_next() {
+//                 Ok(Some(value)) => {
+//                     let mut events_list: Vec<ffi::SwEvent> = Vec::new();
 
-                    for event in value {
-                        let key = vector::config::log_schema().message_key();
-                        let ev = event.as_log().get(key).unwrap().to_string_lossy();
-                        // let ts_key = vector::config::log_schema().timestamp_key();
-                        // let ts = event.as_log().get(ts_key).unwrap().as_timestamp().unwrap().timestamp_millis();
-                        let new_event = ffi::SwEvent {
-                            parsed: false,
-                            target: "whatever".to_string(),
-                            source_type: "".to_string(),
-                            message: ev,
-                            // timestamp: ts
-                        };
-                        events_list.push(new_event);
-                        // print!("\nsingle value is {:?}, ts is {:?}\n", ev, ts);
-                    }
+//                     for event in value {
+//                         let key = vector::config::log_schema().message_key();
+//                         let ev = event.as_log().get(key).unwrap().to_string_lossy();
+//                         // let ts_key = vector::config::log_schema().timestamp_key();
+//                         // let ts = event.as_log().get(ts_key).unwrap().as_timestamp().unwrap().timestamp_millis();
+//                         let new_event = ffi::SwEvent {
+//                             parsed: false,
+//                             target: "whatever".to_string(),
+//                             source_type: "".to_string(),
+//                             message: ev,
+//                             // timestamp: ts
+//                         };
+//                         events_list.push(new_event);
+//                         // print!("\nsingle value is {:?}, ts is {:?}\n", ev, ts);
+//                     }
 
-                    f(events_list);
-                },
-                Ok(None) => {
-                    std::thread::sleep(ten_millis);
-                    break;
-                }
-                Err(e) => {
-                    std::thread::sleep(ten_millis);
-                }
-            }
-        }
-    });
+//                     f(events_list);
+//                 },
+//                 Ok(None) => {
+//                     std::thread::sleep(ten_millis);
+//                     break;
+//                 }
+//                 Err(e) => {
+//                     std::thread::sleep(ten_millis);
+//                 }
+//             }
+//         }
+//     });
 
-    topology.sources_finished().await;
-    topology.stop().await;
+//     topology.sources_finished().await;
+//     topology.stop().await;
 
-    println!("all events are done");
-    // (flag, msg)
-    (true, "whatever".to_string())
-}
+//     println!("all events are done");
+//     // (flag, msg)
+//     (true, "whatever".to_string())
+// }
 
 pub fn poll_vector_events() -> SwEvents {
     let out_rx = unsafe { &mut GLOBAL_VEC_RX };
@@ -308,8 +314,8 @@ pub fn poll_vector_events() -> SwEvents {
                 // } else if let Some(target) = value[0].as_log().get("_target_es") {
                 //     target_es = target.to_string_lossy();
                 // }
-
-                for event in value {
+                println!("receiving events, cnt {:?}", value.len());
+                for event in &value {
                     let mut ev = String::new();
                     let mut parsed: bool = false;
                     let mut source_type = String::new();
@@ -338,13 +344,13 @@ pub fn poll_vector_events() -> SwEvents {
                     //     }
                     // }
                     let mut target_event_set = String::new();
-                    if let Some(target) = event.as_log().get("-Target-Es") {
+                    if let Some(target) = event.as_log().get_flat("-Target-Es") {
                         target_event_set = target.to_string_lossy();
-                    } else if let Some(target) = event.as_log().get("_target_es") {
+                    } else if let Some(target) = event.as_log().get_flat("_target_es") {
                         target_event_set = target.to_string_lossy();
                     }
     
-                    if let Some(value) = event.as_log().get(source_type_key) {
+                    if let Some(value) = event.as_log().get_flat(source_type_key) {
                         source_type = value.to_string_lossy();
                     } 
 
@@ -403,9 +409,7 @@ pub fn start_ingest_to_vector(config: String) -> ffi::ExportResult {
 
     let result = panic::catch_unwind(|| {
         unsafe {
-            let (succeed, err_msg) = block_on(
-                start_vector_service(config)
-            );
+            let (succeed, err_msg) = start_vector_service(config);
             if succeed {
                 return ffi::ExportResult {succeed:true, err_msg: "".to_string()};
             }
@@ -432,7 +436,7 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
         },
         ConfigAction::ADD | ConfigAction::UPDATE => {
             let config_str = &config_event.config_str;
-            let new_builder: ConfigBuilder = config::format::deserialize(config_str.as_str(), Some(config::Format::Json)).unwrap();
+            let new_builder: ConfigBuilder = config::format::deserialize(config_str.as_str(), config::Format::Json).unwrap();
             let mut config_builder_new = config_builder.clone();
             if new_builder.sources.len() > 0 {
                 config_builder_new.sources.extend(new_builder.sources);
@@ -451,11 +455,11 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
             let mut config_builder_new = config_builder.clone();
 
             for id in &config_event.config_ids {
-                let key = &ComponentKey::from(&id);
-                if config_builder_new.sources.get(key).is_some() {
-                    config_builder_new.sources.remove(key);
-                } else if config_builder_new.transforms.get(key).is_some() {
-                    config_builder_new.transforms.remove(key);
+                let key = ComponentKey::from(id.as_str());
+                if config_builder_new.sources.get(&key).is_some() {
+                    config_builder_new.sources.remove(&key);
+                } else if config_builder_new.transforms.get(&key).is_some() {
+                    config_builder_new.transforms.remove(&key);
                 }
             }
             println!("ConfigBuilder sources {:?}", config_builder_new.sources);
@@ -479,7 +483,7 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
     // let res = topology.reload_config_and_respawn(config_builder_new.build().unwrap()).await.unwrap();
 }
 
-pub async fn start_vector_service(config_str: String) -> (bool, String) {
+pub fn start_vector_service(config_str: String) -> (bool, String) {
     let (g_config_tx, g_cofing_rx) = tokio::sync::mpsc::channel(2);
     let g_config_tx_box = Box::new(g_config_tx);
     let g_config_rx_box = Box::new(g_cofing_rx);
@@ -499,7 +503,7 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
     //     },
     // };
     // let config_builder: ConfigBuilder = config::format::deserialize(config_str.as_str(), Some(config::Format::Json)).unwrap();
-    let res = config::format::deserialize(config_str.as_str(), Some(config::Format::Json));
+    let res = config::format::deserialize(config_str.as_str(), config::Format::Json);
     if res.is_err() {
         println!("deserialize error {:?}", res.unwrap_err());
         return (false, "failed to deserialize config string for".to_string());
@@ -514,47 +518,51 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
     let builder_for_shema = config_builder.clone();
     vector::config::init_log_schema_from_builder(builder_for_shema, true);
 
-
-    let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
-    let mut sources_finished = topology.sources_finished();
-    let config_rx = unsafe { &mut GLOBAL_CONFIG_RX };
     let mut exit_status: bool = true;
     let mut exit_msg: String = "".to_string();
+    let rt = runtime();
 
-    GLOBAL_STAGE_ID.store(1, Ordering::Relaxed);
-    loop {
-        tokio::select! {
-            Some(config_event) = config_rx.as_mut().unwrap().recv() => {
-                println!("got config event: {:?}",  config_event.config_str);
-               
-                match config_event.action {
-                    ConfigAction::EXIT => {
-                        println!("received exit request");
-                        GLOBAL_STAGE_ID.store(config_event.stage_id, Ordering::Relaxed);
-                        exit_status = true;
-                        exit_msg = "receive exit request from sw".to_string();
-                        break;
-                    },
-                    _ => {
-                        reload_vector(config_event, &mut config_builder_copy, &mut topology).await;
+    rt.block_on(async move {
+        let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
+        let mut sources_finished = topology.sources_finished();
+        let config_rx = unsafe { &mut GLOBAL_CONFIG_RX };
+        println!("This is a multi-core vector service");
+        GLOBAL_STAGE_ID.store(1, Ordering::Relaxed);
+        loop {
+            tokio::select! {
+                Some(config_event) = config_rx.as_mut().unwrap().recv() => {
+                    println!("got config event: {:?}",  config_event.config_str);
+                   
+                    match config_event.action {
+                        ConfigAction::EXIT => {
+                            println!("received exit request");
+                            GLOBAL_STAGE_ID.store(config_event.stage_id, Ordering::Relaxed);
+                            // exit_status = true;
+                            // exit_msg = "receive exit request from sw".to_string();
+                            break;
+                        },
+                        _ => {
+                            reload_vector(config_event, &mut config_builder_copy, &mut topology).await;
+                        }
                     }
                 }
+                _ = &mut sources_finished => {
+                    println!("sources finished");
+                    // exit_status = true;
+                    // exit_msg = "sources finished".to_string();
+                    break;
+                },
+                else => {
+                    println!("should not go here")
+                }
             }
-            _ = &mut sources_finished => {
-                println!("sources finished");
-                exit_status = true;
-                exit_msg = "sources finished".to_string();
-                break;
-            },
-            else => {
-                println!("should not go here")
-            }
+            std::thread::sleep(std::time::Duration::from_millis(1000));
         }
-        std::thread::sleep(std::time::Duration::from_millis(1000));
-    }
-
-    // topology.sources_finished().await;
-    topology.stop().await;
+    
+        // topology.sources_finished().await;
+        topology.stop().await;
+    });
+    
 
     (exit_status, exit_msg)
 }

@@ -1,7 +1,7 @@
 // use tempfile::tempdir;
 use vector::{
     config::Config,
-    sinks::console::{ConsoleSinkConfig, Encoding, Target},
+    sinks::console::{ConsoleSinkConfig, Target},
     sources::file::FileConfig,
     transforms::remap::RemapConfig,
     test_util::{start_topology, start_topology_new},
@@ -10,39 +10,11 @@ use vector::{
     sinks::file::{FileSinkConfig, Compression},
     sinks::util::encoding::{EncodingConfig, StandardEncodings},
 };
+
 use vector::config::SinkConfig;
 use rdkafka::config::ClientConfig;
 use rdkafka::consumer::{BaseConsumer, Consumer};
 
-pub async fn start(file_path: String, data_dir: String) {
-    let mut old_config = Config::builder();
-    // let http_config = SimpleHttpConfig::generate_config();
-    let file_config = FileConfig {
-        include: vec![std::path::Path::new(&file_path).join("*.log")],
-        data_dir: Some(std::path::Path::new(&data_dir).to_path_buf()),
-        keep_watching: false,
-        ..Default::default()
-    };
-
-    let console_sink = ConsoleSinkConfig {
-        target: Target::Stdout,
-        encoding: Encoding::Text.into(),
-    };
-
-    let demo_logs = file_config;
-
-    old_config.add_source("in", demo_logs);
-    old_config.add_sink(
-        "console_sink_1",
-        &["in"],
-        console_sink,
-    );
-
-    let (topology, _crash) = start_topology(old_config.build().unwrap(), false).await;
-
-    topology.sources_finished().await;
-    topology.stop().await;
-}
 
 // refer to https://github.com/fede1024/rust-rdkafka/blob/master/examples/metadata.rs for metadata
 fn kafka_healthcheck(config: KafkaSinkConfig) -> (bool, String) {
@@ -79,14 +51,15 @@ pub async fn export_json_result_to_kafka(task_id: String, file_path: String, dat
         bootstrap_servers: kafka_server,
         topic: kafka_topic,
         key_field: None,
-        encoding: EncodingConfig::from(StandardEncodings::Json),
+        encoding: EncodingConfig::from(StandardEncodings::Json).into(),
         batch: Default::default(),
         compression: KafkaCompression::None,
         auth: Default::default(),
         socket_timeout_ms: 60000,
         message_timeout_ms: 300000,
         librdkafka_options: Default::default(),
-        headers_field: None,
+        headers_key: None,
+        acknowledgements: Default::default(),
     };
     let healthy = kafka_healthcheck(kafka_sink_config.clone());
     if !healthy.0 {
@@ -100,8 +73,9 @@ pub async fn export_json_result_to_file(task_id: String, file_path: String, data
     let config = FileSinkConfig {
         path: target_file_path.try_into().unwrap(),
         idle_timeout_secs: None,
-        encoding: EncodingConfig::from(vector::sinks::file::Encoding::Ndjson),
+        encoding: EncodingConfig::from(vector::sinks::file::Encoding::Ndjson).into(),
         compression: Compression::None,
+        acknowledgements: Default::default(),
     };
 
     let result = export_json_result_to_sink(task_id, file_path, data_dir, config).await;
