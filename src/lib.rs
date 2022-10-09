@@ -15,6 +15,7 @@ use vector::{
     topology::{GLOBAL_RX, GLOBAL_VEC_RX},
     serde::{default_decoding, default_framing_stream_based}, config};
 
+use vector::test_util::runtime;
 use vector::config::SinkConfig;
 use vector::config::ConfigBuilder;
 use vector::config::ComponentKey;
@@ -309,11 +310,11 @@ pub fn poll_vector_events() -> SwEvents {
                 //     target_es = target.to_string_lossy();
                 // }
 
-                for event in value {
+                println!("receiving events, cnt {:?}", value.len());
+                for event in &value {
                     let mut ev = String::new();
                     let mut parsed: bool = false;
                     let mut source_type = String::new();
-
                     // for now, no extra json decoding, will add soon
                     if let Some(value) = event.as_log().get("sw_events") {
                         ev = value.to_string_lossy();
@@ -403,9 +404,10 @@ pub fn start_ingest_to_vector(config: String) -> ffi::ExportResult {
 
     let result = panic::catch_unwind(|| {
         unsafe {
-            let (succeed, err_msg) = block_on(
-                start_vector_service(config)
-            );
+            // let (succeed, err_msg) = block_on(
+            //     start_vector_service(config)
+            // );
+            let (succeed, err_msg) = start_vector_service(config);
             if succeed {
                 return ffi::ExportResult {succeed:true, err_msg: "".to_string()};
             }
@@ -479,7 +481,7 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
     // let res = topology.reload_config_and_respawn(config_builder_new.build().unwrap()).await.unwrap();
 }
 
-pub async fn start_vector_service(config_str: String) -> (bool, String) {
+pub fn start_vector_service(config_str: String) -> (bool, String) {
     let (g_config_tx, g_cofing_rx) = tokio::sync::mpsc::channel(2);
     let g_config_tx_box = Box::new(g_config_tx);
     let g_config_rx_box = Box::new(g_cofing_rx);
@@ -514,47 +516,51 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
     let builder_for_shema = config_builder.clone();
     vector::config::init_log_schema_from_builder(builder_for_shema, true);
 
-
-    let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
-    let mut sources_finished = topology.sources_finished();
-    let config_rx = unsafe { &mut GLOBAL_CONFIG_RX };
     let mut exit_status: bool = true;
     let mut exit_msg: String = "".to_string();
+    let rt = runtime();
 
-    GLOBAL_STAGE_ID.store(1, Ordering::Relaxed);
-    loop {
-        tokio::select! {
-            Some(config_event) = config_rx.as_mut().unwrap().recv() => {
-                println!("got config event: {:?}",  config_event.config_str);
-               
-                match config_event.action {
-                    ConfigAction::EXIT => {
-                        println!("received exit request");
-                        GLOBAL_STAGE_ID.store(config_event.stage_id, Ordering::Relaxed);
-                        exit_status = true;
-                        exit_msg = "receive exit request from sw".to_string();
-                        break;
-                    },
-                    _ => {
-                        reload_vector(config_event, &mut config_builder_copy, &mut topology).await;
+    rt.block_on(async move {
+        let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
+        let mut sources_finished = topology.sources_finished();
+        let config_rx = unsafe { &mut GLOBAL_CONFIG_RX };
+        println!("This is a multi-core vector service");
+        GLOBAL_STAGE_ID.store(1, Ordering::Relaxed);
+        loop {
+            tokio::select! {
+                Some(config_event) = config_rx.as_mut().unwrap().recv() => {
+                    println!("got config event: {:?}",  config_event.config_str);
+                   
+                    match config_event.action {
+                        ConfigAction::EXIT => {
+                            println!("received exit request");
+                            GLOBAL_STAGE_ID.store(config_event.stage_id, Ordering::Relaxed);
+                            // exit_status = true;
+                            // exit_msg = "receive exit request from sw".to_string();
+                            break;
+                        },
+                        _ => {
+                            reload_vector(config_event, &mut config_builder_copy, &mut topology).await;
+                        }
                     }
                 }
+                _ = &mut sources_finished => {
+                    println!("sources finished");
+                    // exit_status = true;
+                    // exit_msg = "sources finished".to_string();
+                    break;
+                },
+                else => {
+                    println!("should not go here")
+                }
             }
-            _ = &mut sources_finished => {
-                println!("sources finished");
-                exit_status = true;
-                exit_msg = "sources finished".to_string();
-                break;
-            },
-            else => {
-                println!("should not go here")
-            }
+            std::thread::sleep(std::time::Duration::from_millis(1000));
         }
-        std::thread::sleep(std::time::Duration::from_millis(1000));
-    }
-
-    // topology.sources_finished().await;
-    topology.stop().await;
+    
+        // topology.sources_finished().await;
+        topology.stop().await;
+    });
+    
 
     (exit_status, exit_msg)
 }
