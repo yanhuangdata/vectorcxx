@@ -433,7 +433,7 @@ dependencies = [
 [[package]]
 name = "buffers"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "bytes 1.1.0",
  "core_common",
@@ -748,7 +748,7 @@ checksum = "5827cebf4670468b8772dd191856768aedcb1b0278a04f989f7766351917b9dc"
 [[package]]
 name = "core_common"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "metrics",
  "serde_json",
@@ -1024,7 +1024,7 @@ checksum = "3ee2393c4a91429dffb4bedf19f4d6abf27d8a732c8ce4980305d782e5426d57"
 [[package]]
 name = "datadog-grok"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "bytes 1.1.0",
  "chrono",
@@ -1054,7 +1054,7 @@ dependencies = [
 [[package]]
 name = "datadog-search-syntax"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "itertools",
  "lazy_static",
@@ -1171,7 +1171,7 @@ dependencies = [
 [[package]]
 name = "dnsmsg-parser"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "data-encoding",
  "thiserror",
@@ -1242,7 +1242,7 @@ checksum = "c34f04666d835ff5d62e058c3995147c06f42fe86ff053337632bca83e42702d"
 [[package]]
 name = "enrichment"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "arc-swap",
  "chrono",
@@ -1352,7 +1352,7 @@ checksum = "e88a8acf291dafb59c2d96e8f59828f3838bb1a70398823ade51a84de6a6deed"
 [[package]]
 name = "fakedata"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "chrono",
  "fakedata_generator",
@@ -1409,7 +1409,7 @@ checksum = "ec54ac60a7f2ee9a97cad9946f9bf629a3bc6a7ae59e68983dc9318f5a54b81a"
 [[package]]
 name = "file-source"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "bstr",
  "bytes 1.1.0",
@@ -2345,7 +2345,7 @@ dependencies = [
 [[package]]
 name = "lookup"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "inherent",
  "lalrpop",
@@ -3171,7 +3171,7 @@ checksum = "58893f751c9b0412871a09abd62ecd2a00298c6c83befa223ef98c52aef40cbe"
 [[package]]
 name = "portpicker"
 version = "1.0.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "rand 0.8.4",
 ]
@@ -3958,7 +3958,7 @@ dependencies = [
 [[package]]
 name = "shared"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "bytes 1.1.0",
  "chrono",
@@ -4694,7 +4694,7 @@ dependencies = [
 [[package]]
 name = "tracing-limit"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "ansi_term",
  "dashmap",
@@ -5029,7 +5029,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "vector"
 version = "0.19.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "async-compression",
  "async-graphql",
@@ -5145,7 +5145,7 @@ dependencies = [
 [[package]]
 name = "vector-api-client"
 version = "0.1.2"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -5168,7 +5168,7 @@ dependencies = [
 [[package]]
 name = "vector_core"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "async-graphql",
  "async-trait",
@@ -5250,7 +5250,7 @@ checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 [[package]]
 name = "vrl"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "bytes 1.1.0",
  "indoc",
@@ -5266,7 +5266,7 @@ dependencies = [
 [[package]]
 name = "vrl-cli"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "bytes 1.1.0",
  "exitcode",
@@ -5287,7 +5287,7 @@ dependencies = [
 [[package]]
 name = "vrl-compiler"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "bitflags",
  "bytes 1.1.0",
@@ -5310,7 +5310,7 @@ dependencies = [
 [[package]]
 name = "vrl-diagnostic"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "codespan-reporting",
  "termcolor",
@@ -5319,7 +5319,7 @@ dependencies = [
 [[package]]
 name = "vrl-parser"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "lalrpop",
  "lalrpop-util",
@@ -5333,7 +5333,7 @@ dependencies = [
 [[package]]
 name = "vrl-stdlib"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-lib#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector_lib_19#d549bbbefa8b6023a0080a1c8e4ac11fe2942bba"
 dependencies = [
  "base64",
  "bytes 1.1.0",
