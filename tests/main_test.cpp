@@ -121,16 +121,20 @@ void consume_and_verify_events(uint32_t expected) {
             // auto target_es = result.target;
             // std::cout << " target_es: " << target_es << ", parsed: " << result.parsed  << std::endl;
             time_t start_t = time(NULL);
+            uint32_t inside = 0;
             for (auto& ev : result.events) {
                 // std::cout << "expectec:  " << expected << "cnt_a:  " << cnt_a << ", cnt_b:  " << cnt_b << ", cnt_wrong:  " << cnt_wrong << std::endl;
                 cnt_a += (ev.target == "table_a" ? 1 : 0);
                 cnt_b += (ev.target == "table_b" ? 1 : 0);
                 // cnt_wrong += (ev.target != target_es ? 1 : 0);
-                // std::cout << "target: " << ev.target << ", source_type: " << ev.source_type << ", message: " << ev.message << std::endl;
+                if (inside == 0 || inside == result.events.size() - 1) {
+                    std::cout << "target: " << ev.target << ", parsed: " << ev.parsed << ", source_type: " << ev.source_type << ", message: " << ev.message << std::endl;
+                }
                 // std::cout << ev.timestamp << std::endl;
 
                 --expected;
                 ++total;
+                ++inside;
             }
             time_t end_t = time(NULL);
             std::cout << "time: " << ctime(&start_t)<< "polled events, size: " << result.events.size() << ", " << total << ", " << expected << std::endl;
@@ -276,9 +280,15 @@ TEST_CASE("test cpp poll with http json array") {
             "address": "0.0.0.0:9099",
             "encoding": "json",
             "headers": [
-                "-Target-Es"
+                "-Target-Es",
+                "X-NILE-PARSED"
             ],
             "type": "http"
+        },
+        "sw_source_vector_test": {
+            "address": "0.0.0.0:9999",
+            "type": "vector",
+            "version": "1"
         }
     },
     "transforms": {
@@ -286,7 +296,14 @@ TEST_CASE("test cpp poll with http json array") {
             "inputs": [
                 "sw_source_df_sw_vector"
             ],
-            "source": "if exists(.sw_events) {. = unnest!(.sw_events)}\n",
+            "source": "",
+            "type": "remap"
+        },
+        "sw_transform_vector_test": {
+            "inputs": [
+                "sw_source_vector_test"
+            ],
+            "source": "._target_es = \"vector_es\"",
             "type": "remap"
         },
         "sw_final_transform": {

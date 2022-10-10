@@ -312,21 +312,29 @@ pub fn poll_vector_events() -> SwEvents {
 
                 println!("receiving events, cnt {:?}", value.len());
                 for event in &value {
-                    let mut ev = String::new();
+                    // let mut ev = String::new();
                     let mut parsed: bool = false;
                     let mut source_type = String::new();
                     // for now, no extra json decoding, will add soon
-                    if let Some(value) = event.as_log().get("sw_events") {
-                        ev = value.to_string_lossy();
-                        parsed = true;
-                    // } else if let Some(value) = event.as_log().get(default_msg_key){
-                    //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
-                    // } else if let Some(value) = event.as_log().get("_message"){
-                    //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
-                    // } else if source_type == "kafka" {
-                    //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
-                    } else {
-                        ev = serde_json::to_string(event.as_log()).unwrap();
+                    // if let Some(value) = event.as_log().get("sw_events") {
+                    //     ev = value.to_string_lossy();
+                    //     parsed = true;
+                    // // } else if let Some(value) = event.as_log().get(default_msg_key){
+                    // //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
+                    // // } else if let Some(value) = event.as_log().get("_message"){
+                    // //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
+                    // // } else if source_type == "kafka" {
+                    // //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
+                    // } else {
+                    //     ev = serde_json::to_string(event.as_log()).unwrap();
+                    // }
+
+                    let mut ev = serde_json::to_string(event.as_log()).unwrap();
+
+                    if let Some(value) = event.as_log().get("X-NILE-PARSED") {
+                        if !value.is_empty() {
+                            parsed = true;
+                        }
                     }
 
                     // let ts_key = vector::config::log_schema().timestamp_key();
