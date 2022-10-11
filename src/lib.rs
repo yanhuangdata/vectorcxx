@@ -2,7 +2,7 @@ mod topology;
 use tokio_test::block_on;
 use std::panic;
 use std::sync::{Arc, Mutex};
-use crate::ffi::{ExportResult, KafkaSinkParams, send_event_to_sw, SwEvent, SwEvents};
+use crate::ffi::{ExportResult, KafkaSinkParams, SwEvent, SwEvents};
 // use futures::executor::block_on;
 use vector::{
     config::Config, config::format,
@@ -76,18 +76,10 @@ mod ffi {
     }
 
 
-    unsafe extern "C++" {
-        include!("vectorcxx/src/sw_utils.h");
-
-        pub fn send_event_to_sw(event: String) -> bool;
-        pub fn send_events_to_sw(events: Vec<SwEvent>) -> bool;
-    }
-
     extern "Rust" {
         fn start_topology(file_path: String, data_dir: String) -> bool;
         fn export_to_kafka(task_id: String, file_path: String, data_dir: String, sink_config: KafkaSinkParams) -> ExportResult;
         fn export_to_file(task_id: String, file_path: String, data_dir: String, sink_config: FileSinkParams) -> ExportResult;
-        fn start_sw_sink_vec_test() -> ExportResult;
         fn start_ingest_to_vector(config: String) -> ExportResult;
         fn crud_vector_config(action: String, ids: Vec<String>, config_str: String, stage_id: u32) -> bool;
         fn poll_vector_events() -> SwEvents;
@@ -114,14 +106,6 @@ pub static mut GLOBAL_CONFIG_TX: Option<&mut tokio::sync::mpsc::Sender<ConfigEve
 pub static mut GLOBAL_CONFIG_RX: Option<&mut tokio::sync::mpsc::Receiver<ConfigEvent>> = None;
 static GLOBAL_STAGE_ID: AtomicU32 = AtomicU32::new(0);
 
-
-pub fn start_sw_sink_vec_test() -> ffi::ExportResult {
-    unsafe {
-        // ffi::send_event_to_sw("something".to_string());
-        let (succeed, err_msg) = block_on(ingest_to_blackhole(ffi::send_events_to_sw));
-        return ffi::ExportResult {succeed:succeed, err_msg: err_msg};
-    }
-}
 
 pub fn start_topology(file_path: String, data_dir: String) -> bool {
     println!("starting topology with await with params");
