@@ -15,6 +15,7 @@ use vector::{
     topology::{GLOBAL_RX, GLOBAL_VEC_RX},
     serde::{default_decoding, default_framing_stream_based}, config};
 
+use vector::test_util::runtime;
 use vector::config::SinkConfig;
 use vector::config::ConfigBuilder;
 use vector::config::ComponentKey;
@@ -47,14 +48,15 @@ mod ffi {
     }
 
     pub struct SwEvent {
-        // pub target: String,
+        pub parsed: bool,
+        pub target: String,
+        pub source_type: String,
         pub message: String,
         // pub timestamp: i64,
     }
 
     pub struct SwEvents {
-        pub parsed: bool,
-        pub target: String,
+        // pub target: String,
         pub events: Vec<SwEvent>,
     }
 
@@ -241,6 +243,9 @@ pub async fn ingest_to_blackhole(f: fn(v: Vec<ffi::SwEvent>) -> bool) -> (bool, 
                         // let ts_key = vector::config::log_schema().timestamp_key();
                         // let ts = event.as_log().get(ts_key).unwrap().as_timestamp().unwrap().timestamp_millis();
                         let new_event = ffi::SwEvent {
+                            parsed: false,
+                            target: "whatever".to_string(),
+                            source_type: "".to_string(),
                             message: ev,
                             // timestamp: ts
                         };
@@ -273,35 +278,47 @@ pub fn poll_vector_events() -> SwEvents {
     let out_rx = unsafe { &mut GLOBAL_VEC_RX };
     let ten_millis = std::time::Duration::from_millis(1000);
     let mut events_list: Vec<ffi::SwEvent> = Vec::new();
-    let mut target_es = String::new();
-    let mut parsed: bool = false;
-    // let default_msg_key = vector::config::log_schema().message_key();
+    // let mut target_es = String::new();
+    // let mut parsed: bool = false;
+    // let mut source_type = String::new();
+    let default_msg_key = vector::config::log_schema().message_key();
+    let source_type_key = vector::config::log_schema().source_type_key();
 
     if let Some(rx) = out_rx {
         match rx.try_next() {
             Ok(Some(value)) => {
                 // println!("\nevent is {:?}", value[0].as_log());
-                if let Some(target) = value[0].as_log().get("-Target-Es") {
-                    target_es = target.to_string_lossy();
-                } else if let Some(target) = value[0].as_log().get("_target_es") {
-                    target_es = target.to_string_lossy();
-                }
+                // if let Some(target) = value[0].as_log().get("-Target-Es") {
+                //     target_es = target.to_string_lossy();
+                // } else if let Some(target) = value[0].as_log().get("_target_es") {
+                //     target_es = target.to_string_lossy();
+                // }
 
-                if let Some(event) = value[0].as_log().get("sw_events") {
-                    parsed = true;
-                } 
-
-                for event in value {
-                    let mut ev = String::new();
+                println!("receiving events, cnt {:?}", value.len());
+                for event in &value {
+                    // let mut ev = String::new();
+                    let mut parsed: bool = false;
+                    let mut source_type = String::new();
                     // for now, no extra json decoding, will add soon
-                    if let Some(value) = event.as_log().get("sw_events") {
-                        ev = value.to_string_lossy();
-                    // } else if let Some(value) = event.as_log().get(default_msg_key){
-                    //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
-                    // } else if let Some(value) = event.as_log().get("_message"){
-                    //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
-                    } else {
-                        ev = serde_json::to_string(event.as_log()).unwrap();
+                    // if let Some(value) = event.as_log().get("sw_events") {
+                    //     ev = value.to_string_lossy();
+                    //     parsed = true;
+                    // // } else if let Some(value) = event.as_log().get(default_msg_key){
+                    // //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
+                    // // } else if let Some(value) = event.as_log().get("_message"){
+                    // //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
+                    // // } else if source_type == "kafka" {
+                    // //     ev = event.as_log().get(default_msg_key).unwrap().to_string_lossy();
+                    // } else {
+                    //     ev = serde_json::to_string(event.as_log()).unwrap();
+                    // }
+
+                    let mut ev = serde_json::to_string(event.as_log()).unwrap();
+
+                    if let Some(value) = event.as_log().get("X-NILE-PARSED") {
+                        if !value.is_empty() {
+                            parsed = true;
+                        }
                     }
 
                     // let ts_key = vector::config::log_schema().timestamp_key();
@@ -313,8 +330,21 @@ pub fn poll_vector_events() -> SwEvents {
                     //         ts = timestamp.timestamp_millis();
                     //     }
                     // }
+                    let mut target_event_set = String::new();
+                    if let Some(target) = event.as_log().get("-Target-Es") {
+                        target_event_set = target.to_string_lossy();
+                    } else if let Some(target) = event.as_log().get("_target_es") {
+                        target_event_set = target.to_string_lossy();
+                    }
+    
+                    if let Some(value) = event.as_log().get(source_type_key) {
+                        source_type = value.to_string_lossy();
+                    } 
 
                     let new_event = ffi::SwEvent {
+                        parsed,
+                        target: target_event_set,
+                        source_type,
                         message: ev,
                     };
                     events_list.push(new_event);
@@ -332,9 +362,10 @@ pub fn poll_vector_events() -> SwEvents {
     }
 
     SwEvents {
-        parsed,
-        target: target_es,
+        // parsed,
+        // target: target_es,
         events: events_list,
+        // source_type,
     }
 }
 
@@ -365,9 +396,10 @@ pub fn start_ingest_to_vector(config: String) -> ffi::ExportResult {
 
     let result = panic::catch_unwind(|| {
         unsafe {
-            let (succeed, err_msg) = block_on(
-                start_vector_service(config)
-            );
+            // let (succeed, err_msg) = block_on(
+            //     start_vector_service(config)
+            // );
+            let (succeed, err_msg) = start_vector_service(config);
             if succeed {
                 return ffi::ExportResult {succeed:true, err_msg: "".to_string()};
             }
@@ -441,7 +473,7 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
     // let res = topology.reload_config_and_respawn(config_builder_new.build().unwrap()).await.unwrap();
 }
 
-pub async fn start_vector_service(config_str: String) -> (bool, String) {
+pub fn start_vector_service(config_str: String) -> (bool, String) {
     let (g_config_tx, g_cofing_rx) = tokio::sync::mpsc::channel(2);
     let g_config_tx_box = Box::new(g_config_tx);
     let g_config_rx_box = Box::new(g_cofing_rx);
@@ -476,47 +508,51 @@ pub async fn start_vector_service(config_str: String) -> (bool, String) {
     let builder_for_shema = config_builder.clone();
     vector::config::init_log_schema_from_builder(builder_for_shema, true);
 
-
-    let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
-    let mut sources_finished = topology.sources_finished();
-    let config_rx = unsafe { &mut GLOBAL_CONFIG_RX };
     let mut exit_status: bool = true;
     let mut exit_msg: String = "".to_string();
+    let rt = runtime();
 
-    GLOBAL_STAGE_ID.store(1, Ordering::Relaxed);
-    loop {
-        tokio::select! {
-            Some(config_event) = config_rx.as_mut().unwrap().recv() => {
-                println!("got config event: {:?}",  config_event.config_str);
-               
-                match config_event.action {
-                    ConfigAction::EXIT => {
-                        println!("received exit request");
-                        GLOBAL_STAGE_ID.store(config_event.stage_id, Ordering::Relaxed);
-                        exit_status = true;
-                        exit_msg = "receive exit request from sw".to_string();
-                        break;
-                    },
-                    _ => {
-                        reload_vector(config_event, &mut config_builder_copy, &mut topology).await;
+    rt.block_on(async move {
+        let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
+        let mut sources_finished = topology.sources_finished();
+        let config_rx = unsafe { &mut GLOBAL_CONFIG_RX };
+        println!("This is a multi-core vector service");
+        GLOBAL_STAGE_ID.store(1, Ordering::Relaxed);
+        loop {
+            tokio::select! {
+                Some(config_event) = config_rx.as_mut().unwrap().recv() => {
+                    println!("got config event: {:?}",  config_event.config_str);
+                   
+                    match config_event.action {
+                        ConfigAction::EXIT => {
+                            println!("received exit request");
+                            GLOBAL_STAGE_ID.store(config_event.stage_id, Ordering::Relaxed);
+                            // exit_status = true;
+                            // exit_msg = "receive exit request from sw".to_string();
+                            break;
+                        },
+                        _ => {
+                            reload_vector(config_event, &mut config_builder_copy, &mut topology).await;
+                        }
                     }
                 }
+                _ = &mut sources_finished => {
+                    println!("sources finished");
+                    // exit_status = true;
+                    // exit_msg = "sources finished".to_string();
+                    break;
+                },
+                else => {
+                    println!("should not go here")
+                }
             }
-            _ = &mut sources_finished => {
-                println!("sources finished");
-                exit_status = true;
-                exit_msg = "sources finished".to_string();
-                break;
-            },
-            else => {
-                println!("should not go here")
-            }
+            std::thread::sleep(std::time::Duration::from_millis(1000));
         }
-        std::thread::sleep(std::time::Duration::from_millis(1000));
-    }
-
-    // topology.sources_finished().await;
-    topology.stop().await;
+    
+        // topology.sources_finished().await;
+        topology.stop().await;
+    });
+    
 
     (exit_status, exit_msg)
 }
