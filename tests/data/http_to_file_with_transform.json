@@ -1,0 +1,29 @@
+{
+  "data_dir": "/tmp/vector/",
+  "sources": {
+    "source_http": {
+      "type": "http",
+      "address": "0.0.0.0:9999",
+      "encoding": "text"
+    }
+  },
+  "transforms": {
+    "transform_remap_field": {
+      "type": "remap",
+      "inputs": ["source_*"],
+      "source": "._source = \"my_source\""
+    }
+  },
+  "sinks": {
+    "sink_file": {
+      "type": "file",
+      "inputs": [
+        "transform_*"
+      ],
+      "encoding": {
+        "codec": "ndjson"
+      },
+      "path": "/tmp/vector_test_sink.log"
+    }
+  }
+}

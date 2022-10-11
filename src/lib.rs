@@ -4,9 +4,13 @@ use tokio_test::block_on;
 use std::panic;
 use std::sync::{Arc, Mutex};
 use crate::ffi::{ExportResult, KafkaSinkParams, SwEvent, SwEvents};
+use std::sync::Once;
+use std::fmt::{Debug, Display};
+
 // use futures::executor::block_on;
-use tracing::info;
-use tracing_subscriber;
+use tracing::{debug, info, error, Level};
+use time::macros::format_description;
+
 use vector::{
     config::Config, config::format,
     sinks::console::{ConsoleSinkConfig, Encoding, Target},
@@ -29,7 +33,6 @@ use cxx::{CxxString, SharedPtr};
 use vector::topology::RunningTopology;
 use std::sync::atomic::{Ordering, AtomicU32};
 use serde_json;
-
 
 #[cxx::bridge(namespace = "vectorcxx")]
 mod ffi {
@@ -90,12 +93,19 @@ mod ffi {
     }
 }
 
+#[derive(Debug)]
 enum ConfigAction {
     INIT,
     ADD,
     UPDATE,
     DELETE,
     EXIT,
+}
+
+impl std::fmt::Display for ConfigAction {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        std::fmt::Debug::fmt(self, f)
+    }
 }
 
 pub struct ConfigEvent {
@@ -105,13 +115,23 @@ pub struct ConfigEvent {
     stage_id: u32,
 }
 
+pub fn setup_logging() {
+    let timer = tracing_subscriber::fmt::time::time();
+    let collector = tracing_subscriber::fmt()
+        .with_max_level(Level::DEBUG)
+        // disable color to make CLion happy
+        .with_ansi(false)
+        .with_thread_ids(true)
+        .with_timer(timer)
+        .finish();
+    tracing::subscriber::set_global_default(collector).expect("setting default subscriber failed");
+}
+
 pub static mut GLOBAL_CONFIG_TX: Option<&mut tokio::sync::mpsc::Sender<ConfigEvent>> = None;
 pub static mut GLOBAL_CONFIG_RX: Option<&mut tokio::sync::mpsc::Receiver<ConfigEvent>> = None;
 static GLOBAL_STAGE_ID: AtomicU32 = AtomicU32::new(0);
 
 pub fn start_topology(file_path: String, data_dir: String) -> bool {
-    tracing_subscriber::fmt::init();
-
     info!("starting topology");
     let result = panic::catch_unwind(|| {
         block_on(topology::start(file_path, data_dir))
@@ -477,7 +497,13 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
     // let res = topology.reload_config_and_respawn(config_builder_new.build().unwrap()).await.unwrap();
 }
 
+static START: Once = Once::new();
+
 pub fn start_vector_service(config_str: String) -> (bool, String) {
+    START.call_once(|| {
+        setup_logging();
+    });
+
     let (g_config_tx, g_config_rx) = tokio::sync::mpsc::channel(2);
     let g_config_tx_box = Box::new(g_config_tx);
     let g_config_rx_box = Box::new(g_config_rx);
@@ -485,32 +511,20 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
         GLOBAL_CONFIG_TX = Some(Box::leak(g_config_tx_box));
         GLOBAL_CONFIG_RX = Some(Box::leak(g_config_rx_box));
     }
-    info!("start vector service, config {:?}", config_str);
+    info!("start vector service");
+    debug!("start vector service with config; config={:?}", config_str);
 
-    // let mut res = match config::format::deserialize(config_str.as_str(), Some(config::Format::Json)) {
-    //     // 打开文件成功，将file句柄赋值给f
-    //     Ok(builder) => builder,
-    //     // 打开文件失败，将错误返回(向上传播)
-    //     Err(e) => {
-    //         info!("failed to deserialize: {:?}", e);
-    //         return (false, "failed to deserialize".to_string());
-    //     },
-    // };
-    // let config_builder: ConfigBuilder = config::format::deserialize(config_str.as_str(), Some(config::Format::Json)).unwrap();
     let res = config::format::deserialize(config_str.as_str(), Some(config::Format::Json));
     if res.is_err() {
-        info!("deserialize error {:?}", res.unwrap_err());
+        error!("deserialize error {:?}", res.unwrap_err());
         return (false, "failed to deserialize config string for".to_string());
     }
     let config_builder: ConfigBuilder = res.unwrap();
-    info!("ConfigBuilder sources {:?}", config_builder.sources);
-    info!("ConfigBuilder transforms {:?}", config_builder.transforms);
-    info!("ConfigBuilder sinks {:?}", config_builder.sinks);
-    info!("ConfigBuilder globals {:?}", config_builder.global);
+    debug!("config_builder deserialized; sources={:?} transforms={:?} sinks={:?} global={:?}", config_builder.sources, config_builder.transforms, config_builder.sinks, config_builder.global);
 
     let mut config_builder_copy = config_builder.clone();
-    let builder_for_shema = config_builder.clone();
-    vector::config::init_log_schema_from_builder(builder_for_shema, true);
+    let builder_for_schema = config_builder.clone();
+    vector::config::init_log_schema_from_builder(builder_for_schema, false);
 
     let mut exit_status: bool = true;
     let mut exit_msg: String = "".to_string();
@@ -525,7 +539,7 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
         loop {
             tokio::select! {
                 Some(config_event) = config_rx.as_mut().unwrap().recv() => {
-                    info!("got config event: {:?}",  config_event.config_str);
+                    info!("receive config event action={:?} config={:?}", config_event.action.to_string().as_str(), config_event.config_str);
                    
                     match config_event.action {
                         ConfigAction::EXIT => {
@@ -572,10 +586,11 @@ pub fn crud_vector_config(action: String, ids: Vec<String>, config_str: String, 
             _ => ConfigAction::INIT,
         }
     };
-    info!("crud vector config to {:?}", config_str);
+    info!("crud vector config to action={:?}", action.as_str());
     // let config_tx = unsafe { &mut GLOBAL_CONFIG_TX };
     unsafe {
         if let Some(sender) = &mut GLOBAL_CONFIG_TX {
+            debug!("sending config event: action={:?} config={:?}", action.as_str(), config_str);
             sender.try_send(ConfigEvent {
                 action: get_action(action.as_str()),
                 config_ids: ids,

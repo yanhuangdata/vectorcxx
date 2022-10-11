@@ -1,0 +1,9 @@
+{
+  "transforms": {
+    "transform_add_field": {
+      "type": "remap",
+      "inputs": ["source_*"],
+      "source": ".age = 42"
+    }
+  }
+}

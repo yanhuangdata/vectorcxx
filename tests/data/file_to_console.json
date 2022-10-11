@@ -1,18 +1,19 @@
 {
-  "data_dir": "/var/lib/vector/",
+  "data_dir": "/tmp/vector/",
   "sources": {
-    "file_input": {
+    "source_file": {
       "type": "file",
+      "read_from": "beginning",
       "include": [
-        "/var/log/system.log"
+        "/tmp/vector_test_source.log"
       ]
     }
   },
   "sinks": {
-    "console_sink": {
+    "sink_console": {
       "type": "console",
       "inputs": [
-        "file_input"
+        "source_*"
       ],
       "target": "stdout",
       "encoding": {

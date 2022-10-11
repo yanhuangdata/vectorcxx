@@ -1,18 +1,18 @@
 // use tempfile::tempdir;
-use vector::{
-    config::Config,
-    sinks::console::{ConsoleSinkConfig, Encoding, Target},
-    sources::file::FileConfig,
-    transforms::remap::RemapConfig,
-    test_util::{start_topology, start_topology_new},
-    kafka::KafkaCompression,
-    sinks::kafka::config::KafkaSinkConfig,
-    sinks::file::{FileSinkConfig, Compression},
-    sinks::util::encoding::{EncodingConfig, StandardEncodings},
-};
-use vector::config::SinkConfig;
 use rdkafka::config::ClientConfig;
 use rdkafka::consumer::{BaseConsumer, Consumer};
+use vector::config::SinkConfig;
+use vector::{
+    config::Config,
+    kafka::KafkaCompression,
+    sinks::console::{ConsoleSinkConfig, Encoding, Target},
+    sinks::file::{Compression, FileSinkConfig},
+    sinks::kafka::config::KafkaSinkConfig,
+    sinks::util::encoding::{EncodingConfig, StandardEncodings},
+    sources::file::FileConfig,
+    test_util::{start_topology, start_topology_new},
+    transforms::remap::RemapConfig,
+};
 
 pub async fn start(file_path: String, data_dir: String) {
     let mut old_config = Config::builder();
@@ -32,11 +32,7 @@ pub async fn start(file_path: String, data_dir: String) {
     let demo_logs = file_config;
 
     old_config.add_source("in", demo_logs);
-    old_config.add_sink(
-        "console_sink_1",
-        &["in"],
-        console_sink,
-    );
+    old_config.add_sink("console_sink_1", &["in"], console_sink);
 
     let (topology, _crash) = start_topology(old_config.build().unwrap(), false).await;
 
@@ -51,8 +47,10 @@ fn kafka_healthcheck(config: KafkaSinkConfig) -> (bool, String) {
         .create()
         .expect("Consumer creation failed");
 
-    let metadata = consumer
-        .fetch_metadata(Some(config.topic.as_str()), core::time::Duration::from_secs(3));
+    let metadata = consumer.fetch_metadata(
+        Some(config.topic.as_str()),
+        core::time::Duration::from_secs(3),
+    );
 
     // check if server could be connected
     if metadata.is_err() {
@@ -74,7 +72,13 @@ fn kafka_healthcheck(config: KafkaSinkConfig) -> (bool, String) {
     (true, "".to_string())
 }
 
-pub async fn export_json_result_to_kafka(task_id: String, file_path: String, data_dir: String, kafka_server: String, kafka_topic: String) -> (bool, String) {
+pub async fn export_json_result_to_kafka(
+    task_id: String,
+    file_path: String,
+    data_dir: String,
+    kafka_server: String,
+    kafka_topic: String,
+) -> (bool, String) {
     let kafka_sink_config = KafkaSinkConfig {
         bootstrap_servers: kafka_server,
         topic: kafka_topic,
@@ -96,7 +100,12 @@ pub async fn export_json_result_to_kafka(task_id: String, file_path: String, dat
     return result;
 }
 
-pub async fn export_json_result_to_file(task_id: String, file_path: String, data_dir: String, target_file_path: String) -> (bool, String) {
+pub async fn export_json_result_to_file(
+    task_id: String,
+    file_path: String,
+    data_dir: String,
+    target_file_path: String,
+) -> (bool, String) {
     let config = FileSinkConfig {
         path: target_file_path.try_into().unwrap(),
         idle_timeout_secs: None,
@@ -108,7 +117,12 @@ pub async fn export_json_result_to_file(task_id: String, file_path: String, data
     return result;
 }
 
-pub async fn export_json_result_to_sink<S: SinkConfig + 'static>(task_id: String, file_path: String, data_dir: String, sink: S) -> (bool, String) {
+pub async fn export_json_result_to_sink<S: SinkConfig + 'static>(
+    task_id: String,
+    file_path: String,
+    data_dir: String,
+    sink: S,
+) -> (bool, String) {
     // println!("file_path {}, data_dir {}, kafka_server {}, topic {} ", file_path, data_dir, kafka_server, kafka_topic);
     let mut old_config = Config::builder();
     let sink_type = sink.sink_type().to_string();
@@ -116,7 +130,6 @@ pub async fn export_json_result_to_sink<S: SinkConfig + 'static>(task_id: String
     let source_config_name = format!("{}_{}_for_{}", task_id, "source", sink_type);
     let remap_config_name = format!("{}_{}", task_id, "remap");
     let sink_config_name = format!("{}_{}_to_{}", task_id, "sink", sink_type);
-
 
     let file_config = FileConfig {
         include: vec![std::path::Path::new(&file_path).join("*.json")],
@@ -131,11 +144,7 @@ pub async fn export_json_result_to_sink<S: SinkConfig + 'static>(task_id: String
         ..Default::default()
     };
 
-    old_config.add_sink(
-        sink_config_name,
-        &[remap_config_name.as_str()],
-        sink,
-    );
+    old_config.add_sink(sink_config_name, &[remap_config_name.as_str()], sink);
 
     old_config.add_transform(
         remap_config_name,

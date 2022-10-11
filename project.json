@@ -19,7 +19,8 @@
       "vcpkg": "corrosion"
     },
     {
-      "library": "rdkafka"
+      "library": "rdkafka",
+      "scope": "PRIVATE"
     },
     {
       "package": "OpenSSL",
@@ -43,6 +44,25 @@
     {
       "library": "CoreFoundation",
       "platform": "Darwin"
+    }
+  ],
+  "testDependencies": [
+    {
+      "package": "nlohmann_json",
+      "link": "nlohmann_json::nlohmann_json"
+    },
+    {
+      "package": "spdlog",
+      "link": "spdlog::spdlog",
+      "vcpkg": "spdlog"
+    },
+    {
+      "package": "cpr",
+      "link": "cpr::cpr"
+    },
+    {
+      "package": "fmt",
+      "link": "fmt::fmt"
     }
   ]
 }

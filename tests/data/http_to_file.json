@@ -1,12 +1,10 @@
 {
   "data_dir": "/tmp/vector/",
   "sources": {
-    "source_file": {
-      "type": "file",
-      "read_from": "beginning",
-      "include": [
-        "/tmp/vector_test_source.log"
-      ]
+    "source_http": {
+      "type": "http",
+      "address": "0.0.0.0:9999",
+      "encoding": "text"
     }
   },
   "sinks": {
