@@ -9,7 +9,7 @@
     {
       "name": "default-config-preset",
       "binaryDir": "${sourceDir}/build-$env{CMAKE_BUILD_TYPE_PLATFORM}-x64-cmake",
-      "generator": "Unix Makefiles",
+      "generator": "Ninja",
       "environment": {
         "CMAKE_BUILD_TYPE_PLATFORM": "${presetName}"
       },
