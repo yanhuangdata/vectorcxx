@@ -1,45 +1,53 @@
 mod topology;
 
-use tokio_test::block_on;
-use std::panic;
-use std::sync::{Arc, Mutex};
 use crate::ffi::{ExportResult, KafkaSinkParams, SwEvent, SwEvents};
-use std::sync::Once;
 use std::fmt::{Debug, Display};
+use std::panic;
+use std::sync::Once;
+use std::sync::{Arc, Mutex};
+use tokio_test::block_on;
 
 // use futures::executor::block_on;
-use tracing::{debug, info, error, Level};
 use time::macros::format_description;
+use tracing::{debug, error, info, Level};
 
 use vector::{
-    config::Config, config::format,
+    config,
+    config::format,
+    config::Config,
+    kafka::KafkaCompression,
+    serde::{default_decoding, default_framing_stream_based},
+    sinks::blackhole::BlackholeConfig,
     sinks::console::{ConsoleSinkConfig, Encoding, Target},
-    sources::file::FileConfig, sources::demo_logs::DemoLogsConfig, sources::http::SimpleHttpConfig,
-    sources::util, transforms::remap::RemapConfig, kafka::KafkaCompression,
-    sinks::kafka::config::KafkaSinkConfig, sinks::file::{FileSinkConfig, Compression},
-    sinks::util::encoding::{EncodingConfig, StandardEncodings}, sinks::blackhole::BlackholeConfig,
+    sinks::file::{Compression, FileSinkConfig},
+    sinks::kafka::config::KafkaSinkConfig,
     sinks::memory_queue::MemoryQueueConfig,
+    sinks::util::encoding::{EncodingConfig, StandardEncodings},
+    sources::demo_logs::DemoLogsConfig,
+    sources::file::FileConfig,
+    sources::http::SimpleHttpConfig,
+    sources::util,
     topology::{GLOBAL_RX, GLOBAL_VEC_RX},
-    serde::{default_decoding, default_framing_stream_based}, config};
+    transforms::remap::RemapConfig,
+};
 
-use vector::test_util::runtime;
-use vector::config::SinkConfig;
-use vector::config::ConfigBuilder;
-use vector::config::ComponentKey;
+use cxx::{CxxString, SharedPtr};
 use rdkafka::config::ClientConfig;
 use rdkafka::consumer::{BaseConsumer, Consumer};
-use std::net::{Ipv4Addr, SocketAddr};
-use cxx::{CxxString, SharedPtr};
-use vector::topology::RunningTopology;
-use std::sync::atomic::{Ordering, AtomicU32};
 use serde_json;
+use std::net::{Ipv4Addr, SocketAddr};
+use std::sync::atomic::{AtomicU32, Ordering};
+use vector::config::ComponentKey;
+use vector::config::ConfigBuilder;
+use vector::config::SinkConfig;
+use vector::test_util::runtime;
+use vector::topology::RunningTopology;
 
 #[cxx::bridge(namespace = "vectorcxx")]
 mod ffi {
     pub struct ExportResult {
         pub succeed: bool,
         pub err_msg: String,
-
     }
 
     pub struct KafkaSinkParams {
@@ -66,7 +74,6 @@ mod ffi {
         pub events: Vec<SwEvent>,
     }
 
-
     pub struct SwSharedEvent {
         // pub target: String,
         // pub message: String,
@@ -75,17 +82,25 @@ mod ffi {
         values: Vec<String>,
     }
 
-
     pub struct SwSharedEvents {
         pub target: String,
         pub events: Vec<SwSharedEvent>,
     }
 
-
     extern "Rust" {
         fn start_topology(file_path: String, data_dir: String) -> bool;
-        fn export_to_kafka(task_id: String, file_path: String, data_dir: String, sink_config: KafkaSinkParams) -> ExportResult;
-        fn export_to_file(task_id: String, file_path: String, data_dir: String, sink_config: FileSinkParams) -> ExportResult;
+        fn export_to_kafka(
+            task_id: String,
+            file_path: String,
+            data_dir: String,
+            sink_config: KafkaSinkParams,
+        ) -> ExportResult;
+        fn export_to_file(
+            task_id: String,
+            file_path: String,
+            data_dir: String,
+            sink_config: FileSinkParams,
+        ) -> ExportResult;
         fn start_ingest_to_vector(config: String) -> ExportResult;
         fn poll_vector_events() -> SwEvents;
         fn get_stage_id() -> u32;
@@ -109,9 +124,9 @@ enum ConfigAction {
     EXIT,
 }
 
-impl std::fmt::Display for ConfigAction {
+impl Display for ConfigAction {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+        Debug::fmt(self, f)
     }
 }
 
@@ -139,13 +154,16 @@ static GLOBAL_STAGE_ID: AtomicU32 = AtomicU32::new(0);
 
 pub fn start_topology(file_path: String, data_dir: String) -> bool {
     info!("starting topology");
-    let result = panic::catch_unwind(|| {
-        block_on(topology::start(file_path, data_dir))
-    });
+    let result = panic::catch_unwind(|| block_on(topology::start(file_path, data_dir)));
     return !result.is_err();
 }
 
-pub fn export_to_kafka(task_id: String, file_path: String, data_dir: String, sink_config: KafkaSinkParams) -> ExportResult {
+pub fn export_to_kafka(
+    task_id: String,
+    file_path: String,
+    data_dir: String,
+    sink_config: KafkaSinkParams,
+) -> ExportResult {
     let global_buffer = Arc::new(Mutex::new(String::new()));
     let old_hook = panic::take_hook();
 
@@ -155,35 +173,60 @@ pub fn export_to_kafka(task_id: String, file_path: String, data_dir: String, sin
             let mut global_buffer = global_buffer.lock().unwrap();
 
             if let Some(s) = info.payload().downcast_ref::<&str>() {
-                let panic_msg = format!("{} in file {}, line {}", s, info.location().unwrap().file(), info.location().unwrap().line());
+                let panic_msg = format!(
+                    "{} in file {}, line {}",
+                    s,
+                    info.location().unwrap().file(),
+                    info.location().unwrap().line()
+                );
                 global_buffer.push_str(panic_msg.as_str());
             }
         })
     });
 
     let result = panic::catch_unwind(|| {
-        let (succeed, err_msg) = block_on(
-            topology::export_json_result_to_kafka(task_id, file_path, data_dir, sink_config.url, sink_config.topic)
-        );
+        let (succeed, err_msg) = block_on(topology::export_json_result_to_kafka(
+            task_id,
+            file_path,
+            data_dir,
+            sink_config.url,
+            sink_config.topic,
+        ));
         if succeed {
-            return ExportResult { succeed: true, err_msg: "".to_string() };
+            return ExportResult {
+                succeed: true,
+                err_msg: "".to_string(),
+            };
         }
-        return ExportResult { succeed: false, err_msg };
+        return ExportResult {
+            succeed: false,
+            err_msg,
+        };
     });
 
     panic::set_hook(old_hook);
 
     match result {
-        Ok(res) => {
-            ExportResult { succeed: res.succeed, err_msg: res.err_msg }
-        }
-        Err(err) => {
-            ExportResult { succeed: false, err_msg: format!("panic in export_to_kafka: {:?}", global_buffer.lock().unwrap()) }
-        }
+        Ok(res) => ExportResult {
+            succeed: res.succeed,
+            err_msg: res.err_msg,
+        },
+        Err(err) => ExportResult {
+            succeed: false,
+            err_msg: format!(
+                "panic in export_to_kafka: {:?}",
+                global_buffer.lock().unwrap()
+            ),
+        },
     }
 }
 
-pub fn export_to_file(task_id: String, file_path: String, data_dir: String, sink_config: ffi::FileSinkParams) -> ExportResult {
+pub fn export_to_file(
+    task_id: String,
+    file_path: String,
+    data_dir: String,
+    sink_config: ffi::FileSinkParams,
+) -> ExportResult {
     let global_buffer = Arc::new(Mutex::new(String::new()));
     let old_hook = panic::take_hook();
 
@@ -193,31 +236,50 @@ pub fn export_to_file(task_id: String, file_path: String, data_dir: String, sink
             let mut global_buffer = global_buffer.lock().unwrap();
 
             if let Some(s) = info.payload().downcast_ref::<&str>() {
-                let panic_msg = format!("{} in file {}, line {}", s, info.location().unwrap().file(), info.location().unwrap().line());
+                let panic_msg = format!(
+                    "{} in file {}, line {}",
+                    s,
+                    info.location().unwrap().file(),
+                    info.location().unwrap().line()
+                );
                 global_buffer.push_str(panic_msg.as_str());
             }
         })
     });
 
     let result = panic::catch_unwind(|| {
-        let (succeed, err_msg) = block_on(
-            topology::export_json_result_to_file(task_id, file_path, data_dir, sink_config.target_path)
-        );
+        let (succeed, err_msg) = block_on(topology::export_json_result_to_file(
+            task_id,
+            file_path,
+            data_dir,
+            sink_config.target_path,
+        ));
         if succeed {
-            return ExportResult { succeed: true, err_msg: "".to_string() };
+            return ExportResult {
+                succeed: true,
+                err_msg: "".to_string(),
+            };
         }
-        return ExportResult { succeed: false, err_msg };
+        return ExportResult {
+            succeed: false,
+            err_msg,
+        };
     });
 
     panic::set_hook(old_hook);
 
     match result {
-        Ok(res) => {
-            ExportResult { succeed: res.succeed, err_msg: res.err_msg }
-        }
-        Err(err) => {
-            ExportResult { succeed: false, err_msg: format!("panic in export_to_file: {:?}", global_buffer.lock().unwrap()) }
-        }
+        Ok(res) => ExportResult {
+            succeed: res.succeed,
+            err_msg: res.err_msg,
+        },
+        Err(err) => ExportResult {
+            succeed: false,
+            err_msg: format!(
+                "panic in export_to_file: {:?}",
+                global_buffer.lock().unwrap()
+            ),
+        },
     }
 }
 
@@ -256,7 +318,8 @@ pub async fn ingest_to_blackhole(f: fn(v: Vec<SwEvent>) -> bool) -> (bool, Strin
     };
     config.add_sink("cxx_sink", &["in1"], sink_config);
 
-    let (topology, _crash) = vector::test_util::start_topology(config.build().unwrap(), false).await;
+    let (topology, _crash) =
+        vector::test_util::start_topology(config.build().unwrap(), false).await;
 
     let out_rx = unsafe { &mut GLOBAL_VEC_RX };
     let ten_millis = std::time::Duration::from_millis(1000);
@@ -422,7 +485,12 @@ pub fn start_ingest_to_vector(config: String) -> ExportResult {
             let mut global_buffer = global_buffer.lock().unwrap();
 
             if let Some(s) = info.payload().downcast_ref::<&str>() {
-                let panic_msg = format!("{} in file {}, line {}", s, info.location().unwrap().file(), info.location().unwrap().line());
+                let panic_msg = format!(
+                    "{} in file {}, line {}",
+                    s,
+                    info.location().unwrap().file(),
+                    info.location().unwrap().line()
+                );
                 global_buffer.push_str(panic_msg.as_str());
             }
         })
@@ -435,32 +503,49 @@ pub fn start_ingest_to_vector(config: String) -> ExportResult {
             // );
             let (succeed, err_msg) = start_vector_service(config);
             if succeed {
-                return ExportResult { succeed: true, err_msg: "".to_string() };
+                return ExportResult {
+                    succeed: true,
+                    err_msg: "".to_string(),
+                };
             }
-            return ExportResult { succeed: false, err_msg };
+            return ExportResult {
+                succeed: false,
+                err_msg,
+            };
         }
     });
 
     panic::set_hook(old_hook);
 
     match result {
-        Ok(res) => {
-            ExportResult { succeed: res.succeed, err_msg: res.err_msg }
-        }
-        Err(_) => {
-            ExportResult { succeed: false, err_msg: format!("panic in start_ingest_to_vector: {:?}", global_buffer.lock().unwrap()) }
-        }
+        Ok(res) => ExportResult {
+            succeed: res.succeed,
+            err_msg: res.err_msg,
+        },
+        Err(_) => ExportResult {
+            succeed: false,
+            err_msg: format!(
+                "panic in start_ingest_to_vector: {:?}",
+                global_buffer.lock().unwrap()
+            ),
+        },
     }
 }
 
-pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut ConfigBuilder, topology: &mut RunningTopology) {
+pub async fn reload_vector(
+    config_event: ConfigEvent,
+    config_builder: &mut ConfigBuilder,
+    topology: &mut RunningTopology,
+) {
     match config_event.action {
         ConfigAction::INIT => {
             // should not go here
         }
         ConfigAction::ADD | ConfigAction::UPDATE => {
             let config_str = &config_event.config_str;
-            let new_builder: ConfigBuilder = config::format::deserialize(config_str.as_str(), Some(config::Format::Json)).unwrap();
+            let new_builder: ConfigBuilder =
+                config::format::deserialize(config_str.as_str(), Some(config::Format::Json))
+                    .unwrap();
             let mut config_builder_new = config_builder.clone();
             if new_builder.sources.len() > 0 {
                 config_builder_new.sources.extend(new_builder.sources);
@@ -469,9 +554,15 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
                 config_builder_new.transforms.extend(new_builder.transforms);
             }
             info!("ConfigBuilder sources {:?}", config_builder_new.sources);
-            info!("ConfigBuilder transforms {:?}", config_builder_new.transforms);
+            info!(
+                "ConfigBuilder transforms {:?}",
+                config_builder_new.transforms
+            );
             info!("ConfigBuilder sinks {:?}", config_builder_new.sinks);
-            topology.reload_config_and_respawn(config_builder_new.build().unwrap()).await.unwrap();
+            topology
+                .reload_config_and_respawn(config_builder_new.build().unwrap())
+                .await
+                .unwrap();
         }
         ConfigAction::DELETE => {
             // source and transform can not use same name in vector
@@ -486,9 +577,15 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
                 }
             }
             info!("ConfigBuilder sources {:?}", config_builder_new.sources);
-            info!("ConfigBuilder transforms {:?}", config_builder_new.transforms);
+            info!(
+                "ConfigBuilder transforms {:?}",
+                config_builder_new.transforms
+            );
             info!("ConfigBuilder sinks {:?}", config_builder_new.sinks);
-            topology.reload_config_and_respawn(config_builder_new.build().unwrap()).await.unwrap();
+            topology
+                .reload_config_and_respawn(config_builder_new.build().unwrap())
+                .await
+                .unwrap();
         }
         ConfigAction::EXIT => {
             // should not go here
@@ -519,7 +616,13 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
         return (false, "failed to deserialize config string for".to_string());
     }
     let config_builder: ConfigBuilder = res.unwrap();
-    debug!("config_builder deserialized; sources={:?} transforms={:?} sinks={:?} global={:?}", config_builder.sources, config_builder.transforms, config_builder.sinks, config_builder.global);
+    debug!(
+        "config_builder deserialized; sources={:?} transforms={:?} sinks={:?} global={:?}",
+        config_builder.sources,
+        config_builder.transforms,
+        config_builder.sinks,
+        config_builder.global
+    );
 
     let mut config_builder_copy = config_builder.clone();
     let builder_for_schema = config_builder.clone();
@@ -538,7 +641,6 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
             tokio::select! {
                 Some(config_event) = config_rx.as_mut().unwrap().recv() => {
                     info!("receive config event action={:?} config={:?}", config_event.action.to_string().as_str(), config_event.config_str);
-                   
                     match config_event.action {
                         ConfigAction::EXIT => {
                             info!("received exit request");
@@ -569,26 +671,30 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
         topology.stop().await;
     });
 
-
     (exit_status, exit_msg)
 }
 
 fn send_config_event(action: String, ids: Vec<String>, config_str: String) -> bool {
-    let get_action = |action| {
-        match action {
-            "init" => ConfigAction::INIT,
-            "add" => ConfigAction::ADD,
-            "update" => ConfigAction::UPDATE,
-            "delete" => ConfigAction::DELETE,
-            "exit" => ConfigAction::EXIT,
-            _ => ConfigAction::INIT,
-        }
+    let get_action = |action| match action {
+        "init" => ConfigAction::INIT,
+        "add" => ConfigAction::ADD,
+        "update" => ConfigAction::UPDATE,
+        "delete" => ConfigAction::DELETE,
+        "exit" => ConfigAction::EXIT,
+        _ => ConfigAction::INIT,
     };
-    info!("about to send vector config event action={:?}", action.as_str());
+    info!(
+        "about to send vector config event action={:?}",
+        action.as_str()
+    );
     // let config_tx = unsafe { &mut GLOBAL_CONFIG_TX };
     unsafe {
         if let Some(sender) = &mut GLOBAL_CONFIG_TX {
-            debug!("sending config event: action={:?} config={:?}", action.as_str(), config_str);
+            debug!(
+                "sending config event: action={:?} config={:?}",
+                action.as_str(),
+                config_str
+            );
             sender.try_send(ConfigEvent {
                 action: get_action(action.as_str()),
                 config_ids: ids,
