@@ -1,0 +1,24 @@
+{
+  "data_dir": "/tmp/vector/",
+  "sources": {
+    "source_file": {
+      "type": "file",
+      "read_from": "beginning",
+      "include": [
+        "/tmp/vector_test_source.log"
+      ]
+    }
+  },
+  "sinks": {
+    "sink_console": {
+      "type": "console",
+      "inputs": [
+        "source_*"
+      ],
+      "target": "stdout",
+      "encoding": {
+        "codec": "ndjson"
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "sources": {
+    "source_http": {
+      "type": "http",
+      "address": "0.0.0.0:9999",
+      "encoding": "text"
+    }
+  }
+}

@@ -1,31 +1,34 @@
 {
-  "version": 2,
+  "version": 3,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 20,
+    "minor": 21,
     "patch": 0
   },
   "configurePresets": [
     {
       "name": "default-config-preset",
       "binaryDir": "${sourceDir}/build-$env{CMAKE_BUILD_TYPE_PLATFORM}-x64-cmake",
-      "generator": "Unix Makefiles",
+      "generator": "Ninja",
       "environment": {
         "CMAKE_BUILD_TYPE_PLATFORM": "${presetName}"
       },
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-      }
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "Boost_NO_WARN_NEW_VERSIONS": "ON",
+        "CMAKE_EXE_LINKER_FLAGS": "$env{CMAKE_LINKER_FLAGS}"
+      },
+      "hidden": true
     },
     {
       "name": "debug-config-preset",
       "inherits": "default-config-preset",
       "displayName": "Debug Preset",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_VERBOSE_BUILD": "true"
-      }
+        "CMAKE_BUILD_TYPE": "Debug"        
+      },
+      "hidden": true
     },
     {
       "name": "relwithdebinfo-config-preset",
@@ -33,7 +36,8 @@
       "displayName": "RelWithDebInfo Preset",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
+      },
+      "hidden": true
     },
     {
       "name": "release-config-preset",
@@ -41,71 +45,74 @@
       "displayName": "Release Preset",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
-      }
+      },
+      "hidden": true
+    },
+    {
+      "name": "osx-config-preset",
+      "displayName": "macOS Preset",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "hidden": true
+    },
+    {
+      "name": "linux-config-preset",
+      "displayName": "Linux Preset",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "hidden": true
     },
     {
       "name": "debug-osx",
-      "inherits": "debug-config-preset"
+      "inherits": ["debug-config-preset", "osx-config-preset"]
     },
     {
       "name": "debug-linux",
-      "inherits": "debug-config-preset"
+      "inherits": ["debug-config-preset", "linux-config-preset"]
     },
     {
       "name": "relwithdebinfo-osx",
-      "inherits": "relwithdebinfo-config-preset"
+      "inherits": ["relwithdebinfo-config-preset", "osx-config-preset"]
     },
     {
       "name": "relwithdebinfo-linux",
-      "inherits": "relwithdebinfo-config-preset"
+      "inherits": ["relwithdebinfo-config-preset", "linux-config-preset"]
     },
     {
       "name": "release-osx",
-      "inherits": "release-config-preset"
+      "inherits": ["release-config-preset", "osx-config-preset"]
     },
     {
       "name": "release-linux",
-      "inherits": "release-config-preset"
-    },
-    {
-      "name": "zld-debug-osx",
-      "inherits": "debug-osx",
-      "environment": {
-        "CMAKE_BUILD_TYPE_PLATFORM": "debug-osx"
-      },
-      "cacheVariables": {
-        "CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=/usr/local/bin/zld"
-      }
+      "inherits": ["release-config-preset", "linux-config-preset"]
     }
   ],
   "buildPresets": [
     {
       "name": "debug-osx-build",
+      "jobs": 10,
       "configurePreset": "debug-osx"
     },
     {
       "name": "debug-linux-build",
+      "jobs": 10,
       "configurePreset": "debug-linux"
     },
     {
       "name": "relwithdebinfo-osx-build",
+      "jobs": 10,
       "configurePreset": "relwithdebinfo-osx"
     },
     {
       "name": "relwithdebinfo-linux-build",
+      "jobs": 10,
       "configurePreset": "relwithdebinfo-linux"
-    },
-    {
-      "name": "release-osx-build",
-      "configurePreset": "release-osx"
-    },
-    {
-      "name": "release-linux-build",
-      "configurePreset": "release-linux"
-    },
-    {
-	    "name": "zld-debug-osx-build",
-	    "configurePreset": "zld-debug-osx"
-	  }
+    }
   ]
 }

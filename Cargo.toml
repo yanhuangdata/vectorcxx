@@ -29,9 +29,11 @@ tempfile = "3.2.0"
 futures = "0.3.17"
 tokio = { version = "1.13.0", features = ["test-util"] }
 tokio-test = "0.4.2"
-rdkafka = { version = "0.27.0", default-features = false, features = ["tokio", "libz", "ssl", "zstd", "dynamic-linking"]}
-concurrent-queue = "1.2.4"
+rdkafka = { version = "0.27.0", default-features = false, features = ["tokio", "libz", "ssl", "zstd", "dynamic-linking"] }
 serde_json = { version = "1.0.68" }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3.16", features = ["env-filter", "time", "local-time", "fmt"] }
+time = { version = "0.3.15", features = ["macros"] }
 
 [build]
 jobs = 12
