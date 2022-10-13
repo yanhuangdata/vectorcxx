@@ -87,9 +87,16 @@ mod ffi {
         fn export_to_kafka(task_id: String, file_path: String, data_dir: String, sink_config: KafkaSinkParams) -> ExportResult;
         fn export_to_file(task_id: String, file_path: String, data_dir: String, sink_config: FileSinkParams) -> ExportResult;
         fn start_ingest_to_vector(config: String) -> ExportResult;
-        fn crud_vector_config(action: String, ids: Vec<String>, config_str: String, stage_id: u32) -> bool;
         fn poll_vector_events() -> SwEvents;
         fn get_stage_id() -> u32;
+
+        fn add_config(config: String) -> bool;
+
+        fn update_config(config: String) -> bool;
+
+        fn delete_config(ids: Vec<String>) -> bool;
+
+        fn exit() -> bool;
     }
 }
 
@@ -112,7 +119,6 @@ pub struct ConfigEvent {
     action: ConfigAction,
     config_ids: Vec<String>,
     config_str: String,
-    stage_id: u32,
 }
 
 pub fn setup_logging() {
@@ -360,10 +366,10 @@ pub fn poll_vector_events() -> SwEvents {
                     } else if let Some(target) = event.as_log().get("_target_es") {
                         target_event_set = target.to_string_lossy();
                     }
-    
+
                     if let Some(value) = event.as_log().get(source_type_key) {
                         source_type = value.to_string_lossy();
-                    } 
+                    }
 
                     let new_event = SwEvent {
                         parsed,
@@ -395,6 +401,10 @@ pub fn poll_vector_events() -> SwEvents {
 
 fn get_stage_id() -> u32 {
     GLOBAL_STAGE_ID.load(Ordering::Relaxed)
+}
+
+fn increment_stage_id() {
+    GLOBAL_STAGE_ID.fetch_add(1, Ordering::Relaxed);
 }
 
 pub fn start_ingest_to_vector(config: String) -> ExportResult {
@@ -462,7 +472,6 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
             info!("ConfigBuilder transforms {:?}", config_builder_new.transforms);
             info!("ConfigBuilder sinks {:?}", config_builder_new.sinks);
             topology.reload_config_and_respawn(config_builder_new.build().unwrap()).await.unwrap();
-            GLOBAL_STAGE_ID.store(config_event.stage_id, Ordering::Relaxed);
         }
         ConfigAction::DELETE => {
             // source and transform can not use same name in vector
@@ -480,21 +489,11 @@ pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut Confi
             info!("ConfigBuilder transforms {:?}", config_builder_new.transforms);
             info!("ConfigBuilder sinks {:?}", config_builder_new.sinks);
             topology.reload_config_and_respawn(config_builder_new.build().unwrap()).await.unwrap();
-            GLOBAL_STAGE_ID.store(config_event.stage_id, Ordering::Relaxed);
         }
         ConfigAction::EXIT => {
             // should not go here
         }
     }
-    // let new_builder: ConfigBuilder = config::format::deserialize(config_str.as_str(), Some(config::Format::Json)).unwrap();
-    // let mut config_builder_new = config_builder.clone();
-    // if new_builder.sources.len() > 0 {
-    //     config_builder_new.sources.extend(new_builder.sources);
-    // }
-    // if new_builder.transforms.len() > 0 {
-    //     config_builder_new.transforms.extend(new_builder.transforms);
-    // }
-    // let res = topology.reload_config_and_respawn(config_builder_new.build().unwrap()).await.unwrap();
 }
 
 static START: Once = Once::new();
@@ -535,7 +534,6 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
         let mut sources_finished = topology.sources_finished();
         let config_rx = unsafe { &mut GLOBAL_CONFIG_RX };
         info!("This is a multi-core vector service");
-        GLOBAL_STAGE_ID.store(1, Ordering::Relaxed);
         loop {
             tokio::select! {
                 Some(config_event) = config_rx.as_mut().unwrap().recv() => {
@@ -544,7 +542,6 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
                     match config_event.action {
                         ConfigAction::EXIT => {
                             info!("received exit request");
-                            GLOBAL_STAGE_ID.store(config_event.stage_id, Ordering::Relaxed);
                             // exit_status = true;
                             // exit_msg = "receive exit request from sw".to_string();
                             break;
@@ -553,6 +550,7 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
                             reload_vector(config_event, &mut config_builder_copy, &mut topology).await;
                         }
                     }
+                    increment_stage_id();
                 }
                 _ = &mut sources_finished => {
                     info!("sources finished");
@@ -566,16 +564,16 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
             }
             std::thread::sleep(std::time::Duration::from_millis(1000));
         }
-    
+
         // topology.sources_finished().await;
         topology.stop().await;
     });
-    
+
 
     (exit_status, exit_msg)
 }
 
-pub fn crud_vector_config(action: String, ids: Vec<String>, config_str: String, stage_id: u32) -> bool {
+fn send_config_event(action: String, ids: Vec<String>, config_str: String) -> bool {
     let get_action = |action| {
         match action {
             "init" => ConfigAction::INIT,
@@ -586,7 +584,7 @@ pub fn crud_vector_config(action: String, ids: Vec<String>, config_str: String, 
             _ => ConfigAction::INIT,
         }
     };
-    info!("crud vector config to action={:?}", action.as_str());
+    info!("about to send vector config event action={:?}", action.as_str());
     // let config_tx = unsafe { &mut GLOBAL_CONFIG_TX };
     unsafe {
         if let Some(sender) = &mut GLOBAL_CONFIG_TX {
@@ -595,10 +593,24 @@ pub fn crud_vector_config(action: String, ids: Vec<String>, config_str: String, 
                 action: get_action(action.as_str()),
                 config_ids: ids,
                 config_str,
-                stage_id,
             });
         }
     }
     true
 }
 
+pub fn add_config(config: String) -> bool {
+    send_config_event("add".to_string(), vec![], config)
+}
+
+pub fn update_config(config: String) -> bool {
+    send_config_event("update".to_string(), vec![], config)
+}
+
+pub fn delete_config(ids: Vec<String>) -> bool {
+    send_config_event("delete".to_string(), ids, "".to_string())
+}
+
+pub fn exit() -> bool {
+    send_config_event("exit".to_string(), vec![], "".to_string())
+}
