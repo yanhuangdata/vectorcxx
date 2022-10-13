@@ -532,11 +532,54 @@ pub fn start_ingest_to_vector(config: String) -> ExportResult {
     }
 }
 
-pub async fn reload_vector(
-    config_event: ConfigEvent,
-    config_builder: &mut ConfigBuilder,
-    topology: &mut RunningTopology,
-) {
+
+pub fn _print_ids(config: &mut ConfigBuilder) {
+    let mut source_ids = Vec::new();
+    let mut transform_ids = Vec::new();
+    let mut sink_ids = Vec::new();
+    for (key, _) in &config.sources {
+        source_ids.push(key.id());
+    }
+    for (key, _) in &config.transforms {
+        transform_ids.push(key.id());
+    }
+    for (key, _) in &config.sinks {
+        sink_ids.push(key.id());
+    }
+    info!("source ids: {:?}", source_ids);
+    info!("transform ids: {:?}", transform_ids);
+    info!("sink ids: {:?}", sink_ids);
+}
+
+
+pub async fn _handle_reload(new: ConfigBuilder, old: &mut ConfigBuilder, topology: &mut RunningTopology) -> bool {
+    let new_copy = new.clone();
+    match topology
+        .reload_config_and_respawn(new.build().unwrap())
+        .await
+    {
+        Ok(true) => {
+            info!("vector config reloaded succeed");
+            *old = new_copy;
+            _print_ids(old);
+        },
+        Ok(false) => {
+            info!("vector config reloaded does not succeed");
+            return false;
+        },
+        Err(()) => {
+            error!("error happen while reloading config");
+            // TODO: handle error here
+            return false;
+        }
+    }
+    true
+}
+
+pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut ConfigBuilder, topology: &mut RunningTopology) {
+    debug!("sources before {:?}: {:?}", config_event.action, config_builder.sources);
+    debug!("transforms before {:?}: {:?}", config_event.action, config_builder.transforms);
+    debug!("sinks before {:?}: {:?}", config_event.action,  config_builder.sinks);
     match config_event.action {
         ConfigAction::INIT => {
             // should not go here
@@ -553,16 +596,12 @@ pub async fn reload_vector(
             if new_builder.transforms.len() > 0 {
                 config_builder_new.transforms.extend(new_builder.transforms);
             }
-            info!("ConfigBuilder sources {:?}", config_builder_new.sources);
-            info!(
-                "ConfigBuilder transforms {:?}",
-                config_builder_new.transforms
-            );
-            info!("ConfigBuilder sinks {:?}", config_builder_new.sinks);
-            topology
-                .reload_config_and_respawn(config_builder_new.build().unwrap())
-                .await
-                .unwrap();
+            debug!("sources after {:?}: {:?}", config_event.action, config_builder_new.sources);
+            debug!("transforms after {:?}: {:?}", config_event.action, config_builder_new.transforms);
+            debug!("sinks after {:?}: {:?}", config_event.action, config_builder_new.sinks);
+            if !_handle_reload(config_builder_new, config_builder, topology).await {
+                // TODO: handle error here
+            }
         }
         ConfigAction::DELETE => {
             // source and transform can not use same name in vector
@@ -576,16 +615,12 @@ pub async fn reload_vector(
                     config_builder_new.transforms.remove(key);
                 }
             }
-            info!("ConfigBuilder sources {:?}", config_builder_new.sources);
-            info!(
-                "ConfigBuilder transforms {:?}",
-                config_builder_new.transforms
-            );
-            info!("ConfigBuilder sinks {:?}", config_builder_new.sinks);
-            topology
-                .reload_config_and_respawn(config_builder_new.build().unwrap())
-                .await
-                .unwrap();
+            debug!("sources after {:?}: {:?}", config_event.action, config_builder_new.sources);
+            debug!("transforms after {:?}: {:?}", config_event.action, config_builder_new.transforms);
+            debug!("sinks after {:?}: {:?}", config_event.action, config_builder_new.sinks);
+            if !_handle_reload(config_builder_new, config_builder, topology).await {
+                // TODO: handle error here
+            }
         }
         ConfigAction::EXIT => {
             // should not go here
@@ -636,7 +671,6 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
         let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
         let mut sources_finished = topology.sources_finished();
         let config_rx = unsafe { &mut GLOBAL_CONFIG_RX };
-        info!("This is a multi-core vector service");
         loop {
             tokio::select! {
                 Some(config_event) = config_rx.as_mut().unwrap().recv() => {

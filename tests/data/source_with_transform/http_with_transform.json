@@ -1,0 +1,16 @@
+{
+  "sources": {
+    "source_http_1": {
+      "type": "http",
+      "address": "0.0.0.0:9998",
+      "encoding": "text"
+    }
+  },
+  "transforms": {
+    "transform_add_field_1": {
+      "type": "remap",
+      "inputs": ["source_http_1"],
+      "source": ".id = 1234"
+    }
+  }
+}

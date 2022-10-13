@@ -167,13 +167,35 @@ TEST_CASE("delete transform from topology") {
   });
   auto events = _read_events_from_sink();
   // FIXME: this is a bug for deletion, 2 events are expected
-  REQUIRE(events.size() == 0);
-//  REQUIRE_THAT(events[0], ContainsSubstring("e0"));
-//  // the remap transform is deleted
-//  REQUIRE_THAT(events[0], !ContainsSubstring("my_source"));
-//  REQUIRE_THAT(events[0], ContainsSubstring("42"));
-//  REQUIRE_THAT(events[1], ContainsSubstring("e1"));
-//  // the remap transform is deleted
-//  REQUIRE_THAT(events[1], !ContainsSubstring("my_source"));
-//  REQUIRE_THAT(events[1], ContainsSubstring("42"));
+  REQUIRE(events.size() == 2);
+  REQUIRE_THAT(events[0], ContainsSubstring("e0"));
+  // the remap transform is deleted
+  REQUIRE_THAT(events[0], !ContainsSubstring("my_source"));
+  REQUIRE_THAT(events[0], ContainsSubstring("42"));
+  REQUIRE_THAT(events[1], ContainsSubstring("e1"));
+  // the remap transform is deleted
+  REQUIRE_THAT(events[1], !ContainsSubstring("my_source"));
+  REQUIRE_THAT(events[1], ContainsSubstring("42"));
+}
+
+// test if a new adding config impacts the previous added config
+TEST_CASE("add two transform from topology") {
+  run("http_to_file_with_transform", []() {
+    auto new_config = _load_config("source_with_transform/http_with_transform");
+    vectorcxx::add_config(new_config);
+    _wait(2000);
+    std::string new_source_name = "source_http_2";
+    std::string new_transform_name = "transform_add_field_2";
+    std::string new_port = "8888";
+    std::string new_id = "5678";
+    new_config = std::regex_replace(new_config, std::regex("source_http_1"), new_source_name);
+    new_config = std::regex_replace(new_config, std::regex("9998"), new_port);
+    new_config = std::regex_replace(new_config, std::regex("transform_add_field_1"), new_transform_name);
+    new_config = std::regex_replace(new_config, std::regex("1234"), new_id);
+    vectorcxx::add_config(new_config);
+    _wait(2000);
+    send_http_events({"e0", "e1"});
+  });
+  auto events = _read_events_from_sink();
+  REQUIRE(events.size() == 2);
 }
