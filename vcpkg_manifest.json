@@ -6,6 +6,10 @@
   "dependencies": [
     "zlib",
     "catch2",
-    "corrosion"
+    "corrosion",
+    "nlohmann_json",
+    "spdlog",
+    "fmt",
+    "cpr"
   ]
 }

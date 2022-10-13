@@ -74,7 +74,7 @@ namespace {
     }
 
     ~VectorService() {
-      vectorcxx::crud_vector_config("exit", {}, "", 0);
+      vectorcxx::exit();
       vector_service_thread.join();
     }
 
@@ -124,7 +124,7 @@ TEST_CASE("start http to file with transform topology") {
 
 TEST_CASE("add new source to topology") {
   run("file_to_file", []() {
-    vectorcxx::crud_vector_config("add", {}, _load_config("source/http"), 0);
+    vectorcxx::add_config(_load_config("source/http"));
     _wait(1000);
     send_http_events({"hello", "world"});
   });
@@ -135,11 +135,11 @@ TEST_CASE("add new source to topology") {
 TEST_CASE("update existing source in topology") {
   run("file_to_file", []() {
     auto config = _load_config("source/http");
-    vectorcxx::crud_vector_config("add", {}, config, 0);
+    vectorcxx::add_config(config);
     _wait(1000);
     uint32_t new_port = 8888;
     config = std::regex_replace(config, std::regex("9999"), std::to_string(new_port));
-    vectorcxx::crud_vector_config("update", {}, config, 0);
+    vectorcxx::update_config(config);
     _wait(1000);
     send_http_events({"hello", "world"}, new_port);
   });
@@ -149,7 +149,7 @@ TEST_CASE("update existing source in topology") {
 
 TEST_CASE("delete source from topology") {
   run("http_to_file_with_transform", []() {
-    vectorcxx::crud_vector_config("delete", {"source_http"}, "", 0);
+    vectorcxx::delete_config({"source_http"});
     _wait(2000);
     send_http_events({"e0", "e1"});
   });
@@ -159,9 +159,9 @@ TEST_CASE("delete source from topology") {
 
 TEST_CASE("delete transform from topology") {
   run("http_to_file_with_transform", []() {
-    vectorcxx::crud_vector_config("add", {}, _load_config("transform/add_field"), 0);
+    vectorcxx::add_config(_load_config("transform/add_field"));
     _wait(2000);
-    vectorcxx::crud_vector_config("delete", {"transform_remap_field"}, "", 0);
+    vectorcxx::delete_config({"transform_remap_field"});
     _wait(2000);
     send_http_events({"e0", "e1"});
   });
