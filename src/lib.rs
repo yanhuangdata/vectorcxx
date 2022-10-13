@@ -90,6 +90,14 @@ mod ffi {
         fn crud_vector_config(action: String, ids: Vec<String>, config_str: String, stage_id: u32) -> bool;
         fn poll_vector_events() -> SwEvents;
         fn get_stage_id() -> u32;
+
+        fn add_config(config: String) -> bool;
+
+        fn update_config(config: String) -> bool;
+
+        fn delete_config(ids: Vec<String>) -> bool;
+
+        fn exit() -> bool;
     }
 }
 
@@ -575,7 +583,7 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
     (exit_status, exit_msg)
 }
 
-pub fn crud_vector_config(action: String, ids: Vec<String>, config_str: String, stage_id: u32) -> bool {
+fn crud_vector_config(action: String, ids: Vec<String>, config_str: String, stage_id: u32) -> bool {
     let get_action = |action| {
         match action {
             "init" => ConfigAction::INIT,
