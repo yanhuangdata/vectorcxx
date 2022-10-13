@@ -387,7 +387,6 @@ pub fn poll_vector_events() -> SwEvents {
                 //     target_es = target.to_string_lossy();
                 // }
 
-                println!("receiving events, cnt {:?}", value.len());
                 for event in &value {
                     // let mut ev = String::new();
                     let mut parsed: bool = false;
@@ -670,6 +669,7 @@ pub fn start_vector_service(config_str: String) -> (bool, String) {
     rt.block_on(async move {
         let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
         let mut sources_finished = topology.sources_finished();
+        increment_stage_id();
         let config_rx = unsafe { &mut GLOBAL_CONFIG_RX };
         loop {
             tokio::select! {
