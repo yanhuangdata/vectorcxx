@@ -57,7 +57,7 @@ namespace {
   void send_http_events(const std::vector<std::string> &events, uint32_t port = 9999) {
     spdlog::info("sending events via http events={}", events.size());
     for (const auto &event : events) {
-      auto res = cpr::Post(cpr::Url{fmt::format("http://localhost:{}", port)}, cpr::Body{event});
+      auto res = cpr::Post(cpr::Url{fmt::format("http://localhost:{}", port)}, cpr::Body{event}, cpr::Header{{"-Target-Es", "main"}});
       spdlog::info("sending event to http status={}", res.status_code);
     }
   }
@@ -105,6 +105,42 @@ namespace {
            const std::function<void(rust::Box<vectorcxx::TopologyController> &)> &operations) {
     VectorService vector_service(config_file);
     operations(vector_service.get_controller());
+  }
+
+  struct ConsumedEvents {
+    bool parsed;
+    std::string source_type;
+    std::string target;
+    std::string message;
+  };
+
+  std::vector<ConsumedEvents> consume_events(uint32_t expected) {
+    std::vector<ConsumedEvents> events;
+    if (expected) {
+      events.reserve(expected);
+    }
+    while (expected) {
+      try {
+        auto result = vectorcxx::poll_vector_events();
+        if (result.events.empty()) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        } else {
+          spdlog::debug("got events", "count", result.events.size());
+          for (auto ev : result.events) {
+            events.push_back(ConsumedEvents{
+              ev.parsed,
+              std::string(ev.source_type.data(), ev.source_type.size()),
+              std::string(ev.target.data(), ev.target.size()),
+              std::string(ev.message.data(), ev.message.size())
+            });
+            --expected;
+          }
+        }
+      } catch (std::exception &e) {
+        spdlog::error("polling failed", "error", e.what());
+      }
+    }
+    return events;
   }
 } // namespace
 
@@ -214,5 +250,25 @@ TEST_CASE("get generation id") {
     tc->add_config(config);
     _wait(1000);
     REQUIRE(tc->get_generation_id() == 1);
+  });
+}
+
+TEST_CASE("consume events from memory queue") {
+  run("http_to_memory_queue", [](rust::Box<vectorcxx::TopologyController> &tc) {
+    send_http_events({"e0", "e1"});
+    auto events = consume_events(2);
+    REQUIRE(events.size() == 2);
+    REQUIRE(events[0].parsed == false);
+    REQUIRE(events[0].target == "main");
+    REQUIRE(events[0].source_type == "http");
+    auto message = nlohmann::json::parse(events[0].message);
+    REQUIRE(message.at("_source") == "my_source");
+    REQUIRE(message.at("message") == "e0");
+    REQUIRE(message.contains("timestamp"));
+
+    auto message_1 = nlohmann::json::parse(events[1].message);
+    REQUIRE(message_1.at("_source") == "my_source");
+    REQUIRE(message_1.at("message") == "e1");
+    REQUIRE(message_1.contains("timestamp"));
   });
 }
