@@ -127,6 +127,8 @@ mod ffi {
         fn exit(self: &mut TopologyController) -> bool;
 
         fn stop(self: &mut TopologyController) -> bool;
+
+        fn get_generation_id(self: &mut TopologyController) -> u32;
     }
 }
 

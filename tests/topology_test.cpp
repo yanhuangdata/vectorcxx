@@ -191,7 +191,8 @@ TEST_CASE("add two transform from topology") {
     std::string new_id = "5678";
     new_config = std::regex_replace(new_config, std::regex("source_http_1"), new_source_name);
     new_config = std::regex_replace(new_config, std::regex("9998"), new_port);
-    new_config = std::regex_replace(new_config, std::regex("transform_add_field_1"), new_transform_name);
+    new_config =
+        std::regex_replace(new_config, std::regex("transform_add_field_1"), new_transform_name);
     new_config = std::regex_replace(new_config, std::regex("1234"), new_id);
     tc->add_config(new_config);
     _wait(2000);
@@ -204,4 +205,14 @@ TEST_CASE("add two transform from topology") {
 TEST_CASE("topology controller init") {
   auto tc = vectorcxx::new_topology_controller();
   REQUIRE(tc.into_raw() != nullptr);
+}
+
+TEST_CASE("get generation id") {
+  run("file_to_file", [](rust::Box<vectorcxx::TopologyController> &tc) {
+    REQUIRE(tc->get_generation_id() == 0);
+    auto config = _load_config("source/http");
+    tc->add_config(config);
+    _wait(1000);
+    REQUIRE(tc->get_generation_id() == 1);
+  });
 }

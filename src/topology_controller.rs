@@ -3,6 +3,7 @@ use crate::{ComponentKey, Level};
 use std::borrow::BorrowMut;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Once;
+use std::sync::Arc;
 use tracing::{debug, error, info};
 use vector::config::ConfigBuilder;
 use vector::topology::RunningTopology;
@@ -11,7 +12,7 @@ use vector::{config, config::format, test_util::runtime};
 pub struct TopologyController {
     config_message_sender: Option<tokio::sync::mpsc::Sender<ConfigEvent>>,
     vector_thread_join_handle: Option<std::thread::JoinHandle<()>>,
-    generation_id: AtomicU32,
+    generation_id: Arc<AtomicU32>,
 }
 
 static START: Once = Once::new();
@@ -26,6 +27,10 @@ pub fn setup_logging() {
         .with_timer(timer)
         .finish();
     tracing::subscriber::set_global_default(collector).expect("setting default subscriber failed");
+}
+
+fn increment_generation_id(generation_id: &AtomicU32) {
+    generation_id.fetch_add(1, Ordering::Relaxed);
 }
 
 fn _print_ids(config: &mut ConfigBuilder) {
@@ -45,7 +50,6 @@ fn _print_ids(config: &mut ConfigBuilder) {
     info!("transform ids: {:?}", transform_ids);
     info!("sink ids: {:?}", sink_ids);
 }
-
 
 async fn _handle_reload(new: ConfigBuilder, old: &mut ConfigBuilder, topology: &mut RunningTopology) -> bool {
     let new_copy = new.clone();
@@ -133,7 +137,7 @@ impl TopologyController {
         Self {
             config_message_sender: None,
             vector_thread_join_handle: None,
-            generation_id: AtomicU32::new(0),
+            generation_id: Arc::new(AtomicU32::new(0)),
         }
     }
 
@@ -166,6 +170,8 @@ impl TopologyController {
         let (config_message_sender, mut config_message_receiver) = tokio::sync::mpsc::channel(1);
         self.config_message_sender = Some(config_message_sender);
 
+        let mut shared_generation_id = self.generation_id.clone();
+
         let join_handle = std::thread::spawn(|| {
             let rt = runtime();
 
@@ -190,7 +196,7 @@ impl TopologyController {
                                     reload_vector(config_event, &mut config_builder_copy, &mut topology).await;
                                 }
                             }
-                            // FIXME: increment generation_id
+                            increment_generation_id(&shared_generation_id);
                         }
                         _ = &mut sources_finished => {
                             info!("sources finished");
@@ -238,6 +244,12 @@ impl TopologyController {
         }
         false
     }
+
+    // a self increment id to indicate which generation of config is currently running
+    pub fn get_generation_id(&self) -> u32 {
+        self.generation_id.load(Ordering::Relaxed)
+    }
+
 
     fn send_config_event(&self, action: String, ids: Vec<String>, config_str: String) -> bool {
         let get_action = |action| match action {
