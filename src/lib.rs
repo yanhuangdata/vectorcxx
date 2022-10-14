@@ -1,7 +1,11 @@
-mod topology;
+#![feature(extern_types)]
 
+mod config_event;
+mod topology;
+mod topology_controller;
+
+use crate::config_event::{ConfigAction, ConfigEvent};
 use crate::ffi::{ExportResult, KafkaSinkParams, SwEvent, SwEvents};
-use std::fmt::{Debug, Display};
 use std::panic;
 use std::sync::Once;
 use std::sync::{Arc, Mutex};
@@ -31,6 +35,7 @@ use vector::{
     transforms::remap::RemapConfig,
 };
 
+use crate::topology_controller::TopologyController;
 use cxx::{CxxString, SharedPtr};
 use rdkafka::config::ClientConfig;
 use rdkafka::consumer::{BaseConsumer, Consumer};
@@ -88,6 +93,8 @@ mod ffi {
     }
 
     extern "Rust" {
+        type TopologyController;
+
         fn start_topology(file_path: String, data_dir: String) -> bool;
         fn export_to_kafka(
             task_id: String,
@@ -103,54 +110,27 @@ mod ffi {
         ) -> ExportResult;
         fn start_ingest_to_vector(config: String) -> ExportResult;
         fn poll_vector_events() -> SwEvents;
-        fn get_stage_id() -> u32;
 
-        fn add_config(config: String) -> bool;
+        /**
+         * TopologyController
+         */
+        fn new_topology_controller() -> Box<TopologyController>;
 
-        fn update_config(config: String) -> bool;
+        fn start(self: &mut TopologyController, topology_config: &str) -> Result<bool>;
 
-        fn delete_config(ids: Vec<String>) -> bool;
+        fn add_config(self: &mut TopologyController, config: String) -> bool;
 
-        fn exit() -> bool;
+        fn update_config(self: &mut TopologyController, config: String) -> bool;
+
+        fn delete_config(self: &mut TopologyController, config_ids: Vec<String>) -> bool;
+
+        fn exit(self: &mut TopologyController) -> bool;
+
+        fn stop(self: &mut TopologyController) -> bool;
+
+        fn get_generation_id(self: &mut TopologyController) -> u32;
     }
 }
-
-#[derive(Debug)]
-enum ConfigAction {
-    INIT,
-    ADD,
-    UPDATE,
-    DELETE,
-    EXIT,
-}
-
-impl Display for ConfigAction {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        Debug::fmt(self, f)
-    }
-}
-
-pub struct ConfigEvent {
-    action: ConfigAction,
-    config_ids: Vec<String>,
-    config_str: String,
-}
-
-pub fn setup_logging() {
-    let timer = tracing_subscriber::fmt::time::time();
-    let collector = tracing_subscriber::fmt()
-        .with_max_level(Level::DEBUG)
-        // disable color to make CLion happy
-        .with_ansi(false)
-        .with_thread_ids(true)
-        .with_timer(timer)
-        .finish();
-    tracing::subscriber::set_global_default(collector).expect("setting default subscriber failed");
-}
-
-pub static mut GLOBAL_CONFIG_TX: Option<&mut tokio::sync::mpsc::Sender<ConfigEvent>> = None;
-pub static mut GLOBAL_CONFIG_RX: Option<&mut tokio::sync::mpsc::Receiver<ConfigEvent>> = None;
-static GLOBAL_STAGE_ID: AtomicU32 = AtomicU32::new(0);
 
 pub fn start_topology(file_path: String, data_dir: String) -> bool {
     info!("starting topology");
@@ -461,14 +441,6 @@ pub fn poll_vector_events() -> SwEvents {
     }
 }
 
-fn get_stage_id() -> u32 {
-    GLOBAL_STAGE_ID.load(Ordering::Relaxed)
-}
-
-fn increment_stage_id() {
-    GLOBAL_STAGE_ID.fetch_add(1, Ordering::Relaxed);
-}
-
 pub fn start_ingest_to_vector(config: String) -> ExportResult {
     // unsafe {
     //     let (succeed, err_msg) = block_on(start_vector_service(config));
@@ -500,7 +472,9 @@ pub fn start_ingest_to_vector(config: String) -> ExportResult {
             // let (succeed, err_msg) = block_on(
             //     start_vector_service(config)
             // );
-            let (succeed, err_msg) = start_vector_service(config);
+            // let (succeed, err_msg) = start_vector_service(config);
+            // FIXME: we need to re-implement the start_vector_service
+            let (succeed, err_msg) = (true, "DONE".to_string());
             if succeed {
                 return ExportResult {
                     succeed: true,
@@ -531,226 +505,6 @@ pub fn start_ingest_to_vector(config: String) -> ExportResult {
     }
 }
 
-
-pub fn _print_ids(config: &mut ConfigBuilder) {
-    let mut source_ids = Vec::new();
-    let mut transform_ids = Vec::new();
-    let mut sink_ids = Vec::new();
-    for (key, _) in &config.sources {
-        source_ids.push(key.id());
-    }
-    for (key, _) in &config.transforms {
-        transform_ids.push(key.id());
-    }
-    for (key, _) in &config.sinks {
-        sink_ids.push(key.id());
-    }
-    info!("source ids: {:?}", source_ids);
-    info!("transform ids: {:?}", transform_ids);
-    info!("sink ids: {:?}", sink_ids);
-}
-
-
-pub async fn _handle_reload(new: ConfigBuilder, old: &mut ConfigBuilder, topology: &mut RunningTopology) -> bool {
-    let new_copy = new.clone();
-    match topology
-        .reload_config_and_respawn(new.build().unwrap())
-        .await
-    {
-        Ok(true) => {
-            info!("vector config reloaded succeed");
-            *old = new_copy;
-            _print_ids(old);
-        },
-        Ok(false) => {
-            info!("vector config reloaded does not succeed");
-            return false;
-        },
-        Err(()) => {
-            error!("error happen while reloading config");
-            // TODO: handle error here
-            return false;
-        }
-    }
-    true
-}
-
-pub async fn reload_vector(config_event: ConfigEvent, config_builder: &mut ConfigBuilder, topology: &mut RunningTopology) {
-    debug!("sources before {:?}: {:?}", config_event.action, config_builder.sources);
-    debug!("transforms before {:?}: {:?}", config_event.action, config_builder.transforms);
-    debug!("sinks before {:?}: {:?}", config_event.action,  config_builder.sinks);
-    match config_event.action {
-        ConfigAction::INIT => {
-            // should not go here
-        }
-        ConfigAction::ADD | ConfigAction::UPDATE => {
-            let config_str = &config_event.config_str;
-            let new_builder: ConfigBuilder =
-                config::format::deserialize(config_str.as_str(), Some(config::Format::Json))
-                    .unwrap();
-            let mut config_builder_new = config_builder.clone();
-            if new_builder.sources.len() > 0 {
-                config_builder_new.sources.extend(new_builder.sources);
-            }
-            if new_builder.transforms.len() > 0 {
-                config_builder_new.transforms.extend(new_builder.transforms);
-            }
-            debug!("sources after {:?}: {:?}", config_event.action, config_builder_new.sources);
-            debug!("transforms after {:?}: {:?}", config_event.action, config_builder_new.transforms);
-            debug!("sinks after {:?}: {:?}", config_event.action, config_builder_new.sinks);
-            if !_handle_reload(config_builder_new, config_builder, topology).await {
-                // TODO: handle error here
-            }
-        }
-        ConfigAction::DELETE => {
-            // source and transform can not use same name in vector
-            let mut config_builder_new = config_builder.clone();
-
-            for id in &config_event.config_ids {
-                let key = &ComponentKey::from(&id);
-                if config_builder_new.sources.get(key).is_some() {
-                    config_builder_new.sources.remove(key);
-                } else if config_builder_new.transforms.get(key).is_some() {
-                    config_builder_new.transforms.remove(key);
-                }
-            }
-            debug!("sources after {:?}: {:?}", config_event.action, config_builder_new.sources);
-            debug!("transforms after {:?}: {:?}", config_event.action, config_builder_new.transforms);
-            debug!("sinks after {:?}: {:?}", config_event.action, config_builder_new.sinks);
-            if !_handle_reload(config_builder_new, config_builder, topology).await {
-                // TODO: handle error here
-            }
-        }
-        ConfigAction::EXIT => {
-            // should not go here
-        }
-    }
-}
-
-static START: Once = Once::new();
-
-pub fn start_vector_service(config_str: String) -> (bool, String) {
-    START.call_once(|| {
-        setup_logging();
-    });
-
-    let (g_config_tx, g_config_rx) = tokio::sync::mpsc::channel(2);
-    let g_config_tx_box = Box::new(g_config_tx);
-    let g_config_rx_box = Box::new(g_config_rx);
-    unsafe {
-        GLOBAL_CONFIG_TX = Some(Box::leak(g_config_tx_box));
-        GLOBAL_CONFIG_RX = Some(Box::leak(g_config_rx_box));
-    }
-    info!("start vector service");
-    debug!("start vector service with config; config={:?}", config_str);
-
-    let res = config::format::deserialize(config_str.as_str(), Some(config::Format::Json));
-    if res.is_err() {
-        error!("deserialize error {:?}", res.unwrap_err());
-        return (false, "failed to deserialize config string for".to_string());
-    }
-    let config_builder: ConfigBuilder = res.unwrap();
-    debug!(
-        "config_builder deserialized; sources={:?} transforms={:?} sinks={:?} global={:?}",
-        config_builder.sources,
-        config_builder.transforms,
-        config_builder.sinks,
-        config_builder.global
-    );
-
-    let mut config_builder_copy = config_builder.clone();
-    let builder_for_schema = config_builder.clone();
-    vector::config::init_log_schema_from_builder(builder_for_schema, false);
-
-    let mut exit_status: bool = true;
-    let mut exit_msg: String = "".to_string();
-    let rt = runtime();
-
-    rt.block_on(async move {
-        let (mut topology, _crash) = vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
-        let mut sources_finished = topology.sources_finished();
-        increment_stage_id();
-        let config_rx = unsafe { &mut GLOBAL_CONFIG_RX };
-        loop {
-            tokio::select! {
-                Some(config_event) = config_rx.as_mut().unwrap().recv() => {
-                    info!("receive config event action={:?} config={:?}", config_event.action.to_string().as_str(), config_event.config_str);
-                    match config_event.action {
-                        ConfigAction::EXIT => {
-                            info!("received exit request");
-                            // exit_status = true;
-                            // exit_msg = "receive exit request from sw".to_string();
-                            break;
-                        },
-                        _ => {
-                            reload_vector(config_event, &mut config_builder_copy, &mut topology).await;
-                        }
-                    }
-                    increment_stage_id();
-                }
-                _ = &mut sources_finished => {
-                    info!("sources finished");
-                    // exit_status = true;
-                    // exit_msg = "sources finished".to_string();
-                    break;
-                },
-                else => {
-                    info!("should not go here")
-                }
-            }
-            std::thread::sleep(std::time::Duration::from_millis(1000));
-        }
-
-        // topology.sources_finished().await;
-        topology.stop().await;
-    });
-
-    (exit_status, exit_msg)
-}
-
-fn send_config_event(action: String, ids: Vec<String>, config_str: String) -> bool {
-    let get_action = |action| match action {
-        "init" => ConfigAction::INIT,
-        "add" => ConfigAction::ADD,
-        "update" => ConfigAction::UPDATE,
-        "delete" => ConfigAction::DELETE,
-        "exit" => ConfigAction::EXIT,
-        _ => ConfigAction::INIT,
-    };
-    info!(
-        "about to send vector config event action={:?}",
-        action.as_str()
-    );
-    // let config_tx = unsafe { &mut GLOBAL_CONFIG_TX };
-    unsafe {
-        if let Some(sender) = &mut GLOBAL_CONFIG_TX {
-            debug!(
-                "sending config event: action={:?} config={:?}",
-                action.as_str(),
-                config_str
-            );
-            sender.try_send(ConfigEvent {
-                action: get_action(action.as_str()),
-                config_ids: ids,
-                config_str,
-            });
-        }
-    }
-    true
-}
-
-pub fn add_config(config: String) -> bool {
-    send_config_event("add".to_string(), vec![], config)
-}
-
-pub fn update_config(config: String) -> bool {
-    send_config_event("update".to_string(), vec![], config)
-}
-
-pub fn delete_config(ids: Vec<String>) -> bool {
-    send_config_event("delete".to_string(), ids, "".to_string())
-}
-
-pub fn exit() -> bool {
-    send_config_event("exit".to_string(), vec![], "".to_string())
+pub fn new_topology_controller() -> Box<TopologyController> {
+    Box::new(TopologyController::new())
 }

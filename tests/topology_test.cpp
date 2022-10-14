@@ -2,17 +2,17 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
-#include <string>
-#include <regex>
 #include "vectorcxx/src/lib.rs.h"
 #include <cpr/cpr.h>
 #include <exception>
 #include <filesystem>
+#include <fmt/format.h>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <regex>
 #include <spdlog/spdlog.h>
+#include <string>
 #include <thread>
-#include <fmt/format.h>
 
 using Catch::Matchers::ContainsSubstring;
 
@@ -67,15 +67,23 @@ namespace {
       _setup();
       auto config = rust::String(_load_config(config_file));
       spdlog::info("starting vector");
-      vector_service_thread = std::thread(vectorcxx::start_ingest_to_vector, config);
+
+      tc = vectorcxx::new_topology_controller();
+      tc.value()->start(config);
+
       // wait for the vector service to start
       spdlog::info("waiting for vector to get started");
       _wait();
     }
 
     ~VectorService() {
-      vectorcxx::exit();
-      vector_service_thread.join();
+      auto &controller = get_controller();
+      controller->exit();
+      controller->stop();
+    }
+
+    rust::Box<vectorcxx::TopologyController> &get_controller() {
+      return tc.value();
     }
 
     static void _setup() {
@@ -85,7 +93,7 @@ namespace {
       std::filesystem::create_directory(DATA_DIR);
     }
 
-    std::thread vector_service_thread;
+    std::optional<rust::Box<vectorcxx::TopologyController>> tc;
   };
 
   /**
@@ -93,26 +101,30 @@ namespace {
    * After running, the vector service will be stopped so that all the events are flushed and can be
    * asserted later
    */
-  void run(const std::string &config_file, const std::function<void()> &operations) {
+  void run(const std::string &config_file,
+           const std::function<void(rust::Box<vectorcxx::TopologyController> &)> &operations) {
     VectorService vector_service(config_file);
-    operations();
+    operations(vector_service.get_controller());
   }
 } // namespace
 
 TEST_CASE("start single event http to file topology") {
-  run("http_to_file", []() { send_http_events({"hello"}); });
+  run("http_to_file",
+      [](rust::Box<vectorcxx::TopologyController> &tc) { send_http_events({"hello"}); });
   auto events = _read_events_from_sink();
   REQUIRE(events.size() == 1);
 }
 
 TEST_CASE("start http to file topology") {
-  run("http_to_file", []() { send_http_events({"hello", "world"}); });
+  run("http_to_file", [](rust::Box<vectorcxx::TopologyController> &tc) {
+    send_http_events({"hello", "world"});
+  });
   auto events = _read_events_from_sink();
   REQUIRE(events.size() == 2);
 }
 
 TEST_CASE("start http to file with transform topology") {
-  run("http_to_file_with_transform", []() {
+  run("http_to_file_with_transform", [](rust::Box<vectorcxx::TopologyController> &tc) {
     send_http_events({"e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9"});
   });
   auto events = _read_events_from_sink();
@@ -123,8 +135,8 @@ TEST_CASE("start http to file with transform topology") {
 }
 
 TEST_CASE("add new source to topology") {
-  run("file_to_file", []() {
-    vectorcxx::add_config(_load_config("source/http"));
+  run("file_to_file", [](rust::Box<vectorcxx::TopologyController> &tc) {
+    tc->add_config(_load_config("source/http"));
     _wait(1000);
     send_http_events({"hello", "world"});
   });
@@ -133,13 +145,13 @@ TEST_CASE("add new source to topology") {
 }
 
 TEST_CASE("update existing source in topology") {
-  run("file_to_file", []() {
+  run("file_to_file", [](rust::Box<vectorcxx::TopologyController> &tc) {
     auto config = _load_config("source/http");
-    vectorcxx::add_config(config);
+    tc->add_config(config);
     _wait(1000);
     uint32_t new_port = 8888;
     config = std::regex_replace(config, std::regex("9999"), std::to_string(new_port));
-    vectorcxx::update_config(config);
+    tc->update_config(config);
     _wait(1000);
     send_http_events({"hello", "world"}, new_port);
   });
@@ -147,26 +159,15 @@ TEST_CASE("update existing source in topology") {
   REQUIRE(events.size() == 2);
 }
 
-TEST_CASE("delete source from topology") {
-  run("http_to_file_with_transform", []() {
-    vectorcxx::delete_config({"source_http"});
-    _wait(2000);
-    send_http_events({"e0", "e1"});
-  });
-  auto events = _read_events_from_sink();
-  REQUIRE(events.size() == 0);
-}
-
 TEST_CASE("delete transform from topology") {
-  run("http_to_file_with_transform", []() {
-    vectorcxx::add_config(_load_config("transform/add_field"));
+  run("http_to_file_with_transform", [](rust::Box<vectorcxx::TopologyController> &tc) {
+    tc->add_config(_load_config("transform/add_field"));
     _wait(2000);
-    vectorcxx::delete_config({"transform_remap_field"});
+    tc->delete_config({"transform_remap_field"});
     _wait(2000);
     send_http_events({"e0", "e1"});
   });
   auto events = _read_events_from_sink();
-  // FIXME: this is a bug for deletion, 2 events are expected
   REQUIRE(events.size() == 2);
   REQUIRE_THAT(events[0], ContainsSubstring("e0"));
   // the remap transform is deleted
@@ -180,9 +181,9 @@ TEST_CASE("delete transform from topology") {
 
 // test if a new adding config impacts the previous added config
 TEST_CASE("add two transform from topology") {
-  run("http_to_file_with_transform", []() {
+  run("http_to_file_with_transform", [](rust::Box<vectorcxx::TopologyController> &tc) {
     auto new_config = _load_config("source_with_transform/http_with_transform");
-    vectorcxx::add_config(new_config);
+    tc->add_config(new_config);
     _wait(2000);
     std::string new_source_name = "source_http_2";
     std::string new_transform_name = "transform_add_field_2";
@@ -190,12 +191,28 @@ TEST_CASE("add two transform from topology") {
     std::string new_id = "5678";
     new_config = std::regex_replace(new_config, std::regex("source_http_1"), new_source_name);
     new_config = std::regex_replace(new_config, std::regex("9998"), new_port);
-    new_config = std::regex_replace(new_config, std::regex("transform_add_field_1"), new_transform_name);
+    new_config =
+        std::regex_replace(new_config, std::regex("transform_add_field_1"), new_transform_name);
     new_config = std::regex_replace(new_config, std::regex("1234"), new_id);
-    vectorcxx::add_config(new_config);
+    tc->add_config(new_config);
     _wait(2000);
     send_http_events({"e0", "e1"});
   });
   auto events = _read_events_from_sink();
   REQUIRE(events.size() == 2);
+}
+
+TEST_CASE("topology controller init") {
+  auto tc = vectorcxx::new_topology_controller();
+  REQUIRE(tc.into_raw() != nullptr);
+}
+
+TEST_CASE("get generation id") {
+  run("file_to_file", [](rust::Box<vectorcxx::TopologyController> &tc) {
+    REQUIRE(tc->get_generation_id() == 0);
+    auto config = _load_config("source/http");
+    tc->add_config(config);
+    _wait(1000);
+    REQUIRE(tc->get_generation_id() == 1);
+  });
 }
