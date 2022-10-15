@@ -16,7 +16,7 @@
         "source_*"
       ],
       "encoding": {
-        "codec": "ndjson"
+        "codec": "json"
       },
       "path": "/tmp/vector_test_sink.log"
     }

@@ -57,7 +57,8 @@ namespace {
   void send_http_events(const std::vector<std::string> &events, uint32_t port = 9999) {
     spdlog::info("sending events via http events={}", events.size());
     for (const auto &event : events) {
-      auto res = cpr::Post(cpr::Url{fmt::format("http://localhost:{}", port)}, cpr::Body{event}, cpr::Header{{"-Target-Es", "main"}});
+      auto res = cpr::Post(cpr::Url{fmt::format("http://localhost:{}", port)}, cpr::Body{event},
+                           cpr::Header{{"_target_table", "main"}});
       spdlog::info("sending event to http status={}", res.status_code);
     }
   }
@@ -116,25 +117,23 @@ namespace {
 
   std::vector<ConsumedEvents> consume_events(uint32_t expected) {
     std::vector<ConsumedEvents> events;
-    if (expected) {
-      events.reserve(expected);
-    }
-    while (expected) {
+    events.reserve(expected);
+
+    auto read_event_count = 0;
+    while (read_event_count < expected) {
       try {
         auto result = vectorcxx::poll_vector_events();
         if (result.events.empty()) {
           std::this_thread::sleep_for(std::chrono::milliseconds(100));
         } else {
-          spdlog::debug("got events", "count", result.events.size());
-          for (auto ev : result.events) {
-            events.push_back(ConsumedEvents{
-              ev.parsed,
-              std::string(ev.source_type.data(), ev.source_type.size()),
-              std::string(ev.target.data(), ev.target.size()),
-              std::string(ev.message.data(), ev.message.size())
-            });
-            --expected;
+          spdlog::info("events pulled from memory queue event_count={}", result.events.size());
+          for (const auto &ev : result.events) {
+            events.emplace_back(
+                ConsumedEvents{ev.parsed, std::string(ev.source_type.data(), ev.source_type.size()),
+                               std::string(ev.target.data(), ev.target.size()),
+                               std::string(ev.message.data(), ev.message.size())});
           }
+          read_event_count += result.events.size();
         }
       } catch (std::exception &e) {
         spdlog::error("polling failed", "error", e.what());

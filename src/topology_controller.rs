@@ -1,13 +1,12 @@
 use crate::config_event::{ConfigAction, ConfigEvent};
-use crate::{ComponentKey, Level};
-use std::borrow::BorrowMut;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Once;
 use std::sync::Arc;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, Level};
 use vector::config::ConfigBuilder;
+use vector::config::ComponentKey;
 use vector::topology::RunningTopology;
-use vector::{config, config::format, test_util::runtime};
+use vector::{config, config::format, metrics, test_util::runtime};
 
 pub struct TopologyController {
     config_message_sender: Option<tokio::sync::mpsc::Sender<ConfigEvent>>,
@@ -16,6 +15,7 @@ pub struct TopologyController {
 }
 
 static START: Once = Once::new();
+static INIT: Once = Once::new();
 
 pub fn setup_logging() {
     let timer = tracing_subscriber::fmt::time::time();
@@ -91,7 +91,7 @@ async fn reload_vector(
         ConfigAction::ADD | ConfigAction::UPDATE => {
             let config_str = &config_event.config_str;
             let new_builder: ConfigBuilder =
-                config::format::deserialize(config_str.as_str(), Some(config::Format::Json))
+                config::format::deserialize(config_str.as_str(), config::Format::Json)
                     .unwrap();
             let mut config_builder_new = config_builder.clone();
             if new_builder.sources.len() > 0 {
@@ -112,7 +112,7 @@ async fn reload_vector(
             let mut config_builder_new = config_builder.clone();
 
             for id in &config_event.config_ids {
-                let key = &ComponentKey::from(&id);
+                let key = &ComponentKey::from(id.clone());
                 if config_builder_new.sources.get(key).is_some() {
                     config_builder_new.sources.remove(key);
                 } else if config_builder_new.transforms.get(key).is_some() {
@@ -149,12 +149,12 @@ impl TopologyController {
 
         info!("start vector service");
 
-        let res = format::deserialize(topology_config, Some(config::Format::Json));
+        let res = format::deserialize(topology_config, config::Format::Json);
         if res.is_err() {
             error!("deserialize error {:?}", res.unwrap_err());
             return Err("failed to deserialize config string");
         }
-        let mut config_builder: ConfigBuilder = res.unwrap();
+        let config_builder: ConfigBuilder = res.unwrap();
         debug!(
             "config_builder deserialized; sources={:?} transforms={:?} sinks={:?} global={:?}",
             config_builder.sources,
@@ -162,22 +162,29 @@ impl TopologyController {
             config_builder.sinks,
             config_builder.global
         );
+        INIT.call_once(|| {
+            let builder_for_schema = config_builder.clone();
+            let _init_result = config::init_log_schema_from_builder(builder_for_schema, false).expect("init log schema failed");
+            #[cfg(not(feature = "enterprise-tests"))]
+            metrics::init_global().expect("metrics initialization failed");
+        });
 
         let mut config_builder_copy = config_builder.clone();
-        let builder_for_schema = config_builder.clone();
-        let init_result = config::init_log_schema_from_builder(builder_for_schema, false);
 
         let (config_message_sender, mut config_message_receiver) = tokio::sync::mpsc::channel(1);
+        info!("config update message channel created");
         self.config_message_sender = Some(config_message_sender);
 
-        let mut shared_generation_id = self.generation_id.clone();
-
+        let shared_generation_id = self.generation_id.clone();
+        let config = config_builder.build().unwrap();
+        info!("config constructed via config builder");
         let join_handle = std::thread::spawn(|| {
             let rt = runtime();
 
             rt.block_on(async move {
                 let (mut topology, _crash) =
-                    vector::test_util::start_topology(config_builder.build().unwrap(), false).await;
+                    vector::test_util::start_topology(config, false).await;
+                info!("vector topology started");
                 let mut sources_finished = topology.sources_finished();
 
                 loop {
@@ -213,6 +220,7 @@ impl TopologyController {
                 topology.stop().await;
             });
         });
+        info!("vector thread spawned");
         self.vector_thread_join_handle = Some(join_handle);
         Ok(true)
     }

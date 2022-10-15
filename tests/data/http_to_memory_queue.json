@@ -4,7 +4,7 @@
     "source_http": {
       "type": "http",
       "address": "0.0.0.0:9999",
-      "headers": ["-Target-Es"],
+      "headers": ["_target_table"],
       "encoding": "text"
     }
   },
