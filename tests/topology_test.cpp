@@ -1,8 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
+#include <catch2/matchers/catch_matchers_vector.hpp>
 
 #include "vectorcxx/src/lib.rs.h"
+#include <algorithm>
 #include <cpr/cpr.h>
 #include <exception>
 #include <filesystem>
@@ -15,6 +17,8 @@
 #include <thread>
 
 using Catch::Matchers::ContainsSubstring;
+using Catch::Matchers::VectorContains;
+using vectorcxx::CxxLogEvent;
 
 namespace {
   // this is the default file sink used by all testing configs
@@ -106,40 +110,6 @@ namespace {
            const std::function<void(rust::Box<vectorcxx::TopologyController> &)> &operations) {
     VectorService vector_service(config_file);
     operations(vector_service.get_controller());
-  }
-
-  struct ConsumedEvents {
-    bool parsed;
-    std::string source_type;
-    std::string target;
-    std::string message;
-  };
-
-  std::vector<ConsumedEvents> consume_events(uint32_t expected) {
-    std::vector<ConsumedEvents> events;
-    events.reserve(expected);
-
-    auto read_event_count = 0;
-    while (read_event_count < expected) {
-      try {
-        auto result = vectorcxx::poll_vector_events();
-        if (result.events.empty()) {
-          std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        } else {
-          spdlog::info("events pulled from memory queue event_count={}", result.events.size());
-          for (const auto &ev : result.events) {
-            events.emplace_back(
-                ConsumedEvents{ev.parsed, std::string(ev.source_type.data(), ev.source_type.size()),
-                               std::string(ev.target.data(), ev.target.size()),
-                               std::string(ev.message.data(), ev.message.size())});
-          }
-          read_event_count += result.events.size();
-        }
-      } catch (std::exception &e) {
-        spdlog::error("polling failed", "error", e.what());
-      }
-    }
-    return events;
   }
 } // namespace
 
@@ -255,19 +225,42 @@ TEST_CASE("get generation id") {
 TEST_CASE("consume events from memory queue") {
   run("http_to_memory_queue", [](rust::Box<vectorcxx::TopologyController> &tc) {
     send_http_events({"e0", "e1"});
-    auto events = consume_events(2);
-    REQUIRE(events.size() == 2);
-    REQUIRE(events[0].parsed == false);
-    REQUIRE(events[0].target == "main");
-    REQUIRE(events[0].source_type == "http");
-    auto message = nlohmann::json::parse(events[0].message);
-    REQUIRE(message.at("_source") == "my_source");
-    REQUIRE(message.at("message") == "e0");
-    REQUIRE(message.contains("timestamp"));
+    auto events = vectorcxx::poll_vector_events();
+    REQUIRE(events.size() == 1);
+    REQUIRE(events[0].get("_target_table") == "main");
+    REQUIRE(events[0].get("source_type") == "http");
+    REQUIRE(events[0].get_timestamp("timestamp") > 0);
+    auto const &message = events[0].get("message");
+    REQUIRE(message == "e0");
 
-    auto message_1 = nlohmann::json::parse(events[1].message);
-    REQUIRE(message_1.at("_source") == "my_source");
-    REQUIRE(message_1.at("message") == "e1");
-    REQUIRE(message_1.contains("timestamp"));
+    do {
+      events = vectorcxx::poll_vector_events();
+    } while (events.empty());
+
+    REQUIRE(events.size() == 1);
+    REQUIRE(events[0].get("_target_table") == "main");
+    REQUIRE(events[0].get("source_type") == "http");
+    auto const &message_1 = events[0].get("message");
+    REQUIRE(message_1 == "e1");
+  });
+}
+
+TEST_CASE("iterate field names from pulled events") {
+  run("http_to_memory_queue", [](rust::Box<vectorcxx::TopologyController> &tc) {
+    send_http_events({"e0", "e1"});
+    auto events = vectorcxx::poll_vector_events();
+    REQUIRE(events.size() == 1);
+    auto fields = events[0].fields();
+    REQUIRE(fields.size() > 0);
+
+    std::vector<std::string> field_vec;
+    field_vec.reserve(fields.size());
+    for (auto const &field : fields) {
+      field_vec.emplace_back(field);
+    }
+    REQUIRE_THAT(field_vec, VectorContains(std::string("message")));
+    REQUIRE_THAT(field_vec, VectorContains(std::string("timestamp")));
+    REQUIRE_THAT(field_vec, VectorContains(std::string("source_type")));
+    REQUIRE_THAT(field_vec, VectorContains(std::string("_source")));
   });
 }
