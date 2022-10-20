@@ -250,9 +250,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql"
-version = "4.0.15"
+version = "4.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12f25ef01a96d5180e8deadca87b041bed49edd1f932dd7d4b1eaa1db443a3a0"
+checksum = "d9ed522678d412d77effe47b3c82314ac36952a35e6e852093dd48287c421f80"
 dependencies = [
  "async-graphql-derive",
  "async-graphql-parser",
@@ -282,9 +282,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-derive"
-version = "4.0.15"
+version = "4.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "798bcf08b169c7589cdaed2e297b6180657165a001efb4b5ba7a87f3a5406622"
+checksum = "c121a894495d7d3fc3d4e15e0a9843e422e4d1d9e3c514d8062a1c94b35b005d"
 dependencies = [
  "Inflector",
  "async-graphql-parser",
@@ -298,9 +298,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-parser"
-version = "4.0.15"
+version = "4.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b599d684b30ed8ede2600507ceb2ba60214ffb2cfc55088c4c0dd33f7656acfd"
+checksum = "6b6c386f398145c6180206c1869c2279f5a3d45db5be4e0266148c6ac5c6ad68"
 dependencies = [
  "async-graphql-value",
  "pest",
@@ -310,9 +310,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-value"
-version = "4.0.15"
+version = "4.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a81662a313c523f2b55c3735e20a5162fe7f42c0d4b0b64f6d73568dfde316ee"
+checksum = "7a941b499fead4a3fb5392cabf42446566d18c86313f69f2deab69560394d65f"
 dependencies = [
  "bytes 1.2.1",
  "indexmap",
@@ -322,9 +322,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-warp"
-version = "4.0.15"
+version = "4.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e12cfa94e15af5a0f9a1beb66c4c143ef44df7c48c2eb9ef3872dbe81e926008"
+checksum = "c512820fb4259389aa5af696cb78297ef93d8d0f25f62007705de1aa7343253b"
 dependencies = [
  "async-graphql",
  "futures-util",
@@ -443,9 +443,9 @@ checksum = "7a40729d2133846d9ed0ea60a8b9541bccddab49cd30f0715a1da672fe9a2524"
 
 [[package]]
 name = "async-trait"
-version = "0.1.57"
+version = "0.1.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76464446b8bc32758d7e88ee1a804d9914cd9b1cb264c029899680b0be29826f"
+checksum = "1e805d94e6b5001b651426cf4cd446b1ab5f319d27bab5c644f61de0a804360c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1028,7 +1028,7 @@ dependencies = [
  "hyperlocal",
  "log",
  "pin-project-lite",
- "rustls 0.20.6",
+ "rustls 0.20.7",
  "rustls-native-certs 0.6.2",
  "rustls-pemfile 1.0.1",
  "serde",
@@ -1078,9 +1078,9 @@ dependencies = [
 
 [[package]]
 name = "bumpalo"
-version = "3.11.0"
+version = "3.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1ad822118d20d2c234f427000d5acc36eabe1e29a348c89b63dd60b13f28e5d"
+checksum = "572f695136211188308f16ad2ca5c851a712c464060ae6974944458eb83880ba"
 
 [[package]]
 name = "bytecheck"
@@ -1271,9 +1271,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.0.15"
+version = "4.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6bf8832993da70a4c6d13c581f4463c2bdda27b9bf1c5498dc4365543abe6d6f"
+checksum = "06badb543e734a2d6568e19a40af66ed5364360b9226184926f89d229b4b4267"
 dependencies = [
  "atty",
  "bitflags",
@@ -1330,7 +1330,7 @@ dependencies = [
 [[package]]
 name = "codecs"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "avro-rs",
  "bytes 1.2.1",
@@ -1340,7 +1340,7 @@ dependencies = [
  "lookup",
  "memchr",
  "once_cell",
- "ordered-float 3.2.0",
+ "ordered-float 3.3.0",
  "prost 0.11.0",
  "regex",
  "serde",
@@ -1608,9 +1608,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "0.1.23"
+version = "0.1.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdffe87e1d521a10f9696f833fe502293ea446d7f256c06128293a4119bdf4cb"
+checksum = "6d2301688392eb071b0bf1a37be05c469d3cc4dbbd95df672fe28ab021e6a096"
 dependencies = [
  "quote",
  "syn",
@@ -1646,9 +1646,9 @@ dependencies = [
 
 [[package]]
 name = "cxx"
-version = "1.0.78"
+version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19f39818dcfc97d45b03953c1292efc4e80954e1583c4aa770bac1383e2310a4"
+checksum = "3f83d0ebf42c6eafb8d7c52f7e5f2d3003b89c7aa4fd2b79229209459a849af8"
 dependencies = [
  "cc",
  "cxxbridge-flags",
@@ -1658,9 +1658,9 @@ dependencies = [
 
 [[package]]
 name = "cxx-build"
-version = "1.0.78"
+version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e580d70777c116df50c390d1211993f62d40302881e54d4b79727acb83d0199"
+checksum = "07d050484b55975889284352b0ffc2ecbda25c0c55978017c132b29ba0818a86"
 dependencies = [
  "cc",
  "codespan-reporting",
@@ -1673,15 +1673,15 @@ dependencies = [
 
 [[package]]
 name = "cxxbridge-flags"
-version = "1.0.78"
+version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56a46460b88d1cec95112c8c363f0e2c39afdb237f60583b0b36343bf627ea9c"
+checksum = "99d2199b00553eda8012dfec8d3b1c75fce747cf27c169a270b3b99e3448ab78"
 
 [[package]]
 name = "cxxbridge-macro"
-version = "1.0.78"
+version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "747b608fecf06b0d72d440f27acc99288207324b793be2c17991839f3d4995ea"
+checksum = "dcb67a6de1f602736dd7eaead0080cf3435df806c61b24b13328db128c58868f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1789,7 +1789,7 @@ dependencies = [
 [[package]]
 name = "datadog-filter"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "datadog-search-syntax",
  "dyn-clone",
@@ -1799,7 +1799,7 @@ dependencies = [
 [[package]]
 name = "datadog-grok"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "bytes 1.2.1",
  "chrono",
@@ -1810,7 +1810,7 @@ dependencies = [
  "nom",
  "once_cell",
  "onig",
- "ordered-float 3.2.0",
+ "ordered-float 3.3.0",
  "peeking_take_while",
  "regex",
  "serde_json",
@@ -1824,7 +1824,7 @@ dependencies = [
 [[package]]
 name = "datadog-search-syntax"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "itertools",
  "once_cell",
@@ -1940,7 +1940,7 @@ dependencies = [
 [[package]]
 name = "dnsmsg-parser"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "data-encoding",
  "thiserror",
@@ -2032,7 +2032,7 @@ checksum = "c34f04666d835ff5d62e058c3995147c06f42fe86ff053337632bca83e42702d"
 [[package]]
 name = "enrichment"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "arc-swap",
  "chrono",
@@ -2174,7 +2174,7 @@ checksum = "de853764b47027c2e862a995c34978ffa63c1501f2e15f987ba11bd4f9bba193"
 [[package]]
 name = "fakedata"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "chrono",
  "fakedata_generator",
@@ -2225,7 +2225,7 @@ checksum = "e11dcc7e4d79a8c89b9ab4c6f5c30b1fc4a83c420792da3542fd31179ed5f517"
 dependencies = [
  "cfg-if",
  "rustix",
- "windows-sys",
+ "windows-sys 0.36.1",
 ]
 
 [[package]]
@@ -2237,7 +2237,7 @@ checksum = "ec54ac60a7f2ee9a97cad9946f9bf629a3bc6a7ae59e68983dc9318f5a54b81a"
 [[package]]
 name = "file-source"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "bstr 1.0.1",
  "bytes 1.2.1",
@@ -2245,7 +2245,7 @@ dependencies = [
  "crc",
  "dashmap",
  "flate2",
- "futures 0.3.24",
+ "futures 0.3.25",
  "glob",
  "indexmap",
  "libc",
@@ -2266,7 +2266,7 @@ dependencies = [
  "cfg-if",
  "libc",
  "redox_syscall",
- "windows-sys",
+ "windows-sys 0.36.1",
 ]
 
 [[package]]
@@ -2376,9 +2376,9 @@ checksum = "3a471a38ef8ed83cd6e40aa59c1ffe17db6855c18e3604d9c4ed8c08ebc28678"
 
 [[package]]
 name = "futures"
-version = "0.3.24"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f21eda599937fba36daeb58a22e8f5cee2d14c4a17b5b7739c7c8e5e3b8230c"
+checksum = "38390104763dc37a5145a53c29c63c1290b5d316d6086ec32c293f6736051bb0"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -2391,9 +2391,9 @@ dependencies = [
 
 [[package]]
 name = "futures-channel"
-version = "0.3.24"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30bdd20c28fadd505d0fd6712cdfcb0d4b5648baf45faef7f852afb2399bb050"
+checksum = "52ba265a92256105f45b719605a571ffe2d1f0fea3807304b522c1d778f79eed"
 dependencies = [
  "futures-core",
  "futures-sink",
@@ -2401,15 +2401,15 @@ dependencies = [
 
 [[package]]
 name = "futures-core"
-version = "0.3.24"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e5aa3de05362c3fb88de6531e6296e85cde7739cccad4b9dfeeb7f6ebce56bf"
+checksum = "04909a7a7e4633ae6c4a9ab280aeb86da1236243a77b694a49eacd659a4bd3ac"
 
 [[package]]
 name = "futures-executor"
-version = "0.3.24"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ff63c23854bee61b6e9cd331d523909f238fc7636290b96826e9cfa5faa00ab"
+checksum = "7acc85df6714c176ab5edf386123fafe217be88c0840ec11f199441134a074e2"
 dependencies = [
  "futures-core",
  "futures-task",
@@ -2418,9 +2418,9 @@ dependencies = [
 
 [[package]]
 name = "futures-io"
-version = "0.3.24"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbf4d2a7a308fd4578637c0b17c7e1c7ba127b8f6ba00b29f717e9655d85eb68"
+checksum = "00f5fb52a06bdcadeb54e8d3671f8888a39697dcb0b81b23b55174030427f4eb"
 
 [[package]]
 name = "futures-lite"
@@ -2439,9 +2439,9 @@ dependencies = [
 
 [[package]]
 name = "futures-macro"
-version = "0.3.24"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42cd15d1c7456c04dbdf7e88bcd69760d74f3a798d6444e16974b505b0e62f17"
+checksum = "bdfb8ce053d86b91919aad980c220b1fb8401a9394410e1c289ed7e66b61835d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2450,15 +2450,15 @@ dependencies = [
 
 [[package]]
 name = "futures-sink"
-version = "0.3.24"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21b20ba5a92e727ba30e72834706623d94ac93a725410b6a6b6fbc1b07f7ba56"
+checksum = "39c15cf1a4aa79df40f1bb462fb39676d0ad9e366c2a33b590d7c66f4f81fcf9"
 
 [[package]]
 name = "futures-task"
-version = "0.3.24"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6508c467c73851293f390476d4491cf4d227dbabcd4170f3bb6044959b294f1"
+checksum = "2ffb393ac5d9a6eaa9d3fdf37ae2776656b706e200c8e16b1bdb227f5198e6ea"
 
 [[package]]
 name = "futures-timer"
@@ -2468,9 +2468,9 @@ checksum = "e64b03909df88034c26dc1547e8970b91f98bdb65165d6a4e9110d94263dbb2c"
 
 [[package]]
 name = "futures-util"
-version = "0.3.24"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44fb6cb1be61cc1d2e43b262516aafcf63b241cffdb1d3fa115f91d9c7b09c90"
+checksum = "197676987abd2f9cadff84926f410af1c183608d36641465df73ae8211dc65d6"
 dependencies = [
  "futures 0.1.31",
  "futures-channel",
@@ -2544,7 +2544,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8af59a261bcf42f45d1b261232847b9b850ba0a1419d6100698246fb66e9240"
 dependencies = [
  "arc-swap",
- "futures 0.3.24",
+ "futures 0.3.25",
  "log",
  "reqwest",
  "serde",
@@ -2564,7 +2564,7 @@ checksum = "de1b4626e87b9eb1d603ed23067ba1e29ec1d0b35325a2b96c3fe1cf20871f56"
 dependencies = [
  "cfg-if",
  "dashmap",
- "futures 0.3.24",
+ "futures 0.3.25",
  "futures-timer",
  "no-std-compat",
  "nonzero_ext",
@@ -2753,7 +2753,7 @@ version = "0.1.0-rc.1"
 source = "git+https://github.com/vectordotdev/heim.git?branch=update-nix#76fa765c7ed7fbe43d1465bf52da6b8d19f2d2a9"
 dependencies = [
  "cfg-if",
- "futures 0.3.24",
+ "futures 0.3.25",
  "glob",
  "heim-common",
  "heim-runtime",
@@ -2833,7 +2833,7 @@ name = "heim-runtime"
 version = "0.1.0-rc.1"
 source = "git+https://github.com/vectordotdev/heim.git?branch=update-nix#76fa765c7ed7fbe43d1465bf52da6b8d19f2d2a9"
 dependencies = [
- "futures 0.3.24",
+ "futures 0.3.25",
  "futures-timer",
  "once_cell",
  "smol",
@@ -2963,7 +2963,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca815a891b24fdfb243fa3239c86154392b0953ee584aa1a2a1f66d20cbe75cc"
 dependencies = [
  "bytes 1.2.1",
- "futures 0.3.24",
+ "futures 0.3.25",
  "headers",
  "http",
  "hyper",
@@ -2999,7 +2999,7 @@ dependencies = [
  "http",
  "hyper",
  "log",
- "rustls 0.20.6",
+ "rustls 0.20.7",
  "rustls-native-certs 0.6.2",
  "tokio",
  "tokio-rustls 0.23.4",
@@ -3059,9 +3059,9 @@ dependencies = [
 
 [[package]]
 name = "iana-time-zone-haiku"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fde6edd6cef363e9359ed3c98ba64590ba9eecba2293eb5a723ab32aee8926aa"
+checksum = "0703ae284fc167426161c2e3f1da3ea71d94b21bedbcc9494e92b28e334e3dca"
 dependencies = [
  "cxx",
  "cxx-build",
@@ -3355,9 +3355,9 @@ checksum = "f9b7d56ba4a8344d6be9729995e6b06f928af29998cdf79fe390cbf6b1fee838"
 
 [[package]]
 name = "kqueue"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d6112e8f37b59803ac47a42d14f1f3a59bbf72fc6857ffc5be455e28a691f8e"
+checksum = "2c8fc60ba15bf51257aa9807a48a61013db043fcf3a78cb0d916e8e396dcad98"
 dependencies = [
  "kqueue-sys",
  "libc",
@@ -3405,7 +3405,7 @@ dependencies = [
  "chrono",
  "dirs-next",
  "either",
- "futures 0.3.24",
+ "futures 0.3.25",
  "http",
  "http-body",
  "hyper",
@@ -3456,7 +3456,7 @@ dependencies = [
  "ahash 0.8.0",
  "backoff",
  "derivative",
- "futures 0.3.24",
+ "futures 0.3.25",
  "json-patch",
  "k8s-openapi",
  "kube-client",
@@ -3667,7 +3667,7 @@ dependencies = [
 [[package]]
 name = "loki-logproto"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "bytes 1.2.1",
  "prost 0.10.4",
@@ -3679,7 +3679,7 @@ dependencies = [
 [[package]]
 name = "lookup"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "inherent",
  "lalrpop",
@@ -3912,7 +3912,7 @@ dependencies = [
  "libc",
  "log",
  "wasi 0.11.0+wasi-snapshot-preview1",
- "windows-sys",
+ "windows-sys 0.36.1",
 ]
 
 [[package]]
@@ -4528,12 +4528,12 @@ dependencies = [
 [[package]]
 name = "opentelemetry-proto"
 version = "0.0.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "bytes 1.2.1",
  "chrono",
  "hex",
- "ordered-float 3.2.0",
+ "ordered-float 3.3.0",
  "prost 0.11.0",
  "prost-build 0.11.1",
  "tonic",
@@ -4553,9 +4553,9 @@ dependencies = [
 
 [[package]]
 name = "ordered-float"
-version = "3.2.0"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "129d36517b53c461acc6e1580aeb919c8ae6708a4b1eae61c4463a615d4f0411"
+checksum = "1f74e330193f90ec45e2b257fa3ef6df087784157ac1ad2c1e71c62837b03aa7"
 dependencies = [
  "num-traits",
 ]
@@ -4600,15 +4600,15 @@ dependencies = [
 
 [[package]]
 name = "parking_lot_core"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09a279cbf25cb0757810394fbc1e359949b59e348145c643a939a525692e6929"
+checksum = "4dc9e0dc2adc1c69d09143aff38d3d30c5c3f0df0dad82e6d25547af174ebec0"
 dependencies = [
  "cfg-if",
  "libc",
  "redox_syscall",
  "smallvec",
- "windows-sys",
+ "windows-sys 0.42.0",
 ]
 
 [[package]]
@@ -4855,7 +4855,7 @@ checksum = "15eb2c6e362923af47e13c23ca5afb859e83d54452c55b0b9ac763b8f7c1ac16"
 [[package]]
 name = "portpicker"
 version = "1.0.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "rand 0.8.5",
 ]
@@ -4866,7 +4866,7 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1de0ea6504e07ca78355a6fb88ad0f36cafe9e696cbc6717f16a207f3a60be72"
 dependencies = [
- "futures 0.3.24",
+ "futures 0.3.25",
  "openssl",
  "tokio",
  "tokio-openssl",
@@ -4985,7 +4985,7 @@ dependencies = [
 [[package]]
 name = "prometheus-parser"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "indexmap",
  "nom",
@@ -5138,7 +5138,7 @@ dependencies = [
  "chrono",
  "crc",
  "data-url",
- "futures 0.3.24",
+ "futures 0.3.25",
  "futures-io",
  "futures-timer",
  "log",
@@ -5312,7 +5312,7 @@ version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1de127f294f2dba488ed46760b129d5ecbeabbd337ccbf3739cb29d50db2161c"
 dependencies = [
- "futures 0.3.24",
+ "futures 0.3.25",
  "libc",
  "log",
  "rdkafka-sys",
@@ -5359,7 +5359,7 @@ dependencies = [
  "async-trait",
  "bytes 1.2.1",
  "combine 4.6.6",
- "futures 0.3.24",
+ "futures 0.3.25",
  "futures-util",
  "itoa 1.0.4",
  "native-tls",
@@ -5461,7 +5461,7 @@ dependencies = [
  "once_cell",
  "percent-encoding",
  "pin-project-lite",
- "rustls 0.20.6",
+ "rustls 0.20.7",
  "rustls-pemfile 1.0.1",
  "serde",
  "serde_json",
@@ -5621,7 +5621,7 @@ dependencies = [
  "io-lifetimes",
  "libc",
  "linux-raw-sys",
- "windows-sys",
+ "windows-sys 0.36.1",
 ]
 
 [[package]]
@@ -5639,9 +5639,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.20.6"
+version = "0.20.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aab8ee6c7097ed6057f43c187a62418d0c05a4bd5f18b3571db50ee0f9ce033"
+checksum = "539a2bfe908f471bfa933876bd1eb6a19cf2176d375f82ef7f99530a40e48c2c"
 dependencies = [
  "log",
  "ring",
@@ -5762,7 +5762,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88d6731146462ea25d9244b2ed5fd1d716d25c52e4d54aa4fb0f3c4e9854dbe2"
 dependencies = [
  "lazy_static",
- "windows-sys",
+ "windows-sys 0.36.1",
 ]
 
 [[package]]
@@ -5937,9 +5937,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.86"
+version = "1.0.87"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41feea4228a6f1cd09ec7a3593a682276702cd67b5273544757dae23c096f074"
+checksum = "6ce777b7b150d76b9cf60d28b55f5847135a003f7d7350c6be7a773508ce7d45"
 dependencies = [
  "indexmap",
  "itoa 1.0.4",
@@ -6111,9 +6111,9 @@ dependencies = [
 
 [[package]]
 name = "sha3"
-version = "0.10.5"
+version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2904bea16a1ae962b483322a1c7b81d976029203aea1f461e51cd7705db7ba9"
+checksum = "bdf0c33fae925bdc080598b84bc15c55e7b9a4a43b3c704da051f977469691c9"
 dependencies = [
  "digest 0.10.5",
  "keccak",
@@ -6491,7 +6491,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8440c860cf79def6164e4a0a983bcc2305d82419177a0e0c71930d049e3ac5a1"
 dependencies = [
  "rustix",
- "windows-sys",
+ "windows-sys 0.36.1",
 ]
 
 [[package]]
@@ -6712,7 +6712,7 @@ version = "0.23.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c43ee83903113e03984cb9e5cebe6c04a5116269e900e3ddba8f068a62adda59"
 dependencies = [
- "rustls 0.20.6",
+ "rustls 0.20.7",
  "tokio",
  "webpki 0.22.0",
 ]
@@ -6750,7 +6750,7 @@ checksum = "f714dd15bead90401d77e04243611caec13726c2408afd5b31901dfcdcb3b181"
 dependencies = [
  "futures-util",
  "log",
- "rustls 0.20.6",
+ "rustls 0.20.7",
  "tokio",
  "tungstenite",
 ]
@@ -6939,7 +6939,7 @@ version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
 dependencies = [
- "futures 0.3.24",
+ "futures 0.3.25",
  "futures-task",
  "pin-project",
  "tracing 0.1.37",
@@ -6957,7 +6957,7 @@ dependencies = [
 [[package]]
 name = "tracing-limit"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "dashmap",
  "tracing-core 0.1.30",
@@ -7012,7 +7012,7 @@ name = "tracing-tower"
 version = "0.1.0"
 source = "git+https://github.com/tokio-rs/tracing?rev=e0642d949891546a3bb7e47080365ee7274f05cd#e0642d949891546a3bb7e47080365ee7274f05cd"
 dependencies = [
- "futures 0.3.24",
+ "futures 0.3.25",
  "tower-service",
  "tracing 0.2.0",
  "tracing-futures 0.3.0",
@@ -7316,14 +7316,14 @@ checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
 [[package]]
 name = "value"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "async-graphql",
  "bytes 1.2.1",
  "chrono",
  "lookup",
  "mlua",
- "ordered-float 3.2.0",
+ "ordered-float 3.3.0",
  "regex",
  "serde",
  "serde_json",
@@ -7341,7 +7341,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vector"
 version = "0.25.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "arc-swap",
  "async-compression",
@@ -7387,7 +7387,7 @@ dependencies = [
  "fakedata",
  "file-source",
  "flate2",
- "futures 0.3.24",
+ "futures 0.3.25",
  "futures-util",
  "glob",
  "goauth",
@@ -7432,7 +7432,7 @@ dependencies = [
  "openssl-probe",
  "openssl-src",
  "opentelemetry-proto",
- "ordered-float 3.2.0",
+ "ordered-float 3.3.0",
  "percent-encoding",
  "pin-project",
  "portpicker",
@@ -7507,13 +7507,13 @@ dependencies = [
 [[package]]
 name = "vector-api-client"
 version = "0.1.2"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
  "clap",
- "futures 0.3.24",
+ "futures 0.3.25",
  "graphql_client",
  "indoc",
  "reqwest",
@@ -7529,7 +7529,7 @@ dependencies = [
 [[package]]
 name = "vector-buffers"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "async-recursion",
  "async-stream",
@@ -7541,7 +7541,7 @@ dependencies = [
  "crossbeam-utils",
  "db-key",
  "fslock",
- "futures 0.3.24",
+ "futures 0.3.25",
  "leveldb",
  "memmap2",
  "metrics",
@@ -7563,7 +7563,7 @@ dependencies = [
 [[package]]
 name = "vector-common"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "async-stream",
  "bytes 1.2.1",
@@ -7571,10 +7571,10 @@ dependencies = [
  "chrono-tz",
  "crossbeam-utils",
  "derivative",
- "futures 0.3.24",
+ "futures 0.3.25",
  "metrics",
  "nom",
- "ordered-float 3.2.0",
+ "ordered-float 3.3.0",
  "pin-project",
  "serde",
  "serde_json",
@@ -7592,7 +7592,7 @@ dependencies = [
 [[package]]
 name = "vector-config"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -7615,7 +7615,7 @@ dependencies = [
 [[package]]
 name = "vector-config-common"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "darling 0.13.4",
  "proc-macro2",
@@ -7627,7 +7627,7 @@ dependencies = [
 [[package]]
 name = "vector-config-macros"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "darling 0.13.4",
  "proc-macro2",
@@ -7640,7 +7640,7 @@ dependencies = [
 [[package]]
 name = "vector-core"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "async-graphql",
  "async-trait",
@@ -7652,7 +7652,7 @@ dependencies = [
  "enrichment",
  "enumflags2",
  "float_eq",
- "futures 0.3.24",
+ "futures 0.3.25",
  "futures-util",
  "headers",
  "http",
@@ -7666,7 +7666,7 @@ dependencies = [
  "no-proxy",
  "once_cell",
  "openssl",
- "ordered-float 3.2.0",
+ "ordered-float 3.3.0",
  "parking_lot",
  "pin-project",
  "prost 0.11.0",
@@ -7707,7 +7707,7 @@ dependencies = [
 [[package]]
 name = "vector-vrl-functions"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "lookup",
  "value",
@@ -7720,7 +7720,7 @@ version = "0.2.0"
 dependencies = [
  "cxx",
  "cxx-build",
- "futures 0.3.24",
+ "futures 0.3.25",
  "serde_json",
  "tempfile",
  "time 0.3.15",
@@ -7746,12 +7746,12 @@ checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 [[package]]
 name = "vrl"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "bytes 1.2.1",
  "indoc",
  "lookup",
- "ordered-float 3.2.0",
+ "ordered-float 3.3.0",
  "value",
  "vector-common",
  "vrl-compiler",
@@ -7762,7 +7762,7 @@ dependencies = [
 [[package]]
 name = "vrl-cli"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "clap",
  "exitcode",
@@ -7786,7 +7786,7 @@ dependencies = [
 [[package]]
 name = "vrl-compiler"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "anymap",
  "bytes 1.2.1",
@@ -7794,7 +7794,7 @@ dependencies = [
  "dyn-clone",
  "lalrpop-util",
  "lookup",
- "ordered-float 3.2.0",
+ "ordered-float 3.3.0",
  "paste",
  "regex",
  "serde",
@@ -7812,7 +7812,7 @@ dependencies = [
 [[package]]
 name = "vrl-core"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "lookup",
  "value",
@@ -7822,7 +7822,7 @@ dependencies = [
 [[package]]
 name = "vrl-diagnostic"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "codespan-reporting",
  "termcolor",
@@ -7831,12 +7831,12 @@ dependencies = [
 [[package]]
 name = "vrl-parser"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "lalrpop",
  "lalrpop-util",
  "lookup",
- "ordered-float 3.2.0",
+ "ordered-float 3.3.0",
  "paste",
  "thiserror",
  "vrl-diagnostic",
@@ -7845,7 +7845,7 @@ dependencies = [
 [[package]]
 name = "vrl-stdlib"
 version = "0.1.0"
-source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#ff37e06c68b7d06c9d61ea3c10b1bab9ebc309c7"
+source = "git+https://github.com/yanhuangdata/vector.git?branch=feature/vector-upgrade#f2baae160fb6d50487ebf66b3b3ff7fc4cd41ca3"
 dependencies = [
  "aes",
  "base64",
@@ -8181,7 +8181,7 @@ dependencies = [
  "bitflags",
  "err-derive",
  "widestring 1.0.2",
- "windows-sys",
+ "windows-sys 0.36.1",
 ]
 
 [[package]]
@@ -8190,12 +8190,33 @@ version = "0.36.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea04155a16a59f9eab786fe12a4a450e75cdb175f9e0d80da1e17db09f55b8d2"
 dependencies = [
- "windows_aarch64_msvc",
- "windows_i686_gnu",
- "windows_i686_msvc",
- "windows_x86_64_gnu",
- "windows_x86_64_msvc",
+ "windows_aarch64_msvc 0.36.1",
+ "windows_i686_gnu 0.36.1",
+ "windows_i686_msvc 0.36.1",
+ "windows_x86_64_gnu 0.36.1",
+ "windows_x86_64_msvc 0.36.1",
 ]
+
+[[package]]
+name = "windows-sys"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a3e1820f08b8513f676f7ab6c1f99ff312fb97b553d30ff4dd86f9f15728aa7"
+dependencies = [
+ "windows_aarch64_gnullvm",
+ "windows_aarch64_msvc 0.42.0",
+ "windows_i686_gnu 0.42.0",
+ "windows_i686_msvc 0.42.0",
+ "windows_x86_64_gnu 0.42.0",
+ "windows_x86_64_gnullvm",
+ "windows_x86_64_msvc 0.42.0",
+]
+
+[[package]]
+name = "windows_aarch64_gnullvm"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41d2aa71f6f0cbe00ae5167d90ef3cfe66527d6f613ca78ac8024c3ccab9a19e"
 
 [[package]]
 name = "windows_aarch64_msvc"
@@ -8204,10 +8225,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9bb8c3fd39ade2d67e9874ac4f3db21f0d710bee00fe7cab16949ec184eeaa47"
 
 [[package]]
+name = "windows_aarch64_msvc"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd0f252f5a35cac83d6311b2e795981f5ee6e67eb1f9a7f64eb4500fbc4dcdb4"
+
+[[package]]
 name = "windows_i686_gnu"
 version = "0.36.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "180e6ccf01daf4c426b846dfc66db1fc518f074baa793aa7d9b9aaeffad6a3b6"
+
+[[package]]
+name = "windows_i686_gnu"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fbeae19f6716841636c28d695375df17562ca208b2b7d0dc47635a50ae6c5de7"
 
 [[package]]
 name = "windows_i686_msvc"
@@ -8216,16 +8249,40 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2e7917148b2812d1eeafaeb22a97e4813dfa60a3f8f78ebe204bcc88f12f024"
 
 [[package]]
+name = "windows_i686_msvc"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84c12f65daa39dd2babe6e442988fc329d6243fdce47d7d2d155b8d874862246"
+
+[[package]]
 name = "windows_x86_64_gnu"
 version = "0.36.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4dcd171b8776c41b97521e5da127a2d86ad280114807d0b2ab1e462bc764d9e1"
 
 [[package]]
+name = "windows_x86_64_gnu"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf7b1b21b5362cbc318f686150e5bcea75ecedc74dd157d874d754a2ca44b0ed"
+
+[[package]]
+name = "windows_x86_64_gnullvm"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09d525d2ba30eeb3297665bd434a54297e4170c7f1a44cad4ef58095b4cd2028"
+
+[[package]]
 name = "windows_x86_64_msvc"
 version = "0.36.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c811ca4a8c853ef420abd8592ba53ddbbac90410fab6903b3e79972a631f7680"
+
+[[package]]
+name = "windows_x86_64_msvc"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f40009d85759725a34da6d89a94e63d7bdc50a862acf0dbc7c8e488f1edcb6f5"
 
 [[package]]
 name = "winreg"
