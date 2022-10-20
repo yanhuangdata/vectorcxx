@@ -53,7 +53,7 @@ fn _print_ids(config: &mut ConfigBuilder) {
     info!("sink ids: {:?}", sink_ids);
 }
 
-async fn _handle_reload(mut new: ConfigBuilder, old: &mut ConfigBuilder, topology: &mut RunningTopology) -> bool {
+async fn _handle_reload(new: ConfigBuilder, old: &mut ConfigBuilder, topology: &mut RunningTopology) -> bool {
     let new_copy = new.clone();
     match topology
         .reload_config_and_respawn(new.build().unwrap())
