@@ -15,6 +15,7 @@ using vectorcxx::test::read_events_from_sink;
 using vectorcxx::test::load_config;
 using vectorcxx::test::wait;
 using vectorcxx::TopologyController;
+using vectorcxx::run_topology;
 
 TEST_CASE("start single event http to file topology") {
   run("http_to_file",
@@ -45,7 +46,6 @@ TEST_CASE("start http to file with transform topology") {
 TEST_CASE("add new source to topology") {
   run("file_to_file", [](rust::Box<TopologyController> &tc) {
     tc->add_config(load_config("source/http"));
-    wait(1000);
     send_http_events({"hello", "world"});
   });
   auto events = read_events_from_sink();
@@ -56,11 +56,9 @@ TEST_CASE("update existing source in topology") {
   run("file_to_file", [](rust::Box<TopologyController> &tc) {
     auto config = load_config("source/http");
     tc->add_config(config);
-    wait(1000);
     uint32_t new_port = 8888;
     config = std::regex_replace(config, std::regex("9999"), std::to_string(new_port));
     tc->update_config(config);
-    wait(1000);
     send_http_events({"hello", "world"}, new_port);
   });
   auto events = read_events_from_sink();
@@ -70,9 +68,7 @@ TEST_CASE("update existing source in topology") {
 TEST_CASE("delete transform from topology") {
   run("http_to_file_with_transform", [](rust::Box<TopologyController> &tc) {
     tc->add_config(load_config("transform/add_field"));
-    wait(2000);
     tc->delete_config({"transform_remap_field"});
-    wait(2000);
     send_http_events({"e0", "e1"});
   });
   auto events = read_events_from_sink();
@@ -92,7 +88,6 @@ TEST_CASE("add two transform from topology") {
   run("http_to_file_with_transform", [](rust::Box<TopologyController> &tc) {
     auto new_config = load_config("source_with_transform/http_with_transform");
     tc->add_config(new_config);
-    wait(2000);
     std::string new_source_name = "source_http_2";
     std::string new_transform_name = "transform_add_field_2";
     std::string new_port = "8888";
@@ -103,7 +98,6 @@ TEST_CASE("add two transform from topology") {
         std::regex_replace(new_config, std::regex("transform_add_field_1"), new_transform_name);
     new_config = std::regex_replace(new_config, std::regex("1234"), new_id);
     tc->add_config(new_config);
-    wait(2000);
     send_http_events({"e0", "e1"});
   });
   auto events = read_events_from_sink();
@@ -120,7 +114,43 @@ TEST_CASE("get generation id") {
     REQUIRE(tc->get_generation_id() == 0);
     auto config = load_config("source/http");
     tc->add_config(config);
-    wait(1000);
     REQUIRE(tc->get_generation_id() == 1);
   });
+}
+
+TEST_CASE("test new topology") {
+  auto config = load_config("batch_file_to_file");
+  vectorcxx::test::setup_data();
+  REQUIRE(run_topology(config));
+  auto events = read_events_from_sink();
+  REQUIRE(events.size() == 2);
+}
+
+// test a kafka sink which is not started, which will fail on health check
+TEST_CASE("test new topology with sink not healthy") {
+  auto config = load_config("batch_file_to_kafka");
+  try {
+    auto res = run_topology(config);
+  } catch (std::exception &e) {
+    REQUIRE(strcmp(e.what(), "health check for sink failed") == 0);
+  }
+}
+
+TEST_CASE("run vector service with one time topology") {
+  run("file_to_file", [](rust::Box<TopologyController> &tc) {
+    tc->add_config(load_config("source/http"));
+    send_http_events({"hello", "world"});
+
+    // add a one time topology
+    auto config = load_config("batch_file_to_file");
+    REQUIRE(run_topology(config));
+
+    // update the long run service config
+    uint32_t new_port = 8888;
+    config = std::regex_replace(config, std::regex("9999"), std::to_string(new_port));
+    tc->update_config(config);
+    send_http_events({"hello", "world"}, new_port);
+  });
+  auto events = read_events_from_sink();
+  REQUIRE(events.size() == 6);
 }

@@ -93,4 +93,8 @@ namespace vectorcxx::test {
     VectorService vector_service(config_file);
     operations(vector_service.get_controller());
   }
+
+  void setup_data() {
+    VectorService::_setup();
+  }
 } // namespace

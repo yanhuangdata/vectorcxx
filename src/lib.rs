@@ -6,6 +6,7 @@ mod model;
 mod memory_queue_client;
 
 use crate::topology_controller::TopologyController;
+use crate::topology_controller::run_topology_once;
 use crate::memory_queue_client::MemoryQueueClient;
 use crate::model::CxxLogEvent;
 
@@ -58,6 +59,10 @@ mod ffi {
 
         fn poll(self: &mut MemoryQueueClient) -> Vec<CxxLogEvent>;
     }
+
+    extern "Rust" {
+        fn run_topology(config: String) -> Result<bool>;
+    }
 }
 
 pub fn new_topology_controller() -> Box<TopologyController> {
@@ -66,4 +71,14 @@ pub fn new_topology_controller() -> Box<TopologyController> {
 
 pub fn new_memory_queue_client() -> Box<MemoryQueueClient> {
     Box::new(MemoryQueueClient::new())
+}
+
+// used to run a one time topology, which will exit after source consuming finished.
+pub fn run_topology(config: String) -> Result<bool, String> {
+    let (res, err_msg) = run_topology_once(config.as_str());
+    return if res {
+        Ok(true)
+    } else {
+        Err(err_msg)
+    }
 }
