@@ -16,6 +16,10 @@ pub struct TopologyController {
     rt: Arc<tokio::runtime::Runtime>,
 }
 
+pub struct OneShotTopologyController {
+    rt: Arc<tokio::runtime::Runtime>,
+}
+
 static START: Once = Once::new();
 static INIT: Once = Once::new();
 
@@ -289,6 +293,36 @@ impl TopologyController {
     }
 }
 
+impl OneShotTopologyController {
+    pub fn new() -> Self {
+        Self {
+            rt: Arc::new(runtime()),
+        }
+    }
+
+    // run topology and return after finished, no need to maintain datas for long run
+    pub fn start(&mut self, config_str: &str) -> Result<bool, String> {
+        info!("start one time vector topology");
+        let config_builder = init_config(config_str);
+        if config_builder.is_none() {
+            return Err("failed to init topology config".to_string());
+        }
+
+        let config = config_builder.unwrap().build().unwrap();
+        info!("config constructed via config builder");
+
+        let (res, err) = self.rt.block_on(async {
+            let (res, err) = start_topology_sync(config, true).await;
+            (res, err)
+        });
+        if res {
+            Ok(true)
+        } else {
+            Err(err)
+        }
+    }
+}
+
 // this function start topology and waiting for source finished
 pub async fn start_topology_sync(
     mut config: Config,
@@ -308,23 +342,4 @@ pub async fn start_topology_sync(
     topology.sources_finished().await;
     topology.stop().await;
     (true, String::new())
-}
-
-// run topology and return after finished, no need to maintain datas for long run
-pub fn run_topology_once(config_str: &str) -> (bool, String) {
-    info!("start one time vector topology");
-    let config_builder = init_config(config_str);
-    if config_builder.is_none() {
-        return (false, "failed to init topology config".to_string());
-    }
-
-    let config = config_builder.unwrap().build().unwrap();
-    info!("config constructed via config builder");
-
-    let rt = runtime();
-    let res = rt.block_on(async {
-        let (res, err) = start_topology_sync(config, true).await;
-        (res, err)
-    });
-    return res;
 }

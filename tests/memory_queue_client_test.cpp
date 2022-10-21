@@ -16,6 +16,9 @@ TEST_CASE("consume events from memory queue") {
 
     auto &memory_queue_client = CxxMemoryQueueClient::get_instance();
     auto events = memory_queue_client->poll();
+    do {
+      events = memory_queue_client->poll();
+    } while (events.empty());
     REQUIRE(events.size() == 1);
     REQUIRE(events[0].get("_target_table") == "main");
     REQUIRE(events[0].get("source_type") == "http");

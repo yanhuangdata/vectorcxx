@@ -10,12 +10,13 @@
 
 using Catch::Matchers::ContainsSubstring;
 using vectorcxx::test::run;
+using vectorcxx::test::run_one_shot;
 using vectorcxx::test::send_http_events;
 using vectorcxx::test::read_events_from_sink;
 using vectorcxx::test::load_config;
 using vectorcxx::test::wait;
 using vectorcxx::TopologyController;
-using vectorcxx::run_topology;
+using vectorcxx::OneShotTopologyController;
 
 TEST_CASE("start single event http to file topology") {
   run("http_to_file",
@@ -118,19 +119,16 @@ TEST_CASE("get generation id") {
   });
 }
 
-TEST_CASE("test new topology") {
-  auto config = load_config("batch_file_to_file");
-  vectorcxx::test::setup_data();
-  REQUIRE(run_topology(config));
+TEST_CASE("test one shot topology") {
+  run_one_shot("batch_file_to_file", [](rust::Box<OneShotTopologyController> &tc) {});
   auto events = read_events_from_sink();
   REQUIRE(events.size() == 2);
 }
 
 // test a kafka sink which is not started, which will fail on health check
-TEST_CASE("test new topology with sink not healthy") {
-  auto config = load_config("batch_file_to_kafka");
+TEST_CASE("test one shot topology with sink not healthy") {
   try {
-    auto res = run_topology(config);
+    run_one_shot("batch_file_to_kafka", [](rust::Box<OneShotTopologyController> &tc) {});
   } catch (std::exception &e) {
     REQUIRE(strcmp(e.what(), "health check for sink failed") == 0);
   }
@@ -143,7 +141,8 @@ TEST_CASE("run vector service with one time topology") {
 
     // add a one time topology
     auto config = load_config("batch_file_to_file");
-    REQUIRE(run_topology(config));
+    auto tc_one_shot = vectorcxx::new_one_shot_topology_controller();
+    REQUIRE(tc_one_shot->start(config));
 
     // update the long run service config
     uint32_t new_port = 8888;
