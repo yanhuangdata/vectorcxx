@@ -186,12 +186,12 @@ impl TopologyController {
 
     // run a topology with tokio runtime
     pub fn start(&mut self, topology_config: &str) -> Result<bool, String> {
-        info!("start vector service");
 
         let builder = init_config(topology_config);
         if builder.is_none() {
             return Err("failed to init topology config".to_string());
         }
+        info!("start vector service");
 
         let config_builder = builder.unwrap();
         *self.config_builder.lock().unwrap() = Some(config_builder.clone());
@@ -302,11 +302,11 @@ impl OneShotTopologyController {
 
     // run topology and return after finished, no need to maintain datas for long run
     pub fn start(&mut self, config_str: &str) -> Result<bool, String> {
-        info!("start one time vector topology");
         let config_builder = init_config(config_str);
         if config_builder.is_none() {
             return Err("failed to init topology config".to_string());
         }
+        info!("start one time vector topology");
 
         let config = config_builder.unwrap().build().unwrap();
         info!("config constructed via config builder");
