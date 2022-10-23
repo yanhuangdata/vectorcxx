@@ -1,0 +1,30 @@
+{
+  "data_dir": "/tmp/vector/",
+  "sources": {
+    "source_file": {
+      "type": "file",
+      "read_from": "beginning",
+      "include": [
+        "../tests/data/test_files/vector_test_source.log"
+      ],
+      "ignore_checkpoints": true,
+      "keep_watching": false
+    }
+  },
+  "sinks": {
+    "sink_kafka": {
+      "type": "kafka",
+      "inputs": [
+        "source_*"
+      ],
+      "bootstrap_servers": "host.docker.internal:9092",
+      "topic": "test-topic",
+      "encoding": {
+        "codec": "json"
+      },
+      "healthcheck": {
+        "enabled": true
+      }
+    }
+  }
+}

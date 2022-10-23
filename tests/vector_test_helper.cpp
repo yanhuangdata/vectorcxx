@@ -54,6 +54,13 @@ namespace vectorcxx::test {
     }
   }
 
+  static void _setup() {
+    // ensure the file sink is cleared
+    std::filesystem::remove(FILE_SINK_PATH);
+    std::filesystem::remove_all(DATA_DIR);
+    std::filesystem::create_directory(DATA_DIR);
+  }
+
   struct VectorService {
     explicit VectorService(const std::string &config_file) {
       _setup();
@@ -78,19 +85,37 @@ namespace vectorcxx::test {
       return tc.value();
     }
 
-    static void _setup() {
-      // ensure the file sink is cleared
-      std::filesystem::remove(FILE_SINK_PATH);
-      std::filesystem::remove_all(DATA_DIR);
-      std::filesystem::create_directory(DATA_DIR);
+    std::optional<rust::Box<vectorcxx::TopologyController>> tc;
+  };
+
+  struct OneShotVectorService {
+    explicit OneShotVectorService(const std::string &config_file) {
+      _setup();
+      auto config = rust::String(load_config(config_file));
+      spdlog::info("starting vector");
+
+      tc = vectorcxx::new_one_shot_topology_controller();
+      tc.value()->start(config);
     }
 
-    std::optional<rust::Box<vectorcxx::TopologyController>> tc;
+    ~OneShotVectorService() {}
+
+    rust::Box<vectorcxx::OneShotTopologyController> &get_controller() {
+      return tc.value();
+    }
+
+    std::optional<rust::Box<vectorcxx::OneShotTopologyController>> tc;
   };
 
   void run(const std::string &config_file,
            const std::function<void(rust::Box<vectorcxx::TopologyController> &)> &operations) {
     VectorService vector_service(config_file);
+    operations(vector_service.get_controller());
+  }
+
+  void run_one_shot(const std::string &config_file,
+           const std::function<void(rust::Box<vectorcxx::OneShotTopologyController> &)> &operations) {
+    OneShotVectorService vector_service(config_file);
     operations(vector_service.get_controller());
   }
 } // namespace

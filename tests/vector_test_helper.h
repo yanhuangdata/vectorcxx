@@ -23,4 +23,8 @@ namespace vectorcxx::test {
    */
   void run(const std::string &config_file,
            const std::function<void(rust::Box<vectorcxx::TopologyController> &)> &operations);
+
+  void run_one_shot(const std::string &config_file,
+           const std::function<void(rust::Box<vectorcxx::OneShotTopologyController> &)> &operations);
+
 } // namespace

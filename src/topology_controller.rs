@@ -2,9 +2,9 @@ use crate::config_event::{ConfigAction, ConfigEvent};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Once;
 use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 use tracing::{debug, error, info, Level};
-use vector::config::ConfigBuilder;
-use vector::config::ComponentKey;
+use vector::config::{ConfigBuilder, Config, ComponentKey, ConfigDiff};
 use vector::topology::RunningTopology;
 use vector::{config, config::format, metrics, test_util::runtime};
 
@@ -13,6 +13,10 @@ pub struct TopologyController {
     generation_id: Arc<AtomicU32>,
     topology: Arc<Mutex<Option<RunningTopology>>>,
     config_builder: Arc<Mutex<Option<ConfigBuilder>>>,
+    rt: Arc<tokio::runtime::Runtime>,
+}
+
+pub struct OneShotTopologyController {
     rt: Arc<tokio::runtime::Runtime>,
 }
 
@@ -29,10 +33,6 @@ pub fn setup_logging() {
         .with_timer(timer)
         .finish();
     tracing::subscriber::set_global_default(collector).expect("setting default subscriber failed");
-}
-
-fn increment_generation_id(generation_id: &AtomicU32) {
-    generation_id.fetch_add(1, Ordering::Relaxed);
 }
 
 fn _print_ids(config: &mut ConfigBuilder) {
@@ -137,6 +137,42 @@ async fn reload_vector(
     true
 }
 
+fn advance_generation(result: bool, generation_id: &AtomicU32) -> bool {
+    if result {
+        generation_id.fetch_add(1, Ordering::Relaxed);
+    }
+    result
+}
+
+pub fn init_config(config_str: &str) -> Option<ConfigBuilder> {
+    START.call_once(|| {
+        setup_logging();
+    });
+
+    let res = format::deserialize(config_str, config::Format::Json);
+    if res.is_err() {
+        error!("deserialize error {:?}", res.unwrap_err());
+        return None;
+    }
+    let config_builder: ConfigBuilder = res.unwrap();
+    debug!(
+        "config_builder deserialized; sources={:?} transforms={:?} sinks={:?} global={:?}",
+        config_builder.sources,
+        config_builder.transforms,
+        config_builder.sinks,
+        config_builder.global
+    );
+    INIT.call_once(|| {
+        let builder_for_schema = config_builder.clone();
+        let _init_result = config::init_log_schema_from_builder(builder_for_schema, false).expect("init log schema failed");
+        #[cfg(not(feature = "enterprise-tests"))]
+        metrics::init_global().expect("metrics initialization failed");
+    });
+
+    info!("config constructed via config builder");
+    Some(config_builder)
+}
+
 impl TopologyController {
     pub fn new() -> Self {
         Self {
@@ -149,33 +185,15 @@ impl TopologyController {
     }
 
     // run a topology with tokio runtime
-    pub fn start(&mut self, topology_config: &str) -> Result<bool, &'static str> {
-        START.call_once(|| {
-            setup_logging();
-        });
+    pub fn start(&mut self, topology_config: &str) -> Result<bool, String> {
 
+        let builder = init_config(topology_config);
+        if builder.is_none() {
+            return Err("failed to init topology config".to_string());
+        }
         info!("start vector service");
 
-        let res = format::deserialize(topology_config, config::Format::Json);
-        if res.is_err() {
-            error!("deserialize error {:?}", res.unwrap_err());
-            return Err("failed to deserialize config string");
-        }
-        let config_builder: ConfigBuilder = res.unwrap();
-        debug!(
-            "config_builder deserialized; sources={:?} transforms={:?} sinks={:?} global={:?}",
-            config_builder.sources,
-            config_builder.transforms,
-            config_builder.sinks,
-            config_builder.global
-        );
-        INIT.call_once(|| {
-            let builder_for_schema = config_builder.clone();
-            let _init_result = config::init_log_schema_from_builder(builder_for_schema, false).expect("init log schema failed");
-            #[cfg(not(feature = "enterprise-tests"))]
-            metrics::init_global().expect("metrics initialization failed");
-        });
-
+        let config_builder = builder.unwrap();
         *self.config_builder.lock().unwrap() = Some(config_builder.clone());
         let topology_cp = self.topology.clone();
         let config = config_builder.build().unwrap();
@@ -201,35 +219,23 @@ impl TopologyController {
 
     pub fn add_config(&mut self, config: String) -> bool {
         let res = self.rt.block_on(self.handle_config_event("add".to_string(), vec![], config));
-        if res {
-            increment_generation_id(&self.generation_id);
-        }
-        res
+        advance_generation(res, &self.generation_id)
     }
 
     pub fn delete_config(&mut self, config_ids: Vec<String>) -> bool {
         let res = self.rt.block_on(self.handle_config_event("delete".to_string(), config_ids, "".to_string()));
-        if res {
-            increment_generation_id(&self.generation_id);
-        }
-        res
+        advance_generation(res, &self.generation_id)
     }
 
     pub fn update_config(&mut self, config: String) -> bool {
         let res = self.rt.block_on(self.handle_config_event("update".to_string(), vec![], config));
-        if res {
-            increment_generation_id(&self.generation_id);
-        }
-        res
+        advance_generation(res, &self.generation_id)
     }
 
     pub fn exit(&mut self) -> bool {
         // no need to handle config event, stop topology directly.
         let res = self.stop();
-        if res {
-            increment_generation_id(&self.generation_id);
-        }
-        res
+        advance_generation(res, &self.generation_id)
     }
 
     pub fn stop(&mut self) -> bool {
@@ -285,4 +291,55 @@ impl TopologyController {
             config_str,
         }, self.config_builder.lock().unwrap().as_mut().unwrap(), self.topology.lock().unwrap().as_mut().unwrap()).await
     }
+}
+
+impl OneShotTopologyController {
+    pub fn new() -> Self {
+        Self {
+            rt: Arc::new(runtime()),
+        }
+    }
+
+    // run topology and return after finished, no need to maintain datas for long run
+    pub fn start(&mut self, config_str: &str) -> Result<bool, String> {
+        let config_builder = init_config(config_str);
+        if config_builder.is_none() {
+            return Err("failed to init topology config".to_string());
+        }
+        info!("start one time vector topology");
+
+        let config = config_builder.unwrap().build().unwrap();
+        info!("config constructed via config builder");
+
+        let (res, err) = self.rt.block_on(async {
+            let (res, err) = start_topology_sync(config, true).await;
+            (res, err)
+        });
+        if res {
+            Ok(true)
+        } else {
+            Err(err)
+        }
+    }
+}
+
+// this function start topology and waiting for source finished
+pub async fn start_topology_sync(
+    mut config: Config,
+    require_healthy: impl Into<Option<bool>>,
+) -> (bool, String) {
+    config.healthchecks.set_require_healthy(require_healthy);
+    let diff = ConfigDiff::initial(&config);
+    let pieces = vector::topology::build_or_log_errors(&config, &diff, HashMap::new())
+        .await
+        .unwrap();
+    let result = vector::topology::start_validated(config, diff, pieces).await;
+    if result.is_none() {
+        return (false, "health check for sink failed".to_string());
+    }
+
+    let (topology, _crash) = result.unwrap();
+    topology.sources_finished().await;
+    topology.stop().await;
+    (true, String::new())
 }

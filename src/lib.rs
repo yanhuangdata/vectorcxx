@@ -6,6 +6,7 @@ mod model;
 mod memory_queue_client;
 
 use crate::topology_controller::TopologyController;
+use crate::topology_controller::OneShotTopologyController;
 use crate::memory_queue_client::MemoryQueueClient;
 use crate::model::CxxLogEvent;
 
@@ -58,10 +59,25 @@ mod ffi {
 
         fn poll(self: &mut MemoryQueueClient) -> Vec<CxxLogEvent>;
     }
+
+    extern "Rust" {
+        /**
+         * OneShotTopologyController
+         */
+        type OneShotTopologyController;
+
+        fn new_one_shot_topology_controller() -> Box<OneShotTopologyController>;
+
+        fn start(self: &mut OneShotTopologyController, topology_config: &str) -> Result<bool>;
+    }
 }
 
 pub fn new_topology_controller() -> Box<TopologyController> {
     Box::new(TopologyController::new())
+}
+
+pub fn new_one_shot_topology_controller() -> Box<OneShotTopologyController> {
+    Box::new(OneShotTopologyController::new())
 }
 
 pub fn new_memory_queue_client() -> Box<MemoryQueueClient> {

@@ -15,7 +15,10 @@ TEST_CASE("consume events from memory queue") {
     send_http_events({"e0", "e1"});
 
     auto &memory_queue_client = CxxMemoryQueueClient::get_instance();
-    auto events = memory_queue_client->poll();
+    rust::Vec<vectorcxx::CxxLogEvent> events;
+    do {
+      events = memory_queue_client->poll();
+    } while (events.empty());
     REQUIRE(events.size() == 1);
     REQUIRE(events[0].get("_target_table") == "main");
     REQUIRE(events[0].get("source_type") == "http");
@@ -39,7 +42,10 @@ TEST_CASE("iterate field names from pulled events") {
   run("http_to_memory_queue", [](rust::Box<TopologyController> &tc) {
     send_http_events({"e0", "e1"});
     auto &memory_queue_client = CxxMemoryQueueClient::get_instance();
-    auto events = memory_queue_client->poll();
+    rust::Vec<vectorcxx::CxxLogEvent> events;
+    do {
+      events = memory_queue_client->poll();
+    } while (events.empty());
     REQUIRE(events.size() == 1);
     auto fields = events[0].fields();
     REQUIRE(fields.size() > 0);

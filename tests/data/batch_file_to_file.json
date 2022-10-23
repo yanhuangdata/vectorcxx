@@ -1,0 +1,26 @@
+{
+  "data_dir": "/tmp/vector/",
+  "sources": {
+    "source_file": {
+      "type": "file",
+      "read_from": "beginning",
+      "include": [
+        "../tests/data/test_files/vector_test_source.log"
+      ],
+      "ignore_checkpoints": true,
+      "keep_watching": false
+    }
+  },
+  "sinks": {
+    "sink_file": {
+      "type": "file",
+      "inputs": [
+        "source_*"
+      ],
+      "encoding": {
+        "codec": "json"
+      },
+      "path": "/tmp/vector_test_sink.log"
+    }
+  }
+}
