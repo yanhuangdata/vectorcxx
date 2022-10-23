@@ -7,6 +7,9 @@ pub struct CxxLogEvent {
 
 impl CxxLogEvent {
     pub fn get(&self, key: &str) -> &str {
+        if self.log_event.get(key).is_none() {
+            return "";
+        }
         let value_ref = self.log_event.get(key).unwrap();
         let value_bytes = value_ref.as_bytes().unwrap();
         str::from_utf8(value_bytes).unwrap()
