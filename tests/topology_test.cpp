@@ -112,10 +112,10 @@ TEST_CASE("topology controller init") {
 
 TEST_CASE("get generation id") {
   run("file_to_file", [](rust::Box<TopologyController> &tc) {
-    REQUIRE(tc->get_generation_id() == 0);
+    REQUIRE(tc->get_generation_id() == 1);
     auto config = load_config("source/http");
     tc->add_config(config);
-    REQUIRE(tc->get_generation_id() == 1);
+    REQUIRE(tc->get_generation_id() == 2);
   });
 }
 

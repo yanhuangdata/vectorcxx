@@ -21,6 +21,7 @@ TEST_CASE("consume events from memory queue") {
     } while (events.empty());
     REQUIRE(events.size() == 1);
     REQUIRE(events[0].get("_target_table") == "main");
+    REQUIRE(events[0].get("\"-Target-Es\"") == "table_a");
     REQUIRE(events[0].get("source_type") == "http");
     REQUIRE(events[0].get_timestamp("timestamp") > 0);
     auto const &message = events[0].get("message");
@@ -32,6 +33,7 @@ TEST_CASE("consume events from memory queue") {
 
     REQUIRE(events.size() == 1);
     REQUIRE(events[0].get("_target_table") == "main");
+    REQUIRE(events[0].get("\"-Target-Es\"") == "table_a");
     REQUIRE(events[0].get("source_type") == "http");
     auto const &message_1 = events[0].get("message");
     REQUIRE(message_1 == "e1");

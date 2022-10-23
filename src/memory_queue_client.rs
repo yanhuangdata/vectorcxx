@@ -1,4 +1,4 @@
-use tracing::{debug, error};
+use tracing::{debug, error, trace};
 use vector::event::{EventArray, EventContainer};
 use vector::sinks::memory_queue::MemoryQueueSink;
 use crate::CxxLogEvent;
@@ -35,7 +35,7 @@ impl MemoryQueueClient {
                 }
                 Ok(None) => {}
                 Err(e) => {
-                    error!("failed to poll events: error={:?}", e);
+                    trace!("failed to poll events: error={:?}", e);
                 }
             }
         }
