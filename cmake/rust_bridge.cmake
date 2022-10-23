@@ -84,6 +84,13 @@ function(add_library_rust)
             "PKG_CONFIG_PATH=$ENV{VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
     )
 
+    set_property(
+        TARGET vectorcxx
+        APPEND
+        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
+        "PROTOC=$ENV{VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/tools/protobuf/protoc"
+    )
+
     target_sources(${CXXBRIDGE_TARGET}
             PRIVATE
                 ${COMMON_HEADER}
