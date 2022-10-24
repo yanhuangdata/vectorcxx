@@ -20,7 +20,7 @@ vector = { git = "https://github.com/yanhuangdata/vector.git", branch = "feature
     "transforms",
     "unix",
     "vrl-cli",
-    "openssl",
+    # "openssl",
     # "sasl",
     "custom-sasl",
     # "vendor-sasl",
