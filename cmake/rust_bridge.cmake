@@ -78,6 +78,13 @@ function(add_library_rust)
     )
 
     set_property(
+        TARGET vectorcxx
+        APPEND
+        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
+        "OPENSSL_NO_VENDOR=true"
+)
+
+    set_property(
             TARGET vectorcxx
             APPEND
             PROPERTY CORROSION_ENVIRONMENT_VARIABLES
