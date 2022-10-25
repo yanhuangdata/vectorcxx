@@ -12,7 +12,9 @@ default_distcc_jobs := env_var_or_default("DISTCC_JOBS", "24")
 
 # configure the project using cmake
 cmake build_type=default_build_type:
-  cmake . --preset={{build_type}}-{{build_os}} -DVCPKG_TARGET_TRIPLET={{vcpkg_default_triplet}}
+  # set the OPENSSL_ROOT_DIR to the package installed via manifest mode,
+  # so that `find_package(OpenSSL)` in CMake can find the OpenSSL lib with correct target architecture
+  OPENSSL_ROOT_DIR=./build-{{build_type}}-{{build_os}}-x64-cmake/vcpkg_installed/{{vcpkg_default_triplet}} cmake . --preset={{build_type}}-{{build_os}} -DVCPKG_TARGET_TRIPLET={{vcpkg_default_triplet}}
 
 # compile the project
 build build_type=default_build_type jobs=default_build_jobs target=default_build_target:

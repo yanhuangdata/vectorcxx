@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "vectorcxx-vector",
+  "version": "0.2.0",
+  "port-version": 0,
+  "description": "vectorcxx vector",
+  "builtin-baseline": "4340582bc30f3e539bd4f52e26418f7d62145956",
+  "dependencies": [
+    "zlib",
+    "catch2",
+    "corrosion",
+    "rs-rdkafka",
+    "nlohmann-json",
+    "spdlog",
+    "fmt",
+    "openssl",
+    "cpr"
+  ],
+  "overrides": [
+    {
+      "name": "librdkafka",
+      "version": "1.8.2",
+      "$comment": "rust-rdkafka still uses 1.8.2"
+    }
+  ]
+}
