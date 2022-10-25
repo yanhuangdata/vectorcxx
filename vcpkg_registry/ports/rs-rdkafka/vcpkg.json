@@ -1,0 +1,8 @@
+{
+  "name": "rs-rdkafka",
+  "version": "0.0.1",
+  "description": "A post installation port for rdkafka",
+  "dependencies": [
+    "librdkafka"
+  ]
+}

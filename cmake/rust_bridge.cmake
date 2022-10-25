@@ -70,12 +70,45 @@ function(add_library_rust)
         endif()
     endif()
 
+    # if OPENSSL_INCLUDE_DIR env var is defined and is not empty string
+    if(DEFINED ENV{OPENSSL_INCLUDE_DIR} AND NOT "$ENV{OPENSSL_INCLUDE_DIR}" STREQUAL "")
+        set(VECTOR_OPENSSL_INCLUDE_DIR $ENV{OPENSSL_INCLUDE_DIR})
+        message(STATUS "Use OPENSSL_INCLUDE_DIR in environment var")
+    else()
+        set(MANIFEST_MODE_VCPKG_OPENSSL_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include)
+        if(EXISTS ${MANIFEST_MODE_VCPKG_OPENSSL_INCLUDE_DIR})
+            set(VECTOR_OPENSSL_INCLUDE_DIR ${MANIFEST_MODE_VCPKG_OPENSSL_INCLUDE_DIR})
+            message(STATUS "Found openssl include dir via vcpkg in manifeste mode")
+        else()
+            message(STATUS "Could not find openssl include dir via vcpkg in manifeste mode MANIFEST_MODE_VCPKG_OPENSSL_INCLUDE_DIR=${MANIFEST_MODE_VCPKG_OPENSSL_INCLUDE_DIR}")
+            set(VECTOR_OPENSSL_INCLUDE_DIR $ENV{VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/include/)
+            message(STATUS "Found openssl include dir via vcpkg in classic mode")
+        endif()
+    endif()
+    message(STATUS "Using openssl include dir: OPENSSL_INCLUDE_DIR=${VECTOR_OPENSSL_INCLUDE_DIR}")
+
     set_property(
             TARGET vectorcxx
             APPEND
             PROPERTY CORROSION_ENVIRONMENT_VARIABLES
-            "OPENSSL_INCLUDE_DIR=$ENV{VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/include/"
+            "OPENSSL_INCLUDE_DIR=${VECTOR_OPENSSL_INCLUDE_DIR}"
     )
+
+    if(DEFINED ENV{PKG_CONFIG_PATH} AND NOT "$ENV{PKG_CONFIG_PATH}" STREQUAL "")
+        set(VECTOR_PKG_CONFIG_PATH $ENV{PKG_CONFIG_PATH})
+        message(STATUS "Use PKG_CONFIG_PATH in environment var")
+    else()
+        set(MANIFEST_MODE_PKG_CONFIG_PATH ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig)
+        if(EXISTS ${MANIFEST_MODE_PKG_CONFIG_PATH})
+            set(VECTOR_PKG_CONFIG_PATH ${MANIFEST_MODE_PKG_CONFIG_PATH})
+            message(STATUS "Found PKG_CONFIG_PATH via vcpkg in manifeste mode")
+        else()
+            message(STATUS "Could not find PKG_CONFIG_PATH via vcpkg in manifeste mode MANIFEST_MODE_PKG_CONFIG_PATH=${MANIFEST_MODE_PKG_CONFIG_PATH}")
+            set(VECTOR_OPKG_CONFIG_PATH $ENV{VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig/)
+            message(STATUS "Found PKG_CONFIG_PATH via vcpkg in classic mode")
+        endif()
+    endif()
+    message(STATUS "Using PKG_CONFIG_PATH: PKG_CONFIG_PATH=${VECTOR_PKG_CONFIG_PATH}")
 
     set_property(
         TARGET vectorcxx
@@ -88,7 +121,7 @@ function(add_library_rust)
             TARGET vectorcxx
             APPEND
             PROPERTY CORROSION_ENVIRONMENT_VARIABLES
-            "PKG_CONFIG_PATH=$ENV{VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
+            "PKG_CONFIG_PATH=${VECTOR_PKG_CONFIG_PATH}"
     )
 
     set_property(
@@ -142,7 +175,18 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     set(Rust_CARGO_TARGET "x86_64-unknown-linux-gnu")
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
-    set(Rust_CARGO_TARGET "x86_64-apple-darwin")
+    # on macOS "uname -m" returns the architecture (x86_64 or arm64)
+    execute_process(
+        COMMAND uname -m
+        RESULT_VARIABLE exit_code_or_error
+        OUTPUT_VARIABLE OSX_NATIVE_ARCHITECTURE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(OSX_NATIVE_ARCHITECTURE STREQUAL "arm64")
+        set(Rust_CARGO_TARGET "aarch64-apple-darwin")
+    else()
+        set(Rust_CARGO_TARGET "x86_64-apple-darwin")
+    endif()
 else()
     message(FATAL_ERROR "hardcoded ${CMAKE_SYSTEM_NAME} platformchecks not supported outside windows-gnu, linux-gnu and apple-darwin")
 endif()
