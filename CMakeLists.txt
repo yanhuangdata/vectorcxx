@@ -107,6 +107,7 @@ macro(setup_dependencies)
     
     
     find_package(OpenSSL REQUIRED)
+    message(STATUS "Found openssl library OPENSSL_INCLUDE_DIR=${OPENSSL_INCLUDE_DIR} OPENSSL_SSL_LIBRARY=${OPENSSL_SSL_LIBRARY}")
     
     if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
     find_library(IOKIT_LIBRARY NAMES IOKit REQUIRED)
