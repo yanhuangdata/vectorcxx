@@ -1,0 +1,4 @@
+[submodule "vector"]
+	path = vector
+	url = https://github.com/yanhuangdata/vector.git
+	branch = snapshot/v0.25

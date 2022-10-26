@@ -1,7 +1,5 @@
 build-debug-osx-x64-cmake
 build-release-osx-x64-cmake
-cmake-build-debug
-vector
 generated_src
 .vscode
 .idea

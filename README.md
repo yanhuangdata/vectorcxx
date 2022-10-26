@@ -7,13 +7,19 @@
 # setup
 * Rust `edition2021` is needed because vector requires it.
     * `rustup default nightly`
-* vcpkg dependencies
-  * `Corrosion`/`zlib`/`Catch`
-  * `vcpkg install`
+
+# build on Apple Silicon for arm64
+* use `nightly-aarch64-apple-darwin` rust toolchain
+* Export the following environment variables
+```
+VCPKG_DEFAULT_TRIPLET=arm64-osx
+VCPKG_DEFAULT_HOST_TRIPLET=arm64-osx
+```
 
 # develop (on macOS)
 * configure and build
 ```
-cmake . --preset=debug-osx
-cmake --build --preset=debug-osx-build
+just cmake
+# this will use vcpkg manifest mode to install all the dependencies
+just build
 ```

@@ -2,7 +2,7 @@
   "data_dir": "/tmp/vector/",
   "sources": {
     "source_http": {
-      "type": "http",
+      "type": "http_server",
       "address": "0.0.0.0:9999",
       "headers": ["_target_table", "-Target-Es"],
       "encoding": "text"

@@ -22,4 +22,4 @@ build build_type=default_build_type jobs=default_build_jobs target=default_build
 
 # run all tests
 test build_type=default_build_type:
-  pushd build-{{build_type}}-{{build_os}}-x64-cmake && make test && popd
+  pushd build-{{build_type}}-{{build_os}}-x64-cmake && ctest && popd
