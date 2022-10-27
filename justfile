@@ -14,7 +14,7 @@ default_distcc_jobs := env_var_or_default("DISTCC_JOBS", "24")
 cmake build_type=default_build_type:
   # set the OPENSSL_ROOT_DIR to the package installed via manifest mode,
   # so that `find_package(OpenSSL)` in CMake can find the OpenSSL lib with correct target architecture
-  OPENSSL_ROOT_DIR=./build-{{build_type}}-{{build_os}}-x64-cmake/vcpkg_installed/{{vcpkg_default_triplet}} cmake . --preset={{build_type}}-{{build_os}} -DVCPKG_TARGET_TRIPLET={{vcpkg_default_triplet}}
+  OPENSSL_ROOT_DIR=./build-cmake-{{build_type}}-{{build_os}}/vcpkg_installed/{{vcpkg_default_triplet}} cmake . --preset={{build_type}}-{{build_os}} -DVCPKG_TARGET_TRIPLET={{vcpkg_default_triplet}}
 
 # compile the project
 build build_type=default_build_type jobs=default_build_jobs target=default_build_target:
@@ -22,4 +22,13 @@ build build_type=default_build_type jobs=default_build_jobs target=default_build
 
 # run all tests
 test build_type=default_build_type:
-  pushd build-{{build_type}}-{{build_os}}-x64-cmake && ctest && popd
+  pushd build-cmake-{{build_type}}-{{build_os}} && ctest && popd
+
+patch: 
+  tomlpatch ./vector/Cargo.toml ./patch/Cargo.patch.json 
+  @echo "Updating patched Cargo.toml for vector"
+  cd vector && cargo update && cd ..
+  cp ./vector/Cargo.toml ./patch/ && cp ./vector/Cargo.lock ./patch/
+
+install_toml_patch:
+  pip install tomlpatch --upgrade

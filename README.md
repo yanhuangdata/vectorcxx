@@ -23,3 +23,10 @@ just cmake
 # this will use vcpkg manifest mode to install all the dependencies
 just build
 ```
+* patch vector Cargo.toml
+```
+# only needed to be installed for the first time user
+just install_toml_patch
+just patch
+```
+Commit the `Cargo.toml` and `Cargo.lock` in the `patch` directory to the vectorcxx repo
