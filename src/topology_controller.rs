@@ -209,11 +209,13 @@ impl TopologyController {
                 info!("vector topology started");
                 *topology_cp.lock().unwrap() = Some(topology);
                 // no need to handle source_finished here
-                let mut _sources_finished = topology_cp.lock().unwrap().as_ref().unwrap().sources_finished();
+                let mut sources_finished = topology_cp.lock().unwrap().as_ref().unwrap().sources_finished();
             });
         });
+
         info!("vector thread spawned");
-        self.vector_thread_join_handle = Some(join_handle);
+        advance_generation(true, &self.generation_id);
+        // self.vector_thread_join_handle = Some(join_handle);
         Ok(true)
     }
 

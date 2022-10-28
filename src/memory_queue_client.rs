@@ -1,4 +1,4 @@
-use tracing::{debug, error};
+use tracing::{debug, error, trace};
 use vector::event::{EventArray, EventContainer};
 use vector::sinks::memory_queue::MemoryQueueSink;
 use crate::CxxLogEvent;
@@ -27,7 +27,7 @@ impl MemoryQueueClient {
         if let Some(rx) = &mut self.receiver {
             match rx.try_next() {
                 Ok(Some(value)) => {
-                    debug!("event array received length={:?}", value.len());
+                    trace!("event array received length={:?}", value.len());
                     events.reserve(value.len());
                     value.iter_events().for_each(|event_ref|
                         events.push(CxxLogEvent { log_event: event_ref.into_log() })
@@ -35,7 +35,7 @@ impl MemoryQueueClient {
                 }
                 Ok(None) => {}
                 Err(e) => {
-                    error!("failed to poll events: error={:?}", e);
+                    trace!("failed to poll events: error={:?}", e);
                 }
             }
         }

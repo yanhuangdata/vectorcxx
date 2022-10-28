@@ -111,10 +111,24 @@ function(add_library_rust)
     message(STATUS "Using PKG_CONFIG_PATH: PKG_CONFIG_PATH=${VECTOR_PKG_CONFIG_PATH}")
 
     set_property(
+        TARGET vectorcxx
+        APPEND
+        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
+        "OPENSSL_NO_VENDOR=true"
+)
+
+    set_property(
             TARGET vectorcxx
             APPEND
             PROPERTY CORROSION_ENVIRONMENT_VARIABLES
             "PKG_CONFIG_PATH=${VECTOR_PKG_CONFIG_PATH}"
+    )
+
+    set_property(
+        TARGET vectorcxx
+        APPEND
+        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
+        "PROTOC=$ENV{VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/tools/protobuf/protoc"
     )
 
     target_sources(${CXXBRIDGE_TARGET}
