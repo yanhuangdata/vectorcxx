@@ -209,17 +209,6 @@ impl TopologyController {
             let mut sources_finished = topology_cp.lock().unwrap().as_ref().unwrap().sources_finished();
         });
 
-        // let join_handle = std::thread::spawn(move || {
-
-        //     rt.block_on(async {
-        //         let (topology, _crash) =
-        //             vector::test_util::start_topology(config, false).await;
-        //         info!("vector topology started");
-        //         *topology_cp.lock().unwrap() = Some(topology);
-        //         // no need to handle source_finished here
-        //         let mut sources_finished = topology_cp.lock().unwrap().as_ref().unwrap().sources_finished();
-        //     });
-        // });
         info!("vector thread spawned");
         advance_generation(true, &self.generation_id);
         // self.vector_thread_join_handle = Some(join_handle);
