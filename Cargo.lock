@@ -2480,7 +2480,11 @@ version = "0.1.0-rc.1"
 source = "git+https://github.com/vectordotdev/heim.git?branch=update-nix#76fa765c7ed7fbe43d1465bf52da6b8d19f2d2a9"
 dependencies = [
  "heim-common",
+ "heim-cpu",
  "heim-disk",
+ "heim-host",
+ "heim-memory",
+ "heim-net",
  "heim-runtime",
 ]
 
@@ -2503,6 +2507,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "heim-cpu"
+version = "0.1.0-rc.1"
+source = "git+https://github.com/vectordotdev/heim.git?branch=update-nix#76fa765c7ed7fbe43d1465bf52da6b8d19f2d2a9"
+dependencies = [
+ "cfg-if",
+ "futures 0.3.25",
+ "glob",
+ "heim-common",
+ "heim-runtime",
+ "lazy_static",
+ "libc",
+ "mach",
+ "ntapi",
+ "smol",
+ "winapi",
+]
+
+[[package]]
 name = "heim-disk"
 version = "0.1.0-rc.1"
 source = "git+https://github.com/vectordotdev/heim.git?branch=update-nix#76fa765c7ed7fbe43d1465bf52da6b8d19f2d2a9"
@@ -2514,6 +2536,53 @@ dependencies = [
  "heim-runtime",
  "libc",
  "mach",
+ "widestring 0.4.3",
+ "winapi",
+]
+
+[[package]]
+name = "heim-host"
+version = "0.1.0-rc.1"
+source = "git+https://github.com/vectordotdev/heim.git?branch=update-nix#76fa765c7ed7fbe43d1465bf52da6b8d19f2d2a9"
+dependencies = [
+ "cfg-if",
+ "heim-common",
+ "heim-runtime",
+ "lazy_static",
+ "libc",
+ "log",
+ "mach",
+ "ntapi",
+ "platforms",
+ "winapi",
+]
+
+[[package]]
+name = "heim-memory"
+version = "0.1.0-rc.1"
+source = "git+https://github.com/vectordotdev/heim.git?branch=update-nix#76fa765c7ed7fbe43d1465bf52da6b8d19f2d2a9"
+dependencies = [
+ "cfg-if",
+ "heim-common",
+ "heim-runtime",
+ "lazy_static",
+ "libc",
+ "mach",
+ "winapi",
+]
+
+[[package]]
+name = "heim-net"
+version = "0.1.0-rc.1"
+source = "git+https://github.com/vectordotdev/heim.git?branch=update-nix#76fa765c7ed7fbe43d1465bf52da6b8d19f2d2a9"
+dependencies = [
+ "bitflags",
+ "cfg-if",
+ "heim-common",
+ "heim-runtime",
+ "libc",
+ "macaddr",
+ "nix 0.23.1",
  "widestring 0.4.3",
  "winapi",
 ]
@@ -3219,6 +3288,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "macaddr"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "baee0bbc17ce759db233beb01648088061bf678383130602a298e6998eedb2d8"
+
+[[package]]
 name = "mach"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3674,6 +3749,15 @@ dependencies = [
  "libc",
  "mio",
  "walkdir",
+ "winapi",
+]
+
+[[package]]
+name = "ntapi"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c28774a7fd2fbb4f0babd8237ce554b73af68021b5f695a3cebd6c59bac0980f"
+dependencies = [
  "winapi",
 ]
 
@@ -4281,6 +4365,12 @@ name = "pkg-config"
 version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
+
+[[package]]
+name = "platforms"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "989d43012e2ca1c4a02507c67282691a0a3207f9dc67cec596b43fe925b3d325"
 
 [[package]]
 name = "polling"
@@ -6615,6 +6705,7 @@ dependencies = [
  "hash_hasher",
  "headers",
  "heim",
+ "hex",
  "hostname",
  "http",
  "http-body",
@@ -6660,6 +6751,7 @@ dependencies = [
  "serde-toml-merge",
  "serde_json",
  "serde_yaml 0.9.14",
+ "sha2 0.10.6",
  "smallvec",
  "snafu",
  "snap",
