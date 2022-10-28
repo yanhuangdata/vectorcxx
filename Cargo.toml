@@ -10,21 +10,7 @@ cxx = "1.0.78"
 # without disabling default features, cargo will complain `libz-sys` feature is required but vector doesn't have it
 # for release, use "vector = { git = "https://github.com/yanhuangdata/vector.git", branch = "feature/vector-lib" }"
 # for local repo test, use "vector = { path = "{path_to_local_vector_repo}" }"
-vector = { git = "https://github.com/yanhuangdata/vector.git", branch = "feature/vector-upgrade", features = [
-    "api",
-    "api-client",
-    "enrichment-tables",
-    "sinks",
-    "sources",
-    "sources-dnstap",
-    "transforms",
-    "unix",
-    "vrl-cli",
-    # "openssl",
-    # "sasl",
-    "custom-sasl",
-    # "vendor-sasl",
-], default-features = false  }
+vector = { git = "https://github.com/yanhuangdata/vector.git", branch = "feature/vector-upgrade", default-features = true  }
 tempfile = "3.2.0"
 futures = "0.3.17"
 tokio = { version = "1.13.0", features = ["test-util"] }
