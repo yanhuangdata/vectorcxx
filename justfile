@@ -24,7 +24,9 @@ build build_type=default_build_type jobs=default_build_jobs target=default_build
 test build_type=default_build_type:
   pushd build-cmake-{{build_type}}-{{build_os}} && ctest && popd
 
+# patch ./vector/Cargo.toml using ./patch/Cargo.patch.json
 patch: 
+  @pushd vector && git diff --exit-code ./Cargo.toml > /dev/null || (echo "./vector/Cargo.toml has uncommitted modification, please commit the necessary changes or discard the changes manually, and then run 'patch' command again" && exit 1)
   tomlpatch ./vector/Cargo.toml ./patch/Cargo.patch.json 
   @echo "Updating patched Cargo.toml for vector"
   cd vector && cargo update && cd ..

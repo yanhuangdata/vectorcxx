@@ -1,8 +1,8 @@
 {
   "patch": {
     "dependencies.openssl.features": null,
-    "package.sources": ["custom-sources-logs"],
-    "package.custom-sources-logs": [
+    "features.sources": ["custom-sources-logs"],
+    "features.custom-sources-logs": [
       "sources-file",
       "sources-demo_logs",
       "sources-stdin",
@@ -10,8 +10,8 @@
       "sources-kafka",
       "sources-vector"
     ],
-    "package.sinks": ["custom-sinks-logs"],
-    "package.custom-sinks-logs": [
+    "features.sinks": ["custom-sinks-logs"],
+    "features.custom-sinks-logs": [
       "sinks-blackhole",
       "sinks-clickhouse",
       "sinks-console",

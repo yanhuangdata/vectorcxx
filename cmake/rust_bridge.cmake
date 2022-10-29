@@ -1,4 +1,23 @@
 # Creates a target including rust lib and cxxbridge named ${NAMESPACE}::${NAME}
+function(find_dependency_path dependency_path_name dependency_location RETURN_DEPENDENCY_PATH)
+    if(DEFINED ENV{${dependency_path_name}} AND NOT "$ENV{${dependency_path_name}}" STREQUAL "")
+        set(VECTOR_${dependency_path_name} $ENV{${dependency_path_name}})
+        message(STATUS "Use ${dependency_path_name} in environment var")
+    else()
+        set(MANIFEST_MODE_${dependency_path_name} ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/${dependency_location})
+        if(EXISTS ${MANIFEST_MODE_${dependency_path_name}})
+            set(VECTOR_${dependency_path_name} ${MANIFEST_MODE_${dependency_path_name}})
+            message(STATUS "Found ${dependency_path_name} via vcpkg in manifest mode")
+        else()
+            message(STATUS "Could not find ${dependency_path_name} via vcpkg in manifest mode MANIFEST_MODE_${dependency_path_name}=${MANIFEST_MODE_${dependency_path_name}}")
+            set(VECTOR_${dependency_path_name} $ENV{VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/${dependency_location})
+            message(STATUS "Found ${dependency_path_name} via vcpkg in classic mode")
+        endif()
+    endif()
+    message(STATUS "Using ${dependency_path_name}: ${dependency_path_name}=${VECTOR_${dependency_path_name}}")
+    set(${RETURN_DEPENDENCY_PATH} ${VECTOR_${dependency_path_name}} PARENT_SCOPE)
+endfunction()
+
 function(add_library_rust)
     # set(OPTIONS)
     set(ONE_VALUE_KEYWORDS NAMESPACE NAME)
@@ -70,22 +89,16 @@ function(add_library_rust)
         endif()
     endif()
 
-    # if OPENSSL_INCLUDE_DIR env var is defined and is not empty string
-    if(DEFINED ENV{OPENSSL_INCLUDE_DIR} AND NOT "$ENV{OPENSSL_INCLUDE_DIR}" STREQUAL "")
-        set(VECTOR_OPENSSL_INCLUDE_DIR $ENV{OPENSSL_INCLUDE_DIR})
-        message(STATUS "Use OPENSSL_INCLUDE_DIR in environment var")
-    else()
-        set(MANIFEST_MODE_VCPKG_OPENSSL_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include)
-        if(EXISTS ${MANIFEST_MODE_VCPKG_OPENSSL_INCLUDE_DIR})
-            set(VECTOR_OPENSSL_INCLUDE_DIR ${MANIFEST_MODE_VCPKG_OPENSSL_INCLUDE_DIR})
-            message(STATUS "Found openssl include dir via vcpkg in manifeste mode")
-        else()
-            message(STATUS "Could not find openssl include dir via vcpkg in manifeste mode MANIFEST_MODE_VCPKG_OPENSSL_INCLUDE_DIR=${MANIFEST_MODE_VCPKG_OPENSSL_INCLUDE_DIR}")
-            set(VECTOR_OPENSSL_INCLUDE_DIR $ENV{VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/include/)
-            message(STATUS "Found openssl include dir via vcpkg in classic mode")
-        endif()
-    endif()
-    message(STATUS "Using openssl include dir: OPENSSL_INCLUDE_DIR=${VECTOR_OPENSSL_INCLUDE_DIR}")
+    find_dependency_path(OPENSSL_INCLUDE_DIR include VECTOR_OPENSSL_INCLUDE_DIR)
+    find_dependency_path(PKG_CONFIG_PATH lib/pkgconfig VECTOR_PKG_CONFIG_PATH)
+    find_dependency_path(PROTOC_PATH tools/protobuf/protoc VECTOR_PROTOC_PATH)
+
+    set_property(
+        TARGET vectorcxx
+        APPEND
+        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
+        "OPENSSL_NO_VENDOR=true"
+    )
 
     set_property(
             TARGET vectorcxx
@@ -93,29 +106,6 @@ function(add_library_rust)
             PROPERTY CORROSION_ENVIRONMENT_VARIABLES
             "OPENSSL_INCLUDE_DIR=${VECTOR_OPENSSL_INCLUDE_DIR}"
     )
-
-    if(DEFINED ENV{PKG_CONFIG_PATH} AND NOT "$ENV{PKG_CONFIG_PATH}" STREQUAL "")
-        set(VECTOR_PKG_CONFIG_PATH $ENV{PKG_CONFIG_PATH})
-        message(STATUS "Use PKG_CONFIG_PATH in environment var")
-    else()
-        set(MANIFEST_MODE_PKG_CONFIG_PATH ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig)
-        if(EXISTS ${MANIFEST_MODE_PKG_CONFIG_PATH})
-            set(VECTOR_PKG_CONFIG_PATH ${MANIFEST_MODE_PKG_CONFIG_PATH})
-            message(STATUS "Found PKG_CONFIG_PATH via vcpkg in manifeste mode")
-        else()
-            message(STATUS "Could not find PKG_CONFIG_PATH via vcpkg in manifeste mode MANIFEST_MODE_PKG_CONFIG_PATH=${MANIFEST_MODE_PKG_CONFIG_PATH}")
-            set(VECTOR_OPKG_CONFIG_PATH $ENV{VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig/)
-            message(STATUS "Found PKG_CONFIG_PATH via vcpkg in classic mode")
-        endif()
-    endif()
-    message(STATUS "Using PKG_CONFIG_PATH: PKG_CONFIG_PATH=${VECTOR_PKG_CONFIG_PATH}")
-
-    set_property(
-        TARGET vectorcxx
-        APPEND
-        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
-        "OPENSSL_NO_VENDOR=true"
-)
 
     set_property(
             TARGET vectorcxx
@@ -128,7 +118,7 @@ function(add_library_rust)
         TARGET vectorcxx
         APPEND
         PROPERTY CORROSION_ENVIRONMENT_VARIABLES
-        "PROTOC=$ENV{VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/tools/protobuf/protoc"
+        "PROTOC=${VECTOR_PROTOC_PATH}"
     )
 
     target_sources(${CXXBRIDGE_TARGET}

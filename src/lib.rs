@@ -1,5 +1,3 @@
-#![feature(extern_types)]
-
 mod config_event;
 mod topology_controller;
 mod model;

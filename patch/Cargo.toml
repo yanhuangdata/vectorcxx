@@ -13,39 +13,6 @@ publish = false
 default-run = "vector"
 autobenches = false
 rust-version = "1.64.0"
-sources = [
-    "custom-sources-logs",
-]
-custom-sources-logs = [
-    "sources-file",
-    "sources-demo_logs",
-    "sources-stdin",
-    "sources-http_server",
-    "sources-kafka",
-    "sources-vector",
-]
-sinks = [
-    "custom-sinks-logs",
-]
-custom-sinks-logs = [
-    "sinks-blackhole",
-    "sinks-clickhouse",
-    "sinks-console",
-    "sinks-elasticsearch",
-    "sinks-file",
-    "sinks-http",
-    "sinks-influxdb",
-    "sinks-kafka",
-    "sinks-loki",
-    "sinks-memory_queue",
-    "sinks-nats",
-    "sinks-pulsar",
-    "sinks-redis",
-    "sinks-socket",
-    "sinks-splunk_hec",
-    "sinks-vector",
-    "sinks-websocket",
-]
 
 [package.metadata.deb]
 name = "vector"
@@ -1540,14 +1507,6 @@ enrichment-tables-geoip = [
 sources = [
     "custom-sources-logs",
 ]
-custom-sources-logs = [
-    "sources-file",
-    "sources-demo_logs",
-    "sources-stdin",
-    "sources-http_server",
-    "sources-kafka",
-    "sources-vector",
-]
 sources-logs = [
     "sources-amqp",
     "sources-aws_kinesis_firehose",
@@ -1836,25 +1795,6 @@ transforms-throttle = [
 ]
 sinks = [
     "custom-sinks-logs",
-]
-custom-sinks-logs = [
-    "sinks-blackhole",
-    "sinks-clickhouse",
-    "sinks-console",
-    "sinks-elasticsearch",
-    "sinks-file",
-    "sinks-http",
-    "sinks-influxdb",
-    "sinks-kafka",
-    "sinks-loki",
-    "sinks-memory_queue",
-    "sinks-nats",
-    "sinks-pulsar",
-    "sinks-redis",
-    "sinks-socket",
-    "sinks-splunk_hec",
-    "sinks-vector",
-    "sinks-websocket",
 ]
 sinks-logs = [
     "sinks-amqp",
@@ -2315,6 +2255,33 @@ loki-benches = [
 ]
 enrichment-tables-benches = [
     "enrichment-tables-geoip",
+]
+custom-sources-logs = [
+    "sources-file",
+    "sources-demo_logs",
+    "sources-stdin",
+    "sources-http_server",
+    "sources-kafka",
+    "sources-vector",
+]
+custom-sinks-logs = [
+    "sinks-blackhole",
+    "sinks-clickhouse",
+    "sinks-console",
+    "sinks-elasticsearch",
+    "sinks-file",
+    "sinks-http",
+    "sinks-influxdb",
+    "sinks-kafka",
+    "sinks-loki",
+    "sinks-memory_queue",
+    "sinks-nats",
+    "sinks-pulsar",
+    "sinks-redis",
+    "sinks-socket",
+    "sinks-splunk_hec",
+    "sinks-vector",
+    "sinks-websocket",
 ]
 
 [[bench]]
