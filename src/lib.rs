@@ -41,7 +41,15 @@ mod ffi {
          */
         type CxxLogEvent;
 
-        unsafe fn get<'a>(self: &'a CxxLogEvent, key: &str) -> &'a str;
+        unsafe fn get_string<'a>(self: &'a CxxLogEvent, key: &str) -> &'a str;
+
+        unsafe fn get_value_type<'a>(self: &'a CxxLogEvent, key: &str) ->  &'a str;
+    
+        fn get_integer(self: &CxxLogEvent, key: &str) -> i64 ;
+    
+        fn get_boolean(self: &CxxLogEvent, key: &str) -> bool;
+    
+        fn get_double(self: &CxxLogEvent, key: &str) -> f64;
 
         // return a field as timestamp with microsecond precision
         fn get_timestamp(self: &CxxLogEvent, key: &str) -> i64;

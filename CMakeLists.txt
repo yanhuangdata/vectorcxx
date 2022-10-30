@@ -311,7 +311,10 @@ function(setup_tests)
     # copy test data during build time
     # file will only be copied when build succeeds (POST_BUILD)
     # a folder with names like `tests/data` its contents will be copied into `data` in bin folder 
-    
+    add_custom_target(${TARGET_NAME}_test_data_TESTS_DATA
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/test_files /tmp/)
+    add_dependencies(${TARGET_NAME} ${TARGET_NAME}_test_data_TESTS_DATA)
 
 endfunction()
 

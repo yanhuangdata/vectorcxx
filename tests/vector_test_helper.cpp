@@ -50,7 +50,7 @@ namespace vectorcxx::test {
     for (const auto &event : events) {
       auto res = cpr::Post(cpr::Url{fmt::format("http://localhost:{}", port)}, cpr::Body{event},
                            cpr::Header{{"-Target-Es", "table_a"}, {"_target_table", "main"}});
-      spdlog::info("1 sending event to http status={}", res.status_code);
+      spdlog::info("sending event to http status={}", res.status_code);
     }
   }
 
