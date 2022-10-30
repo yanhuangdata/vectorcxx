@@ -1,0 +1,27 @@
+{
+  "data_dir": "/tmp/vector/",
+  "sources": {
+    "source_http": {
+      "type": "http",
+      "address": "0.0.0.0:9999",
+      "headers": ["_target_table", "-Target-Es"],
+      "encoding": "json"
+    }
+  },
+  "transforms": {
+    "transform_remap_field": {
+      "type": "remap",
+      "inputs": ["source_*"],
+      "source": "._source = \"my_source\""
+    }
+  },
+  "sinks": {
+    "sink_memory_queue": {
+      "type": "memory_queue",
+      "inputs": [
+        "transform_*"
+      ],
+      "rate": null
+    }
+  }
+}

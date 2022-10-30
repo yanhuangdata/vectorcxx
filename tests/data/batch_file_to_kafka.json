@@ -5,7 +5,7 @@
       "type": "file",
       "read_from": "beginning",
       "include": [
-        "../tests/data/test_files/vector_test_source.log"
+        "/tmp/vector_test_source_one_shot.log"
       ],
       "ignore_checkpoints": true,
       "keep_watching": false
