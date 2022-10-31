@@ -16,12 +16,5 @@
     "fmt",
     "openssl",
     "cpr"
-  ],
-  "overrides": [
-    {
-      "name": "librdkafka",
-      "version": "1.8.2",
-      "$comment": "rust-rdkafka still uses 1.8.2"
-    }
   ]
 }

@@ -1,6 +1,5 @@
 {
   "patch": {
-    "dependencies.openssl.features": null,
     "features.sources": ["custom-sources-logs"],
     "features.custom-sources-logs": [
       "sources-file",
@@ -30,7 +29,7 @@
       "sinks-vector",
       "sinks-websocket"
     ],
-    "dependencies.rdkafka.tag": "v0.28.0"
+    "dependencies.openssl.features": null
   },
   "extend": {
     "dependencies.rdkafka.features": ["dynamic-linking"]

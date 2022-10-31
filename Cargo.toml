@@ -17,8 +17,6 @@ serde_json = { version = "1.0.68" }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3.16", features = ["env-filter", "time", "local-time", "fmt"] }
 time = { version = "0.3.15", features = ["macros"] }
-# this is for resolving the dependency conflict between rust-rdkafka and aysnc-compression in vector when upgrading rust-rdkafka to 1.9.2
-# zstd-sys = "2.0.1+zstd.1.5.2"
 
 [build-dependencies]
 cxx-build = "1.0.73"

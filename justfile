@@ -24,12 +24,17 @@ build build_type=default_build_type jobs=default_build_jobs target=default_build
 test build_type=default_build_type:
   pushd build-cmake-{{build_type}}-{{build_os}} && ctest && popd
 
+clean:
+  rm -fr target && rm -fr vcpkg_installed && rm -fr build-cmake-*
+
 # patch ./vector/Cargo.toml using ./patch/Cargo.patch.json
 patch: 
-  @pushd vector && git diff --exit-code ./Cargo.toml > /dev/null || (echo "./vector/Cargo.toml has uncommitted modification, please commit the necessary changes or discard the changes manually, and then run 'patch' command again" && exit 1)
+  # @pushd vector && git diff --exit-code ./Cargo.toml > /dev/null || (echo "./vector/Cargo.toml has uncommitted modification, please commit the necessary changes or discard the changes manually, and then run 'patch' command again" && exit 1)
+  # this will reset the ./vector/Cargo.toml to the original state
+  cd vector && git checkout HEAD -- ./Cargo.toml && cd ..
   tomlpatch ./vector/Cargo.toml ./patch/Cargo.patch.json 
   @echo "Updating patched Cargo.toml for vector"
-  cd vector && cargo update && cd ..
+  cd vector && cargo update --package openssl --package rdkafka && cd ..
   cp ./vector/Cargo.toml ./patch/ && cp ./vector/Cargo.lock ./patch/
 
 install_toml_patch:
