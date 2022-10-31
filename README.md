@@ -30,3 +30,7 @@ just install_toml_patch
 just patch
 ```
 Commit the `Cargo.toml` and `Cargo.lock` in the `patch` directory to the vectorcxx repo
+
+* re-generate `CMakelists.txt`
+Everytime `CMakelists.txt` is re-generated, the following changes need to be made (until we remove all of them out of it):
+* `if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")` branch for dependencies

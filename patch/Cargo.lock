@@ -1413,9 +1413,9 @@ checksum = "2c676a478f63e9fa2dd5368a42f28bba0d6c560b775f38583c8bbaa7fcd67c9c"
 
 [[package]]
 name = "bytemuck"
-version = "1.12.1"
+version = "1.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f5715e491b5a1598fc2bef5a606847b5dc1d48ea625bd3c02c00de8285591da"
+checksum = "5aec14f5d4e6e3f927cd0c81f72e5710d95ee9019fbeb4b3021193867491bfd8"
 
 [[package]]
 name = "byteorder"
@@ -4647,9 +4647,9 @@ dependencies = [
 
 [[package]]
 name = "mlua"
-version = "0.8.4"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86b8fdab73969938b10159fb7e4fee45e96f386baadd8eaa6150e3161f28dfe2"
+checksum = "53b6ea067a456d841f7fdd9510368715ee8da5608ddaa43d36c58414add37abf"
 dependencies = [
  "bstr 0.2.17",
  "cc",
@@ -6331,8 +6331,8 @@ dependencies = [
 
 [[package]]
 name = "rdkafka"
-version = "0.28.0"
-source = "git+https://github.com/fede1024/rust-rdkafka?tag=v0.29.0#fe99e1fb18433debc5ba6ca811de983c535e1804"
+version = "0.29.0"
+source = "git+https://github.com/fede1024/rust-rdkafka?tag=v0.29.0#65520c820565f9882475cc29cd6d149940515324"
 dependencies = [
  "futures-channel",
  "futures-util",
@@ -6348,8 +6348,8 @@ dependencies = [
 
 [[package]]
 name = "rdkafka-sys"
-version = "4.2.0+1.8.2"
-source = "git+https://github.com/fede1024/rust-rdkafka?tag=v0.29.0#fe99e1fb18433debc5ba6ca811de983c535e1804"
+version = "4.3.0+1.9.2"
+source = "git+https://github.com/fede1024/rust-rdkafka?tag=v0.29.0#65520c820565f9882475cc29cd6d149940515324"
 dependencies = [
  "cmake",
  "libc",

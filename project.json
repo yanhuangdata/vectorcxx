@@ -19,8 +19,10 @@
       "vcpkg": "corrosion"
     },
     {
-      "library": "rdkafka",
-      "scope": "PRIVATE"
+      "package": "RdKafka",
+      "link": "RdKafka::rdkafka RdKafka::rdkafka++",
+      "scope": "PRIVATE",
+      "vcpkg": "librdkafka"
     },
     {
       "package": "OpenSSL",

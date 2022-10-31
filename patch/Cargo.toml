@@ -1271,7 +1271,6 @@ default = [
     "unix",
     "rdkafka?/gssapi-vendored",
     "vrl-cli",
-    "enterprise",
 ]
 default-cmake = [
     "api",
