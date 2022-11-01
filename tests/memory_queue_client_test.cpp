@@ -85,21 +85,6 @@ TEST_CASE("consume events containing different value types") {
       events = memory_queue_client->poll();
     } while (events.empty());
 
-    auto fields = events[0].fields();
-    REQUIRE(fields.size() > 0);
-    std::vector<std::string> field_vec;
-    field_vec.reserve(fields.size());
-    for (auto const &field : fields) {
-      field_vec.emplace_back(field);
-    }
-    REQUIRE_THAT(field_vec, VectorContains(std::string("timestamp")));
-    REQUIRE_THAT(field_vec, VectorContains(std::string("source_type")));
-    REQUIRE_THAT(field_vec, VectorContains(std::string("_source")));
-    REQUIRE_THAT(field_vec, VectorContains(std::string("age")));
-    REQUIRE_THAT(field_vec, VectorContains(std::string("happy")));
-    REQUIRE_THAT(field_vec, VectorContains(std::string("pi")));
-    REQUIRE_THAT(field_vec, VectorContains(std::string("words")));
-
     REQUIRE(events.size() == 1);
     REQUIRE(events[0].get_string("_target_table") == "main");
     REQUIRE(events[0].get_string("\"-Target-Es\"") == "table_a");
@@ -113,5 +98,61 @@ TEST_CASE("consume events containing different value types") {
     REQUIRE(events[0].get_double("pi") == 3.141);
     auto const &words = events[0].get_string("words");
     REQUIRE(words == "give me five");
+  });
+}
+
+TEST_CASE("consume events with raw message") {
+  run("http_to_memory_queue_with_parsing", [](rust::Box<TopologyController> &tc) {
+    nlohmann::json event = nlohmann::json::parse(
+      R"({"_datatype":"json","message":"{\"b\":2}","_time":1})");
+    send_http_events({event.dump()});
+
+    auto &memory_queue_client = CxxMemoryQueueClient::get_instance();
+    rust::Vec<vectorcxx::CxxLogEvent> events;
+    do {
+      events = memory_queue_client->poll();
+    } while (events.empty());
+
+    REQUIRE(events.size() == 1);
+    REQUIRE(std::string(events[0].get_string("_datatype").data(), events[0].get_string("_datatype").size()) == "json");
+    REQUIRE(std::string(events[0].get_string("_message").data(), events[0].get_string("_message").size()) == "{\"b\":2}");
+
+  });
+}
+
+TEST_CASE("consume events with object and array field") {
+  run("http_to_memory_queue_with_parsing", [](rust::Box<TopologyController> &tc) {
+    nlohmann::json event = nlohmann::json::parse(
+      R"({"_datatype":"json", "empty_obj":{},"empty_list":[], "some_obj":{"k1": "v1"},"some_list":[1, 2]})");
+    send_http_events({event.dump()});
+
+    auto &memory_queue_client = CxxMemoryQueueClient::get_instance();
+    rust::Vec<vectorcxx::CxxLogEvent> events;
+    do {
+      events = memory_queue_client->poll();
+    } while (events.empty());
+
+    // std::vector<std::vector<std::string>> field_vec;
+    // auto fields = events[0].fields();
+    // field_vec.reserve(fields.size());
+    // for (auto const &field : fields) {
+    //   auto field_name = std::string(field.data(), field.size());
+    //   auto type = events[0].get_value_type(field);
+    //   auto field_type = std::string(type.data(), type.size());
+    //   std::vector<std::string> one_field = {field_name, field_type};
+    //   field_vec.emplace_back(one_field);
+    //   std::cout << "key: " << field_name << ", type: " << field_type << std::endl;
+    // }
+
+    REQUIRE(events.size() == 1);
+    REQUIRE(std::string(events[0].get_string("_datatype").data(), events[0].get_string("_datatype").size()) == "json");
+
+    REQUIRE(std::string(events[0].get_object_as_string("empty_obj").data(), events[0].get_object_as_string("empty_obj").size()) == "{}");
+    REQUIRE(std::string(events[0].get_array_as_string("empty_list").data(), events[0].get_array_as_string("empty_list").size()) == "[]");
+
+    REQUIRE(std::string(events[0].get_object_as_string("some_obj").data(), events[0].get_object_as_string("some_obj").size()) == "{\"k1\":\"v1\"}");
+    REQUIRE(std::string(events[0].get_array_as_string("some_list").data(), events[0].get_array_as_string("some_list").size()) == "[1,2]");
+    // REQUIRE(std::string(events[0].get_string("_message").data(), events[0].get_string("_message").size()) == "{\"b\":2}");
+
   });
 }

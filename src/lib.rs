@@ -42,6 +42,10 @@ mod ffi {
         unsafe fn get_string<'a>(self: &'a CxxLogEvent, key: &str) -> &'a str;
 
         unsafe fn get_value_type<'a>(self: &'a CxxLogEvent, key: &str) ->  &'a str;
+
+        fn get_object_as_string(self: &CxxLogEvent, key: &str) -> String;
+        
+        fn get_array_as_string(self: &CxxLogEvent, key: &str) -> String;
     
         fn get_integer(self: &CxxLogEvent, key: &str) -> i64 ;
     

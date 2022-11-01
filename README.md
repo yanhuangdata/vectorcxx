@@ -17,6 +17,11 @@ VCPKG_DEFAULT_HOST_TRIPLET=arm64-osx
 ```
 
 # develop (on macOS)
+* add submodule for vectorcxx
+```
+# only needed to be run for the first time
+git submodule update --init --recursive
+```
 * configure and build
 ```
 just cmake
@@ -26,6 +31,7 @@ just build
 * patch vector Cargo.toml
 ```
 # only needed to be installed for the first time user
+# remember that tomlpatch requires python version > 3.10.0
 just install_toml_patch
 just patch
 ```
