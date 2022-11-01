@@ -15,6 +15,14 @@ impl CxxLogEvent {
         str::from_utf8(value_bytes).unwrap()
     }
 
+    pub fn get_object_as_string(&self, key: &str) -> String {
+        self.log_event.get(key).unwrap().to_string_lossy()
+    }
+
+    pub fn get_array_as_string(&self, key: &str) -> String {
+        self.log_event.get(key).unwrap().to_string_lossy()
+    }
+
     pub fn get_value_type(&self, key: &str) -> &str {
         if self.log_event.get(key).is_none() {
             return "";
