@@ -1,0 +1,40 @@
+{
+  "patch": {
+    "features.sources": ["custom-sources-logs"],
+    "features.custom-sources-logs": [
+      "sources-file",
+      "sources-demo_logs",
+      "sources-stdin",
+      "sources-http_server",
+      "sources-kafka",
+      "sources-vector"
+    ],
+    "features.sinks": ["custom-sinks-logs"],
+    "features.custom-sinks-logs": [
+      "sinks-blackhole",
+      "sinks-clickhouse",
+      "sinks-console",
+      "sinks-elasticsearch",
+      "sinks-file",
+      "sinks-http",
+      "sinks-influxdb",
+      "sinks-kafka",
+      "sinks-loki",
+      "sinks-memory_queue",
+      "sinks-nats",
+      "sinks-pulsar",
+      "sinks-redis",
+      "sinks-socket",
+      "sinks-splunk_hec",
+      "sinks-vector",
+      "sinks-websocket"
+    ],
+    "dependencies.openssl.features": null
+  },
+  "extend": {
+    "dependencies.rdkafka.features": ["dynamic-linking"]
+  },
+  "remove": {
+    "features.default": ["enterprise"]
+  }
+}

@@ -7,6 +7,7 @@
 
 #include <spdlog/spdlog.h>
 
+using std::filesystem::copy_options;
 using vectorcxx::CxxLogEvent;
 
 namespace vectorcxx::test {
@@ -113,9 +114,13 @@ namespace vectorcxx::test {
     operations(vector_service.get_controller());
   }
 
-  void run_one_shot(const std::string &config_file,
-           const std::function<void(rust::Box<vectorcxx::OneShotTopologyController> &)> &operations) {
+  void run_one_shot(
+      const std::string &config_file,
+      const std::function<void(rust::Box<vectorcxx::OneShotTopologyController> &)> &operations) {
+    std::filesystem::copy_file(_file_path("test_files/vector_test_source_one_shot.log"),
+                               "/tmp/vector_test_source_one_shot.log",
+                               copy_options::overwrite_existing);
     OneShotVectorService vector_service(config_file);
     operations(vector_service.get_controller());
   }
-} // namespace
+} // namespace vectorcxx::test

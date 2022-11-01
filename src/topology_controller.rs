@@ -9,7 +9,6 @@ use vector::topology::RunningTopology;
 use vector::{config, config::format, metrics, test_util::runtime};
 
 pub struct TopologyController {
-    vector_thread_join_handle: Option<std::thread::JoinHandle<()>>,
     generation_id: Arc<AtomicU32>,
     topology: Arc<Mutex<Option<RunningTopology>>>,
     config_builder: Arc<Mutex<Option<ConfigBuilder>>>,
@@ -176,7 +175,6 @@ pub fn init_config(config_str: &str) -> Option<ConfigBuilder> {
 impl TopologyController {
     pub fn new() -> Self {
         Self {
-            vector_thread_join_handle: None,
             generation_id: Arc::new(AtomicU32::new(0)),
             topology: Arc::new(Mutex::new(None)),
             config_builder: Arc::new(Mutex::new(None)),
@@ -207,12 +205,11 @@ impl TopologyController {
             info!("vector topology started");
             *topology_cp.lock().unwrap() = Some(topology);
             // no need to handle source_finished here
-            let mut sources_finished = topology_cp.lock().unwrap().as_ref().unwrap().sources_finished();
+            let mut _sources_finished = topology_cp.lock().unwrap().as_ref().unwrap().sources_finished();
         });
 
         info!("vector thread spawned");
         advance_generation(true, &self.generation_id);
-        // self.vector_thread_join_handle = Some(join_handle);
         Ok(true)
     }
 
@@ -247,16 +244,7 @@ impl TopologyController {
         let _guard = self.rt.enter();
         self.rt.block_on(self.topology.lock().unwrap().take().unwrap().stop());
         *self.topology.lock().unwrap() = None;
-
-        if self.vector_thread_join_handle.is_some() {
-            self.vector_thread_join_handle
-                .take()
-                .unwrap()
-                .join()
-                .unwrap();
-            return true;
-        }
-        false
+        true
     }
 
     // a self increment id to indicate which generation of config is currently running

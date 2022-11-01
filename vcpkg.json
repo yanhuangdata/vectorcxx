@@ -10,17 +10,11 @@
     "catch2",
     "corrosion",
     "rs-rdkafka",
+    "protobuf",
     "nlohmann-json",
     "spdlog",
     "fmt",
     "openssl",
     "cpr"
-  ],
-  "overrides": [
-    {
-      "name": "librdkafka",
-      "version": "1.8.2",
-      "$comment": "rust-rdkafka still uses 1.8.2"
-    }
   ]
 }

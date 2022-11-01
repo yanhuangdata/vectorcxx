@@ -1,9 +1,7 @@
-build-debug-osx-x64-cmake
-build-release-osx-x64-cmake
-cmake-build-debug
-vector
+build-cmake-*
 generated_src
 .vscode
 .idea
 target
 vcpkg_installed
+.envrc

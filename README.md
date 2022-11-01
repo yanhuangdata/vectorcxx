@@ -7,13 +7,30 @@
 # setup
 * Rust `edition2021` is needed because vector requires it.
     * `rustup default nightly`
-* vcpkg dependencies
-  * `Corrosion`/`zlib`/`Catch`
-  * `vcpkg install`
+
+# build on Apple Silicon for arm64
+* use `nightly-aarch64-apple-darwin` rust toolchain
+* Export the following environment variables
+```
+VCPKG_DEFAULT_TRIPLET=arm64-osx
+VCPKG_DEFAULT_HOST_TRIPLET=arm64-osx
+```
 
 # develop (on macOS)
 * configure and build
 ```
-cmake . --preset=debug-osx
-cmake --build --preset=debug-osx-build
+just cmake
+# this will use vcpkg manifest mode to install all the dependencies
+just build
 ```
+* patch vector Cargo.toml
+```
+# only needed to be installed for the first time user
+just install_toml_patch
+just patch
+```
+Commit the `Cargo.toml` and `Cargo.lock` in the `patch` directory to the vectorcxx repo
+
+* re-generate `CMakelists.txt`
+Everytime `CMakelists.txt` is re-generated, the following changes need to be made (until we remove all of them out of it):
+* `if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")` branch for dependencies

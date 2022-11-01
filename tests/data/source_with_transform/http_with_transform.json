@@ -1,7 +1,7 @@
 {
   "sources": {
     "source_http_1": {
-      "type": "http",
+      "type": "http_server",
       "address": "0.0.0.0:9998",
       "encoding": "text"
     }
