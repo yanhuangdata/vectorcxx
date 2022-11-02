@@ -5361,6 +5361,7 @@ dependencies = [
 name = "vectorcxx"
 version = "0.2.0"
 dependencies = [
+ "bytesize",
  "cxx",
  "cxx-build",
  "futures 0.3.24",

@@ -134,6 +134,7 @@ pub async fn export_json_result_to_sink<S: SinkConfig + 'static>(
     let file_config = FileConfig {
         include: vec![std::path::Path::new(&file_path).join("*.json")],
         data_dir: Some(std::path::Path::new(&data_dir).to_path_buf()),
+        max_line_bytes: bytesize::mib(2u64) as usize,
         keep_watching: false,
         ..Default::default()
     };
