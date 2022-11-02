@@ -23,7 +23,7 @@ TEST_CASE("consume events from memory queue") {
     } while (events.empty());
     REQUIRE(events.size() == 1);
     REQUIRE(events[0].get_string("_target_table") == "main");
-    REQUIRE(events[0].get_string("\"-Target-Es\"") == "table_a");
+    REQUIRE(events[0].get_string("-Target-Es") == "table_a");
     REQUIRE(events[0].get_string("source_type") == "http");
     REQUIRE(events[0].get_timestamp("timestamp") > 0);
     auto const &message = events[0].get_string("message");
@@ -35,7 +35,7 @@ TEST_CASE("consume events from memory queue") {
 
     REQUIRE(events.size() == 1);
     REQUIRE(events[0].get_string("_target_table") == "main");
-    REQUIRE(events[0].get_string("\"-Target-Es\"") == "table_a");
+    REQUIRE(events[0].get_string("-Target-Es") == "table_a");
     REQUIRE(events[0].get_string("source_type") == "http");
     auto const &message_1 = events[0].get_string("message");
     REQUIRE(message_1 == "e1");
@@ -87,7 +87,7 @@ TEST_CASE("consume events containing different value types") {
 
     REQUIRE(events.size() == 1);
     REQUIRE(events[0].get_string("_target_table") == "main");
-    REQUIRE(events[0].get_string("\"-Target-Es\"") == "table_a");
+    REQUIRE(events[0].get_string("-Target-Es") == "table_a");
     REQUIRE(events[0].get_string("source_type") == "http");
     REQUIRE(events[0].get_timestamp("timestamp") > 0);
     REQUIRE(events[0].get_value_type("age") == "integer");
@@ -152,7 +152,32 @@ TEST_CASE("consume events with object and array field") {
 
     REQUIRE(std::string(events[0].get_object_as_string("some_obj").data(), events[0].get_object_as_string("some_obj").size()) == "{\"k1\":\"v1\"}");
     REQUIRE(std::string(events[0].get_array_as_string("some_list").data(), events[0].get_array_as_string("some_list").size()) == "[1,2]");
+    
+    REQUIRE(std::string(events[0].get_value_type("some_list[0]").data(), events[0].get_value_type("some_list[0]").size()) == "integer");
+    REQUIRE(events[0].get_integer("some_list[0]") == 1);
+    REQUIRE(std::string(events[0].get_value_type("some_obj.k1").data(), events[0].get_value_type("some_obj.k1").size()) == "string");
+    REQUIRE(std::string(events[0].get_string("some_obj.k1").data(), events[0].get_string("some_obj.k1").size()) == "v1");
     // REQUIRE(std::string(events[0].get_string("_message").data(), events[0].get_string("_message").size()) == "{\"b\":2}");
 
+  });
+}
+
+TEST_CASE("consume events with chinese field name") {
+  run("http_to_memory_queue_with_parsing", [](rust::Box<TopologyController> &tc) {
+    nlohmann::json event = nlohmann::json::parse(
+      R"({"_datatype":"json", "-Target-Es":"main", "name":"湖北", "确诊人数":"67466"})");
+    send_http_events({event.dump()});
+
+    auto &memory_queue_client = CxxMemoryQueueClient::get_instance();
+    rust::Vec<vectorcxx::CxxLogEvent> events;
+    do {
+      events = memory_queue_client->poll();
+    } while (events.empty());
+
+    REQUIRE(events.size() == 1);
+    REQUIRE(std::string(events[0].get_string("_datatype").data(), events[0].get_string("_datatype").size()) == "json");
+    REQUIRE(std::string(events[0].get_string("-Target-Es").data(), events[0].get_string("-Target-Es").size()) == "main");
+    REQUIRE(std::string(events[0].get_string("name").data(), events[0].get_string("name").size()) == "湖北");
+    REQUIRE(std::string(events[0].get_string("确诊人数").data(), events[0].get_string("确诊人数").size()) == "67466");
   });
 }
