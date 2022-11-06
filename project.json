@@ -2,10 +2,11 @@
   "namespace": "vectorcxx",
   "name": "vector",
   "version": "0.2.0",
-  "portVersion": 0,
+  "portVersion": 1,
   "dependencies": [
     {
-      "link": "vectorcxx::vectorcxx"
+      "link": "vectorcxx-total",
+      "$comment": "library added by rust_bridge.cmake"
     },
     {
       "package": "ZLIB",
@@ -19,17 +20,17 @@
       "vcpkg": "corrosion"
     },
     {
+      "vcpkg": "rs-rdkafka"
+    },
+    {
       "package": "RdKafka",
       "link": "RdKafka::rdkafka RdKafka::rdkafka++",
-      "scope": "PRIVATE",
       "vcpkg": "librdkafka"
     },
     {
       "package": "OpenSSL",
-      "link": "${OPENSSL_SSL_LIBRARY}"
-    },
-    {
-      "link": "${OPENSSL_CRYPTO_LIBRARY}"
+      "link": "${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY}",
+      "vcpkg": "openssl"
     },
     {
       "library": "IOKit",
