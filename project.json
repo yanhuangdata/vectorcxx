@@ -5,7 +5,7 @@
   "portVersion": 1,
   "dependencies": [
     {
-      "link": "vectorcxx-total",
+      "link": "vectorcxx::vectorcxx",
       "$comment": "library added by rust_bridge.cmake"
     },
     {
@@ -33,6 +33,10 @@
       "vcpkg": "openssl"
     },
     {
+      "library": "resolv",
+      "platform": "Darwin"
+    },
+    {
       "library": "IOKit",
       "platform": "Darwin"
     },
@@ -52,20 +56,24 @@
   "testDependencies": [
     {
       "package": "nlohmann_json",
-      "link": "nlohmann_json::nlohmann_json"
+      "link": "nlohmann_json::nlohmann_json",
+      "scope": "PRIVATE"
     },
     {
       "package": "spdlog",
       "link": "spdlog::spdlog",
-      "vcpkg": "spdlog"
+      "vcpkg": "spdlog",
+      "scope": "PRIVATE"
     },
     {
       "package": "cpr",
-      "link": "cpr::cpr"
+      "link": "cpr::cpr",
+      "scope": "PRIVATE"
     },
     {
       "package": "fmt",
-      "link": "fmt::fmt"
+      "link": "fmt::fmt",
+      "scope": "PRIVATE"
     }
   ]
 }

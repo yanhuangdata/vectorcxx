@@ -98,6 +98,15 @@ macro(setup_dependencies)
     
     find_package(OpenSSL REQUIRED)
     if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+    find_library(RESOLV_LIBRARY NAMES resolv REQUIRED)
+        if (RESOLV_LIBRARY)
+            message(STATUS "[library found] library=resolv path=${RESOLV_LIBRARY}")
+        else ()
+            message(FATAL_ERROR "[library not found] library='resolv'")
+        endif ()
+    
+    endif()
+    if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
     find_library(IOKIT_LIBRARY NAMES IOKit REQUIRED)
         if (IOKIT_LIBRARY)
             message(STATUS "[library found] library=IOKit path=${IOKIT_LIBRARY}")
@@ -185,26 +194,26 @@ function(setup_src)
             PUBLIC
                 vectorcxx::vectorcxx
                 ZLIB::ZLIB
-                ${OPENSSL_SSL_LIBRARY}
-                ${OPENSSL_CRYPTO_LIBRARY}
+                RdKafka::rdkafka RdKafka::rdkafka++
+                ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY}
+                ${RESOLV_LIBRARY}
                 ${IOKIT_LIBRARY}
                 ${SECURITY_LIBRARY}
                 ${CORESERVICES_LIBRARY}
                 ${COREFOUNDATION_LIBRARY}
             INTERFACE      
-            PRIVATE
-                RdKafka::rdkafka RdKafka::rdkafka++                    
+            PRIVATE                    
         )
     else()
         target_link_libraries(${TARGET_NAME} 
             PUBLIC
                 vectorcxx::vectorcxx
                 ZLIB::ZLIB
-                ${OPENSSL_SSL_LIBRARY}
-                ${OPENSSL_CRYPTO_LIBRARY}
+                RdKafka::rdkafka RdKafka::rdkafka++
+                ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY}
+                ${RESOLV_LIBRARY}
             INTERFACE      
-            PRIVATE
-                RdKafka::rdkafka RdKafka::rdkafka++ 
+            PRIVATE                    
         )
     endif()
 

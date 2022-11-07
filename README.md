@@ -40,3 +40,9 @@ Commit the `Cargo.toml` and `Cargo.lock` in the `patch` directory to the vectorc
 * re-generate `CMakelists.txt`
 Everytime `CMakelists.txt` is re-generated, the following changes need to be made (until we remove all of them out of it):
 * `if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")` branch for dependencies
+
+# CMake targets of this library
+* vectorcxx::vectorcxx-vector ==> vectorcxx::vectorcxx-total;zlib;libssl;...
+* vectorcxx::vectorcxx == vectorcxx-total
+* vectorcxx-total ==> vectorcxx-bridge;vectorcxx
+* vectorcxx ==> vectorcxx-static
