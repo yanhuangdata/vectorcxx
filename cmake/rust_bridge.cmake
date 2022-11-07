@@ -159,24 +159,27 @@ function(add_library_rust)
 
 endfunction(add_library_rust)
 
-# TODO: handle arm64 architecture
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     set(Rust_CARGO_TARGET "x86_64-pc-windows-gnu")
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     set(Rust_CARGO_TARGET "x86_64-unknown-linux-gnu")
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
-    # on macOS "uname -m" returns the architecture (x86_64 or arm64)
-    execute_process(
-        COMMAND uname -m
-        RESULT_VARIABLE exit_code_or_error
-        OUTPUT_VARIABLE OSX_NATIVE_ARCHITECTURE
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    if(OSX_NATIVE_ARCHITECTURE STREQUAL "arm64")
-        set(Rust_CARGO_TARGET "aarch64-apple-darwin")
-    else()
+    if("${CMAKE_OSX_ARCHITECTURES}" STREQUAL "x86_64")
         set(Rust_CARGO_TARGET "x86_64-apple-darwin")
-    endif()
+    else()
+        # on macOS "uname -m" returns the architecture (x86_64 or arm64)
+        execute_process(
+            COMMAND uname -m
+            RESULT_VARIABLE exit_code_or_error
+            OUTPUT_VARIABLE OSX_NATIVE_ARCHITECTURE
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        if(OSX_NATIVE_ARCHITECTURE STREQUAL "arm64")
+            set(Rust_CARGO_TARGET "aarch64-apple-darwin")
+        else()
+            set(Rust_CARGO_TARGET "x86_64-apple-darwin")
+        endif()
+   endif()
 else()
     message(FATAL_ERROR "hardcoded ${CMAKE_SYSTEM_NAME} platformchecks not supported outside windows-gnu, linux-gnu and apple-darwin")
 endif()
