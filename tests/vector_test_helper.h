@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vectorcxx/src/lib.rs.h"
+#include "vectorcxx_bridge/lib.h"
 #include <filesystem>
 
 namespace vectorcxx::test {

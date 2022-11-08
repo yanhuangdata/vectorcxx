@@ -40,46 +40,19 @@ function(add_library_rust)
 
     ## Simplyfy inputs
     set(_LIB_NAME ${_RUST_LIB_NAME})
-    set(_NAMESPACE ${_RUST_LIB_NAMESPACE})
+    set(CXXBRIDGE_TARGET ${_RUST_LIB_NAME}_bridge)
+
+    set(CXXBRIDGE_CMD_VERSION "1.0.80")
+    # install cxxbridge-cmd
+    add_custom_command(
+        OUTPUT $ENV{HOME}/.cargo/bin/cxxbridge
+        COMMAND cargo install cxxbridge-cmd@"${CXXBRIDGE_CMD_VERSION}"
+    )
 
     ## Import Rust target
     corrosion_import_crate(MANIFEST_PATH "${CMAKE_CURRENT_LIST_DIR}/../Cargo.toml")
 
-    ## Set cxxbridge values
-
-    set(CXXBRIDGE_BINARY_FOLDER ${CMAKE_BINARY_DIR}/cargo/build/${Rust_CARGO_TARGET}/cxxbridge)
-    set(ORIGIN_COMMON_HEADER ${CXXBRIDGE_BINARY_FOLDER}/rust/cxx.h)
-    set(ORIGIN_BINDING_HEADER ${CXXBRIDGE_BINARY_FOLDER}/${_LIB_NAME}/src/lib.rs.h)
-    set(ORIGIN_BINDING_SOURCE ${CXXBRIDGE_BINARY_FOLDER}/${_LIB_NAME}/src/lib.rs.cc)
-
-    ## Create cxxbridge target
-    add_custom_command(
-            DEPENDS ${_LIB_NAME}-static
-            OUTPUT
-                ${ORIGIN_COMMON_HEADER}
-                ${ORIGIN_BINDING_HEADER}
-                ${ORIGIN_BINDING_SOURCE}
-    )
-
-    set(GENERATED_SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/../generated_src)
-    set(CXX_BINDING_INCLUDE_DIR ${GENERATED_SRC_DIR})
-    set(COMMON_HEADER ${GENERATED_SRC_DIR}/rust/cxx.h)
-    set(BINDING_HEADER ${GENERATED_SRC_DIR}/${_LIB_NAME}/src/lib.rs.h)
-    set(BINDING_SOURCE ${GENERATED_SRC_DIR}/${_LIB_NAME}/src/lib.rs.cc)
-
-    add_custom_command(
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ORIGIN_COMMON_HEADER} ${COMMON_HEADER}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ORIGIN_BINDING_HEADER} ${BINDING_HEADER}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ORIGIN_BINDING_SOURCE} ${BINDING_SOURCE}
-            DEPENDS ${ORIGIN_COMMON_HEADER}
-            OUTPUT
-                ${COMMON_HEADER}
-                ${BINDING_SOURCE}
-                ${BINDING_HEADER}
-    )
-
-    set(CXXBRIDGE_TARGET ${_LIB_NAME}-bridge)
-    add_library(${CXXBRIDGE_TARGET})
+    corrosion_add_cxxbridge(${CXXBRIDGE_TARGET} CRATE vectorcxx MANIFEST_PATH .. FILES lib.rs)
 
     if(NOT DEFINED VCPKG_TARGET_TRIPLET)
         if(APPLE)
@@ -121,41 +94,17 @@ function(add_library_rust)
         "PROTOC=${VECTOR_PROTOC_PATH}"
     )
 
-    target_sources(${CXXBRIDGE_TARGET}
-            PRIVATE
-                ${COMMON_HEADER}
-                ${BINDING_HEADER}
-                ${BINDING_SOURCE}
-            )
-
-    target_include_directories(${CXXBRIDGE_TARGET}
-            PUBLIC
-                $<BUILD_INTERFACE:${CXX_BINDING_INCLUDE_DIR}>
-                $<INSTALL_INTERFACE:include>
-            )
-
-    ## Create total target with alias with given namespace
-    set(CXXBRIDGE_TOTAL_TARGET ${_LIB_NAME}-total)
-
-    add_library(${CXXBRIDGE_TOTAL_TARGET} INTERFACE)
-    target_link_libraries(${CXXBRIDGE_TOTAL_TARGET}
-            INTERFACE
-                ${CXXBRIDGE_TARGET}
-                ${_LIB_NAME}
-            )
-    # for end-user to link into project
-    message(STATUS "add_library ${_NAMESPACE}::${_LIB_NAME}")
-    add_library(${_NAMESPACE}::${_LIB_NAME} ALIAS ${CXXBRIDGE_TOTAL_TARGET})
-
     install(TARGETS ${_LIB_NAME}
             EXPORT ${EXPORT_TARGET_NAME}
-            )
+    )
+
+    set_target_properties(${CXXBRIDGE_TARGET} PROPERTIES
+            PUBLIC_HEADER "${CMAKE_CURRENT_BINARY_DIR}/corrosion_generated/cxxbridge/${CXXBRIDGE_TARGET}/include/${CXXBRIDGE_TARGET}/lib.h")
+
     install(TARGETS ${CXXBRIDGE_TARGET}
             EXPORT ${EXPORT_TARGET_NAME}
-            )
-    install(TARGETS ${CXXBRIDGE_TOTAL_TARGET}
-            EXPORT ${EXPORT_TARGET_NAME}
-            )
+            PUBLIC_HEADER DESTINATION include/${CXXBRIDGE_TARGET}
+    )
 
 endfunction(add_library_rust)
 

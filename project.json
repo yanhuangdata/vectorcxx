@@ -5,7 +5,7 @@
   "portVersion": 1,
   "dependencies": [
     {
-      "link": "vectorcxx::vectorcxx",
+      "link": "vectorcxx_bridge",
       "$comment": "library added by rust_bridge.cmake"
     },
     {

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "vectorcxx/src/lib.rs.h"
+#include "vectorcxx_bridge/lib.h"
 namespace vectorcxx {
   class CxxMemoryQueueClient {
   public:

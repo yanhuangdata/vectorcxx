@@ -199,7 +199,7 @@ function(setup_src)
     set(PUBLIC_LINKED_LIBRARIES "")
     set(INTERFACE_LINKED_LIBRARIES "")
     set(PRIVATE_LINKED_LIBRARIES "")
-        list(APPEND PUBLIC_LINKED_LIBRARIES vectorcxx::vectorcxx)
+        list(APPEND PUBLIC_LINKED_LIBRARIES vectorcxx_bridge)
     
         list(APPEND PUBLIC_LINKED_LIBRARIES ZLIB::ZLIB)
     

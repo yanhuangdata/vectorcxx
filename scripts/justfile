@@ -1,0 +1,27 @@
+workspace_dir := "~/workspace/vectorcxx"
+sync_session := "ichivector"
+project_root := justfile_directory() + "/.."
+
+# add your ssh id into ichibird
+add_ssh_id:
+    ssh-copy-id -i ~/.ssh/id_rsa.pub root@ichibird
+
+# ssh login into ichibird host
+ssh:
+    ssh -t ichibird "cd {{workspace_dir}}; exec \$SHELL -l"
+
+# sync from local to ichibird workspace
+sync mode="one-way-safe":
+    mutagen sync create --name={{sync_session}} {{project_root}} ichibird:{{workspace_dir}} --sync-mode={{mode}} --ignore "**/build-cmake-*" --ignore "**/target"
+
+# list all sync sessions
+list:
+    mutagen sync list
+
+# terminate the sync session
+terminate:
+    mutagen sync terminate {{sync_session}}
+
+# install mutagen install tool for macOS
+install_sync:
+    brew install mutagen-io/mutagen/mutagen

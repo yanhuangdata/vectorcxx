@@ -1,8 +1,8 @@
 {
   "name": "corrosion",
-  "version": "0.2.2",
+  "version": "0.3.2",
   "description": "Marrying Rust and CMake - Easy Rust and C/C++ Integration!",
-  "homepage": "https://github.com/AndrewGaspar/corrosion",
+  "homepage": "https://github.com/corrosion-rs/corrosion",
   "license": "MIT",
   "dependencies": [
     {

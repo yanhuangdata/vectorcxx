@@ -2,7 +2,7 @@
   "$doc": "https://github.com/microsoft/vcpkg/blob/master/docs/maintainers/registries.md#filesystem-registries",
   "default": {
     "corrosion": {
-      "baseline": "0.2.2",
+      "baseline": "0.3.2",
       "port-version": 0
     },
     "rs-rdkafka": {
