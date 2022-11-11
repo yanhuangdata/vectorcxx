@@ -245,6 +245,7 @@ function(setup_src)
             
     )
 
+    set_property(TARGET ${TARGET_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
     
 
     

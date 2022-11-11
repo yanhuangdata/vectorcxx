@@ -53,6 +53,7 @@ function(add_library_rust)
     corrosion_import_crate(MANIFEST_PATH "${CMAKE_CURRENT_LIST_DIR}/../Cargo.toml")
 
     corrosion_add_cxxbridge(${CXXBRIDGE_TARGET} CRATE vectorcxx MANIFEST_PATH .. FILES lib.rs)
+    set_property(TARGET ${CXXBRIDGE_TARGET} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
     if(NOT DEFINED VCPKG_TARGET_TRIPLET)
         if(APPLE)

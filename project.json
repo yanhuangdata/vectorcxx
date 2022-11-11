@@ -75,5 +75,8 @@
       "link": "fmt::fmt",
       "scope": "PRIVATE"
     }
-  ]
+  ],
+  "properties": {
+    "POSITION_INDEPENDENT_CODE": "ON"    
+  }
 }
