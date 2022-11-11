@@ -10,10 +10,14 @@ impl CxxLogEvent {
     pub fn get_string(&self, key: &str) -> &str {
         if self.log_event.get(key).is_some() {
             let value_ref = self.log_event.get(key).unwrap();
-            return str::from_utf8(value_ref.as_bytes().unwrap()).unwrap();
+            if value_ref.is_bytes() {
+                return str::from_utf8(value_ref.as_bytes().unwrap()).unwrap();
+            }
         } else if self.log_event.get(event_path!(key)).is_some() {
             let value_ref = self.log_event.get(event_path!(key)).unwrap();
-            return str::from_utf8(value_ref.as_bytes().unwrap()).unwrap();
+            if value_ref.is_bytes() {
+                return str::from_utf8(value_ref.as_bytes().unwrap()).unwrap();
+            }
         }
         ""
     }
@@ -74,7 +78,9 @@ impl CxxLogEvent {
     }
 
     pub fn fields(&self) -> Vec<String> {
-        self.log_event.keys().map(|s| s)
-            .expect("log event should have some fields").collect()
+        self.log_event.keys()
+            .unwrap()
+            .map(|key| if key.contains("\\.") {key.replace("\\.", ".")} else {key})
+            .collect()
     }
 }
