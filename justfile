@@ -43,3 +43,9 @@ patch:
 
 install_toml_patch:
   pip install tomlpatch --upgrade
+
+# switch to x64_toolchain
+x64_toolchain:
+    rustup override set 1.64.0-x86_64-apple-darwin
+    rustup override set 1.64.0-x86_64-apple-darwin --path vector
+    rustup override list

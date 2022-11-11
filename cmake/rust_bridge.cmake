@@ -49,8 +49,19 @@ function(add_library_rust)
         COMMAND cargo install cxxbridge-cmd@"${CXXBRIDGE_CMD_VERSION}"
     )
 
+    # use mimalloc for macOS so that we could avoid https://github.com/vectordotdev/vector/issues/14946 when using Rosetta
+    if(APPLE)
+        message(STATUS "use mimalloc memory allocator for vector under macOS")
+        set(MEMORY_ALLOCATOR_FEATURE "vector/mimalloc")
+    else()
+        message(STATUS "use jemalloc memory allocator for vector under Linux")
+        set(MEMORY_ALLOCATOR_FEATURE "vector/jemalloc")
+    endif()
+
     ## Import Rust target
-    corrosion_import_crate(MANIFEST_PATH "${CMAKE_CURRENT_LIST_DIR}/../Cargo.toml")
+    corrosion_import_crate(
+        MANIFEST_PATH "${CMAKE_CURRENT_LIST_DIR}/../Cargo.toml"
+        FEATURES ${MEMORY_ALLOCATOR_FEATURE})
 
     corrosion_add_cxxbridge(${CXXBRIDGE_TARGET} CRATE vectorcxx MANIFEST_PATH .. FILES lib.rs)
     set_property(TARGET ${CXXBRIDGE_TARGET} PROPERTY POSITION_INDEPENDENT_CODE ON)

@@ -2,11 +2,7 @@
 * This project is a C++ wrapper for [vector](https://vector.dev)
 
 # how it works
-* This project uses [cxx](https://cxx.rs) to call Rust code from C++, and uses [corrosion](https://github.com/AndrewGaspar/corrosion) to integrate the library into CMake.
-
-# setup
-* Rust `edition2021` is needed because vector requires it.
-    * `rustup default nightly`
+* This project uses [cxx](https://cxx.rs) to call Rust code from C++, and uses [corrosion](https://github.com/corrosion-rs/corrosion) to integrate the library into CMake.
 
 # build on Apple Silicon for arm64
 * use `nightly-aarch64-apple-darwin` rust toolchain
@@ -31,7 +27,7 @@ just build
 * patch vector Cargo.toml
 ```
 # only needed to be installed for the first time user
-# remember that tomlpatch requires python version > 3.10.0
+# remember that tomlpatch requires python version >= 3.10.0
 just install_toml_patch
 just patch
 ```
@@ -41,8 +37,12 @@ Commit the `Cargo.toml` and `Cargo.lock` in the `patch` directory to the vectorc
 Everytime `CMakelists.txt` is re-generated, the following changes need to be made (until we remove all of them out of it):
 * `if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")` branch for dependencies
 
-# CMake targets of this library
-* vectorcxx::vectorcxx-vector ==> vectorcxx::vectorcxx-total;zlib;libssl;...
-* vectorcxx::vectorcxx == vectorcxx-total
-* vectorcxx-total ==> vectorcxx-bridge;vectorcxx
-* vectorcxx ==> vectorcxx-static
+## development x64 under Apple Silicon with Rosetta
+1. Open terminal with Rosetta
+2. Set toolchain
+```
+just x64_toolchain
+
+# use direnv + .envrc is recommended for env var management
+export CMAKE_OSX_ARCHITECTURES=x86_64
+```
