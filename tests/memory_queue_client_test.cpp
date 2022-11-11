@@ -181,3 +181,36 @@ TEST_CASE("consume events with chinese field name") {
     REQUIRE(std::string(events[0].get_string("确诊人数").data(), events[0].get_string("确诊人数").size()) == "67466");
   });
 }
+
+TEST_CASE("consume events with nested field name") {
+  run("http_to_memory_queue_with_parsing", [](rust::Box<TopologyController> &tc) {
+    nlohmann::json event = nlohmann::json::parse(
+      R"({"_datatype":"json", "-Target-Es":"main", "name":"湖北", "确诊人数":"67466", "tags.mention.you":"yes"})");
+    send_http_events({event.dump()});
+
+    auto &memory_queue_client = CxxMemoryQueueClient::get_instance();
+    rust::Vec<vectorcxx::CxxLogEvent> events;
+    do {
+      events = memory_queue_client->poll();
+    } while (events.empty());
+
+    auto fields = events[0].fields();
+    REQUIRE(fields.size() > 0);
+    std::vector<std::string> field_vec;
+    field_vec.reserve(fields.size());
+    for (auto const &field : fields) {
+      field_vec.emplace_back(field);
+    }
+    REQUIRE_THAT(field_vec, VectorContains(std::string("tags.mention.you")));
+    REQUIRE_THAT(field_vec, VectorContains(std::string("_datatype")));
+    REQUIRE_THAT(field_vec, VectorContains(std::string("-Target-Es")));
+    REQUIRE_THAT(field_vec, VectorContains(std::string("确诊人数")));
+
+    REQUIRE(events.size() == 1);
+    REQUIRE(std::string(events[0].get_string("_datatype").data(), events[0].get_string("_datatype").size()) == "json");
+    REQUIRE(std::string(events[0].get_string("-Target-Es").data(), events[0].get_string("-Target-Es").size()) == "main");
+    REQUIRE(std::string(events[0].get_string("name").data(), events[0].get_string("name").size()) == "湖北");
+    REQUIRE(std::string(events[0].get_string("确诊人数").data(), events[0].get_string("确诊人数").size()) == "67466");
+    REQUIRE(std::string(events[0].get_string("tags.mention.you").data(), events[0].get_string("tags.mention.you").size()) == "yes");
+  });
+}
