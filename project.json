@@ -2,10 +2,11 @@
   "namespace": "vectorcxx",
   "name": "vector",
   "version": "0.2.0",
-  "portVersion": 0,
+  "portVersion": 1,
   "dependencies": [
     {
-      "link": "vectorcxx::vectorcxx"
+      "link": "vectorcxx_bridge",
+      "$comment": "library added by rust_bridge.cmake"
     },
     {
       "package": "ZLIB",
@@ -19,17 +20,21 @@
       "vcpkg": "corrosion"
     },
     {
+      "vcpkg": "rs-rdkafka"
+    },
+    {
       "package": "RdKafka",
       "link": "RdKafka::rdkafka RdKafka::rdkafka++",
-      "scope": "PRIVATE",
       "vcpkg": "librdkafka"
     },
     {
       "package": "OpenSSL",
-      "link": "${OPENSSL_SSL_LIBRARY}"
+      "link": "${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY}",
+      "vcpkg": "openssl"
     },
     {
-      "link": "${OPENSSL_CRYPTO_LIBRARY}"
+      "library": "resolv",
+      "platform": "Darwin"
     },
     {
       "library": "IOKit",
@@ -51,20 +56,27 @@
   "testDependencies": [
     {
       "package": "nlohmann_json",
-      "link": "nlohmann_json::nlohmann_json"
+      "link": "nlohmann_json::nlohmann_json",
+      "scope": "PRIVATE"
     },
     {
       "package": "spdlog",
       "link": "spdlog::spdlog",
-      "vcpkg": "spdlog"
+      "vcpkg": "spdlog",
+      "scope": "PRIVATE"
     },
     {
       "package": "cpr",
-      "link": "cpr::cpr"
+      "link": "cpr::cpr",
+      "scope": "PRIVATE"
     },
     {
       "package": "fmt",
-      "link": "fmt::fmt"
+      "link": "fmt::fmt",
+      "scope": "PRIVATE"
     }
-  ]
+  ],
+  "properties": {
+    "POSITION_INDEPENDENT_CODE": "ON"    
+  }
 }

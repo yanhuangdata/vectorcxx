@@ -20,6 +20,10 @@ cmake build_type=default_build_type:
 build build_type=default_build_type jobs=default_build_jobs target=default_build_target:
 	cmake --build --target {{target}} --preset={{build_type}}-{{build_os}}-build -j {{jobs}}
 
+# install the project
+install build_type=default_build_type: 
+	DESTDIR=./{{build_type}}-{{build_os}} cmake --build --target install --preset={{build_type}}-{{build_os}}-build 
+
 # run all tests
 test build_type=default_build_type:
   pushd build-cmake-{{build_type}}-{{build_os}} && ctest && popd
@@ -39,3 +43,9 @@ patch:
 
 install_toml_patch:
   pip install tomlpatch --upgrade
+
+# switch to x64_toolchain
+x64_toolchain:
+    rustup override set 1.64.0-x86_64-apple-darwin
+    rustup override set 1.64.0-x86_64-apple-darwin --path vector
+    rustup override list

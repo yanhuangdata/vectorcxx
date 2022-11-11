@@ -11,22 +11,28 @@ include("${CMAKE_CURRENT_LIST_DIR}/${EXPORT_PACKAGE_NAME}-targets.cmake")
     find_package(RdKafka REQUIRED)
     
     find_package(OpenSSL REQUIRED)
-# we need below part to set interface lib for `vectorcxx-static`, since the `-static` postfix is brought
-# by corrosion, and will not be found
-add_library(vectorcxx-static INTERFACE IMPORTED)
 
-find_library(VECTORCXX_LIB NAMES vectorcxx REQUIRED)
-if (VECTORCXX_LIB)
-    message(STATUS "[library found] library=VECTORCXX_LIB path=${VECTORCXX_LIB}")
-else ()
-    message(FATAL_ERROR "[library not found] library='VECTORCXX_LIB'")
-endif ()
+    # we need below part to set interface lib for `vectorcxx-static`, since the `-static` postfix is brought
+    # by corrosion, and will not be found
+    if(NOT TARGET vectorcxx-static)
+        add_library(vectorcxx-static INTERFACE IMPORTED)
+        find_library(VECTORCXX_LIB NAMES vectorcxx REQUIRED)
+        if (VECTORCXX_LIB)
+            message(STATUS "[library found] library=VECTORCXX_LIB path=${VECTORCXX_LIB}")
+        else ()
+            message(FATAL_ERROR "[library not found] library='VECTORCXX_LIB'")
+        endif ()
 
-message(STATUS "VECTORCXX_LIB: ${VECTORCXX_LIB}, VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}, _HOST_TRIPLET: ${_HOST_TRIPLET}")
+        message(STATUS "VECTORCXX_LIB: ${VECTORCXX_LIB}, VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}, _HOST_TRIPLET: ${_HOST_TRIPLET}")
 
-set_target_properties(vectorcxx-static PROPERTIES
-  INTERFACE_LINK_LIBRARIES ${VECTORCXX_LIB}
-)
+        set_target_properties(vectorcxx-static PROPERTIES
+          INTERFACE_LINK_LIBRARIES ${VECTORCXX_LIB}
+        )
+    endif()
+    
+    if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+    find_library(RESOLV_LIBRARY NAMES resolv REQUIRED)
+    endif()
     if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
     find_library(IOKIT_LIBRARY NAMES IOKit REQUIRED)
     endif()
