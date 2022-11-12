@@ -54,8 +54,9 @@ function(add_library_rust)
         message(STATUS "use mimalloc memory allocator for vector under macOS")
         set(MEMORY_ALLOCATOR_FEATURE "vector/mimalloc")
     else()
-        message(STATUS "use jemalloc memory allocator for vector under Linux")
-        set(MEMORY_ALLOCATOR_FEATURE "vector/tikv-jemallocator")
+        message(STATUS "use default memory allocator for vector under Linux")
+        # tikv-jemallocator is the default memory allocator when unix is enabled
+        # set nothing
     endif()
 
     ## Import Rust target
