@@ -55,7 +55,7 @@ function(add_library_rust)
         set(MEMORY_ALLOCATOR_FEATURE "vector/mimalloc")
     else()
         message(STATUS "use jemalloc memory allocator for vector under Linux")
-        set(MEMORY_ALLOCATOR_FEATURE "vector/jemalloc")
+        set(MEMORY_ALLOCATOR_FEATURE "vector/tikv-jemallocator")
     endif()
 
     ## Import Rust target
