@@ -18,6 +18,40 @@ function(find_dependency_path dependency_path_name dependency_location RETURN_DE
     set(${RETURN_DEPENDENCY_PATH} ${VECTOR_${dependency_path_name}} PARENT_SCOPE)
 endfunction()
 
+function(update_target_properties)
+    find_dependency_path(OPENSSL_INCLUDE_DIR include VECTOR_OPENSSL_INCLUDE_DIR)
+    find_dependency_path(PKG_CONFIG_PATH lib/pkgconfig VECTOR_PKG_CONFIG_PATH)
+    find_dependency_path(PROTOC_PATH tools/protobuf/protoc VECTOR_PROTOC_PATH)
+
+    set_property(
+        TARGET vectorcxx
+        APPEND
+        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
+        "OPENSSL_NO_VENDOR=true"
+    )
+
+    set_property(
+        TARGET vectorcxx
+        APPEND
+        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
+        "OPENSSL_INCLUDE_DIR=${VECTOR_OPENSSL_INCLUDE_DIR}"
+    )
+
+    set_property(
+        TARGET vectorcxx
+        APPEND
+        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
+        "PKG_CONFIG_PATH=${VECTOR_PKG_CONFIG_PATH}"
+    )
+
+    set_property(
+        TARGET vectorcxx
+        APPEND
+        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
+        "PROTOC=${VECTOR_PROTOC_PATH}"
+    )
+endfunction()
+
 function(add_library_rust)
     # set(OPTIONS)
     set(ONE_VALUE_KEYWORDS NAMESPACE NAME)
@@ -34,15 +68,19 @@ function(add_library_rust)
         message(FATAL_ERROR "Must supply a namespace given by keyvalue NAMESPACE <value>")
     endif()
 
-    if(NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/../Cargo.toml")
+    set(CRATE_MANIFEST_PATH "${CMAKE_CURRENT_LIST_DIR}/../Cargo.toml")
+
+    if(NOT EXISTS "${CRATE_MANIFEST_PATH}")
         message(FATAL_ERROR "The path ${CMAKE_CURRENT_LIST_DIR} does not contain a Cargo.toml")
+    else()
+        message(STATUS "Importing crate CRATE_MANIFEST_PATH=${CRATE_MANIFEST_PATH}")
     endif()
 
     ## Simplyfy inputs
     set(_LIB_NAME ${_RUST_LIB_NAME})
     set(CXXBRIDGE_TARGET ${_RUST_LIB_NAME}_bridge)
 
-    set(CXXBRIDGE_CMD_VERSION "1.0.80")
+    set(CXXBRIDGE_CMD_VERSION "1.0.81")
     # install cxxbridge-cmd
     add_custom_command(
         OUTPUT $ENV{HOME}/.cargo/bin/cxxbridge
@@ -51,20 +89,20 @@ function(add_library_rust)
 
     # use mimalloc for macOS so that we could avoid https://github.com/vectordotdev/vector/issues/14946 when using Rosetta
     if(APPLE)
-        message(STATUS "use mimalloc memory allocator for vector under macOS")
+        message(STATUS "Use mimalloc memory allocator for vector under macOS")
         set(MEMORY_ALLOCATOR_FEATURE "vector/mimalloc")
     else()
-        message(STATUS "use default memory allocator for vector under Linux")
-        # tikv-jemallocator is the default memory allocator when unix is enabled
-        # set nothing
+        message(STATUS "Use default memory allocator for vector under Linux")
+        # tikv-jemallocator is the default memory allocator
+        set(MEMORY_ALLOCATOR_FEATURE "")
     endif()
 
     ## Import Rust target
     corrosion_import_crate(
-        MANIFEST_PATH "${CMAKE_CURRENT_LIST_DIR}/../Cargo.toml"
+        MANIFEST_PATH "${CRATE_MANIFEST_PATH}"
         FEATURES ${MEMORY_ALLOCATOR_FEATURE})
 
-    corrosion_add_cxxbridge(${CXXBRIDGE_TARGET} CRATE vectorcxx MANIFEST_PATH .. FILES lib.rs)
+    corrosion_add_cxxbridge(${CXXBRIDGE_TARGET} CRATE ${_LIB_NAME} FILES lib.rs)
     set_property(TARGET ${CXXBRIDGE_TARGET} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
     if(NOT DEFINED VCPKG_TARGET_TRIPLET)
@@ -73,39 +111,10 @@ function(add_library_rust)
         else()
             set(VCPKG_TARGET_TRIPLET "x64-linux")
         endif()
+        message(STATUS "set vcpkg target triplet VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}")
     endif()
 
-    find_dependency_path(OPENSSL_INCLUDE_DIR include VECTOR_OPENSSL_INCLUDE_DIR)
-    find_dependency_path(PKG_CONFIG_PATH lib/pkgconfig VECTOR_PKG_CONFIG_PATH)
-    find_dependency_path(PROTOC_PATH tools/protobuf/protoc VECTOR_PROTOC_PATH)
-
-    set_property(
-        TARGET vectorcxx
-        APPEND
-        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
-        "OPENSSL_NO_VENDOR=true"
-    )
-
-    set_property(
-            TARGET vectorcxx
-            APPEND
-            PROPERTY CORROSION_ENVIRONMENT_VARIABLES
-            "OPENSSL_INCLUDE_DIR=${VECTOR_OPENSSL_INCLUDE_DIR}"
-    )
-
-    set_property(
-            TARGET vectorcxx
-            APPEND
-            PROPERTY CORROSION_ENVIRONMENT_VARIABLES
-            "PKG_CONFIG_PATH=${VECTOR_PKG_CONFIG_PATH}"
-    )
-
-    set_property(
-        TARGET vectorcxx
-        APPEND
-        PROPERTY CORROSION_ENVIRONMENT_VARIABLES
-        "PROTOC=${VECTOR_PROTOC_PATH}"
-    )
+    update_target_properties()
 
     install(TARGETS ${_LIB_NAME}
             EXPORT ${EXPORT_TARGET_NAME}

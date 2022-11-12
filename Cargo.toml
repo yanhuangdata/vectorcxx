@@ -1,13 +1,13 @@
 [package]
 name = "vectorcxx"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cxx = "1.0.80"
-# without disabling default features, cargo will complain `libz-sys` feature is required but vector doesn't have it
+# update cxx-build below and CXXBRIDGE_CMD_VERSION in rust_bridge.cmake together
+cxx = "1.0.81"
 vector = { path = "./vector", default-features = true }
 tempfile = "3.2.0"
 futures = "0.3.17"
@@ -19,7 +19,7 @@ tracing-subscriber = { version = "0.3.16", features = ["env-filter", "time", "lo
 time = { version = "0.3.15", features = ["macros"] }
 
 [build-dependencies]
-cxx-build = "1.0.73"
+cxx-build = "1.0.81"
 
 [lib]
 crate-type = ["staticlib"]
