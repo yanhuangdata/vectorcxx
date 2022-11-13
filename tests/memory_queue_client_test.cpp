@@ -149,10 +149,15 @@ TEST_CASE("consume events with object and array field") {
 
     REQUIRE(std::string(events[0].get_object_as_string("empty_obj").data(), events[0].get_object_as_string("empty_obj").size()) == "{}");
     REQUIRE(std::string(events[0].get_array_as_string("empty_list").data(), events[0].get_array_as_string("empty_list").size()) == "[]");
+    REQUIRE(events[0].get_string_array("empty_list").empty());
 
     REQUIRE(std::string(events[0].get_object_as_string("some_obj").data(), events[0].get_object_as_string("some_obj").size()) == "{\"k1\":\"v1\"}");
     REQUIRE(std::string(events[0].get_array_as_string("some_list").data(), events[0].get_array_as_string("some_list").size()) == "[1,2]");
-    
+    auto some_list = events[0].get_string_array("some_list");
+    REQUIRE(some_list.size() == 2);
+    REQUIRE(std::string(some_list[0].data(), some_list[0].size()) == "1");
+    REQUIRE(std::string(some_list[1].data(), some_list[1].size()) == "2");
+
     REQUIRE(std::string(events[0].get_value_type("some_list[0]").data(), events[0].get_value_type("some_list[0]").size()) == "integer");
     REQUIRE(events[0].get_integer("some_list[0]") == 1);
     REQUIRE(std::string(events[0].get_value_type("some_obj.k1").data(), events[0].get_value_type("some_obj.k1").size()) == "string");
@@ -212,5 +217,93 @@ TEST_CASE("consume events with nested field name") {
     REQUIRE(std::string(events[0].get_string("name").data(), events[0].get_string("name").size()) == "湖北");
     REQUIRE(std::string(events[0].get_string("确诊人数").data(), events[0].get_string("确诊人数").size()) == "67466");
     REQUIRE(std::string(events[0].get_string("tags.mention.you").data(), events[0].get_string("tags.mention.you").size()) == "yes");
+  });
+}
+
+TEST_CASE("consume events with nested json") {
+  run("http_to_memory_queue_with_parsing", [](rust::Box<TopologyController> &tc) {
+    nlohmann::json event = {
+        {"X-NILE-PARSED", 1},
+        {"_datatype", "json"},
+        {"tags.hostname[]", {"v86-6-9-96", "v12-3-10-14"}},
+        {"_message", "{\"tags\": {\"hostname\": [\"v86-6-9-96\", \"v12-3-10-14\"]}}"}};
+    send_http_events({event.dump()});
+
+    auto &memory_queue_client = CxxMemoryQueueClient::get_instance();
+    rust::Vec<vectorcxx::CxxLogEvent> events;
+    do {
+      events = memory_queue_client->poll();
+    } while (events.empty());
+
+    REQUIRE(events.size() == 1);
+    REQUIRE(std::string(events[0].get_string("_datatype").data(),
+                        events[0].get_string("_datatype").size()) == "json");
+    REQUIRE(std::string(events[0].get_string("-Target-Es").data(),
+                        events[0].get_string("-Target-Es").size()) == "table_a");
+    REQUIRE(std::string(events[0].get_array_as_string("tags.hostname[]").data(),
+                        events[0].get_array_as_string("tags.hostname[]").size()) ==
+            "[\"v86-6-9-96\",\"v12-3-10-14\"]");
+    REQUIRE(std::string(events[0].get_string("_message").data(),
+                        events[0].get_string("_message").size()) ==
+            "{\"tags\": {\"hostname\": [\"v86-6-9-96\", \"v12-3-10-14\"]}}");
+  });
+}
+
+TEST_CASE("test fields and top level fields") {
+  run("http_to_memory_queue_with_parsing", [](rust::Box<TopologyController> &tc) {
+    nlohmann::json event = {
+        {"_datatype", "json"},
+        {"tags.hostname[]", {"v86-6-9-96", "v12-3-10-14"}},
+        {"tags.date.today", "1999-09-01"},
+        {"tags.hostname_complex[]",
+         {"v86-6-9-96", "v12-3-10-14", {"inner_host_1", "inner_host_2"}}},
+        {"hardware", {{"cpu", "8-core"}, {"memory", "32G"}}},
+        {"_message", "{\"tags\": {\"hostname\": [\"v86-6-9-96\", \"v12-3-10-14\"]}}"}};
+    send_http_events({event.dump()});
+
+    auto &memory_queue_client = CxxMemoryQueueClient::get_instance();
+    rust::Vec<vectorcxx::CxxLogEvent> events;
+    do {
+      events = memory_queue_client->poll();
+    } while (events.empty());
+
+    {
+      auto fields = events[0].fields();
+      REQUIRE(fields.size() > 0);
+      std::vector<std::string> field_vec;
+      field_vec.reserve(fields.size());
+      for (auto const &field : fields) {
+        field_vec.emplace_back(field);
+      }
+
+      REQUIRE_THAT(field_vec, VectorContains(std::string("tags.date.today")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("tags.hostname[][0]")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("tags.hostname[][1]")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("tags.hostname_complex[][0]")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("tags.hostname_complex[][1]")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("tags.hostname_complex[][2][0]")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("tags.hostname_complex[][2][1]")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("hardware.cpu")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("hardware.memory")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("_datatype")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("_message")));
+    }
+
+    {
+      auto fields = events[0].top_level_fields();
+      REQUIRE(fields.size() > 0);
+      std::vector<std::string> field_vec;
+      field_vec.reserve(fields.size());
+      for (auto const &field : fields) {
+        field_vec.emplace_back(field);
+      }
+
+      REQUIRE_THAT(field_vec, VectorContains(std::string("tags.date.today")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("tags.hostname[]")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("tags.hostname_complex[]")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("hardware")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("_datatype")));
+      REQUIRE_THAT(field_vec, VectorContains(std::string("_message")));
+    }
   });
 }

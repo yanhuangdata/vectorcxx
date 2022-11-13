@@ -29,11 +29,30 @@ impl CxxLogEvent {
         self.log_event.get(event_path!(key)).unwrap().to_string_lossy()
     }
 
+    /* get array type field value in event, the whole array are dumped as string
+     */
     pub fn get_array_as_string(&self, key: &str) -> String {
         if self.log_event.get(key).is_some() {
             return self.log_event.get(key).unwrap().to_string_lossy();
         }
         self.log_event.get(event_path!(key)).unwrap().to_string_lossy()
+    }
+
+    /* get array type field value in event, returning an array, child values in array
+    will all be converted to strings.
+     */
+    pub fn get_string_array(&self, key: &str) -> Vec<String> {
+        let value = if self.log_event.get(key).is_some() 
+                            {self.log_event.get(key).unwrap().as_array()} 
+                            else if self.log_event.get(event_path!(key)).is_some()
+                            {self.log_event.get(event_path!(key)).unwrap().as_array()}
+                            else {None};
+        if value.is_some() {
+            let array = value.unwrap();
+            return array.iter().map(|v|v.to_string_lossy()).collect();
+            // return value.unwrap().as_array().unwrap().map(|v|v.to_string_lossy()).collect();
+        }
+        Vec::new()
     }
 
     pub fn get_value_type(&self, key: &str) -> &str {
@@ -77,10 +96,45 @@ impl CxxLogEvent {
         value_ref.as_timestamp().unwrap().timestamp_micros()
     }
 
+    /*
+    Return all fields of an event.
+    Vector uses a depth-first logic to construct and traverse fields, event like
+    '''
+    {
+        "a": "a_val",
+        "b": [1, 2],
+        "c": {
+            "d": "d_val"
+        }
+    }
+    '''
+    will return field keys: ["a", "b[0]", "b[1]", "c.d"] from this method
+    */
     pub fn fields(&self) -> Vec<String> {
         self.log_event.keys()
             .unwrap()
             .map(|key| if key.contains("\\.") {key.replace("\\.", ".")} else {key})
             .collect()
+    }
+
+    /*
+    Return the top level field keys of event
+    Vector uses a depth-first logic to construct and traverse fields, event like
+    '''
+    {
+        "a": "a_val",
+        "b": [1, 2],
+        "c": {
+            "d": "d_val"
+        }
+    }
+    '''
+    will return field keys: ["a", "b", "c"] from this method
+    */
+    pub fn top_level_fields(&self) -> Vec<String> {
+        match &self.log_event.as_map() {
+            Some(map) => map.keys().map(|key| if key.contains("\\.") {key.replace("\\.", ".")} else {key.clone()}).collect(),
+            None => Vec::new(),
+        }
     }
 }
