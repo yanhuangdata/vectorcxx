@@ -46,6 +46,8 @@ mod ffi {
         fn get_object_as_string(self: &CxxLogEvent, key: &str) -> String;
         
         fn get_array_as_string(self: &CxxLogEvent, key: &str) -> String;
+
+        fn get_string_array(self: &CxxLogEvent, key: &str) -> Vec<String>;
     
         fn get_integer(self: &CxxLogEvent, key: &str) -> i64 ;
     
@@ -57,6 +59,8 @@ mod ffi {
         fn get_timestamp(self: &CxxLogEvent, key: &str) -> i64;
 
         fn fields(self: &CxxLogEvent) -> Vec<String>;
+
+        fn top_level_fields(self: &CxxLogEvent) -> Vec<String>;
     }
 
     extern "Rust" {
