@@ -80,22 +80,16 @@ function(add_library_rust)
     set(_LIB_NAME ${_RUST_LIB_NAME})
     set(CXXBRIDGE_TARGET ${_RUST_LIB_NAME}_bridge)
 
-    set(CXXBRIDGE_CMD_VERSION "1.0.81")
-    # install cxxbridge-cmd
-    add_custom_command(
-        OUTPUT $ENV{HOME}/.cargo/bin/cxxbridge
-        COMMAND cargo install cxxbridge-cmd@"${CXXBRIDGE_CMD_VERSION}"
-    )
-
+    # TODO: disable using non system memory allocator until we can make it work with other jemalloc libraries such as pyarrow
     # use mimalloc for macOS so that we could avoid https://github.com/vectordotdev/vector/issues/14946 when using Rosetta
-    if(APPLE)
-        message(STATUS "Use mimalloc memory allocator for vector under macOS")
-        set(MEMORY_ALLOCATOR_FEATURE "vector/mimalloc")
-    else()
-        message(STATUS "Use default memory allocator for vector under Linux")
-        # tikv-jemallocator is the default memory allocator
-        set(MEMORY_ALLOCATOR_FEATURE "")
-    endif()
+    # if(APPLE)
+    #     message(STATUS "Use mimalloc memory allocator for vector under macOS")
+    #     set(MEMORY_ALLOCATOR_FEATURE "vector/mimalloc")
+    # else()
+    #     message(STATUS "Use default memory allocator for vector under Linux")
+    #     # tikv-jemallocator is the default memory allocator
+    #     set(MEMORY_ALLOCATOR_FEATURE "")
+    # endif()
 
     ## Import Rust target
     corrosion_import_crate(

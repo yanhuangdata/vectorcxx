@@ -1031,9 +1031,9 @@ version = "6.0.1"
 default-features = false
 optional = true
 
-[dependencies.mimalloc]
-version = "0.1.30"
-default-features = true
+[dependencies.tikv-jemallocator]
+version = "0.5.0"
+default-features = false
 optional = true
 
 [dependencies.tokio-postgres]
@@ -1453,9 +1453,7 @@ target-powerpc-unknown-linux-gnu = [
     "vrl-cli",
     "enterprise",
 ]
-unix = [
-    "mimalloc",
-]
+unix = []
 kubernetes = [
     "dep:k8s-openapi",
     "dep:kube",
