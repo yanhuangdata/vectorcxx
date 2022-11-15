@@ -35,6 +35,7 @@
     "dependencies.rdkafka.features": ["dynamic-linking"]
   },
   "remove": {
-    "features.default": ["enterprise"]
+    "features.default": ["enterprise"],
+    "features.unix": ["tikv-jemallocator"]
   }
 }
