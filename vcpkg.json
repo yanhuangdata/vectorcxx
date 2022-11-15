@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
   "name": "vectorcxx-vector",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "port-version": 0,
   "description": "vectorcxx vector",
   "builtin-baseline": "4340582bc30f3e539bd4f52e26418f7d62145956",
