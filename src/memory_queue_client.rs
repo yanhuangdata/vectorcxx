@@ -62,16 +62,9 @@ fn random_batches_with_stream(
     } else {
         random_simple_events(len, count)
     };
-    // let (init_events, _) = random_events_with_stream(len, count, None);
-    // let events = init_events.into_iter().map(|event| {
-    //     let mut ev = event.into_log();
-    //     ev.insert("_target_table", "table_a");
-    //     ev
-    // }).collect::<Vec<_>>();
+
     let chunks: Vec<Vec<LogEvent>> = events.chunks(chunk_size).map(|s| s.into()).collect();
-
     let stream = stream::iter(chunks.clone()).map(|chunk| EventArray::from(chunk));
-
     (events, stream)
 
 }
@@ -96,18 +89,14 @@ impl MemoryQueueClient {
             acknowledgements: Default::default(),
             queue_size: Some(queue_size)
         };
+
         let sink = MemoryQueueSink::new(config);
         let receiver = MemoryQueueSink::take_message_receiver();
-
         let stream_sink = VectorSink::Stream(Box::new(sink));
-
         let (_input_lines, events) = 
             random_batches_with_stream(event_len, events_count, batch_size, is_json);
-
         let _ = block_on(stream_sink.run(Box::pin(events)));
-
         MemoryQueueClient { receiver }
-
     }
 
     pub fn poll(&mut self) -> Vec<CxxLogEvent> {
