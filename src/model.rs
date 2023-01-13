@@ -1,12 +1,29 @@
 use std::str;
 use vector::event::LogEvent;
 use vector::event_path;
+use vector::event::Value;
+use std::collections::BTreeMap;
+use vector::event::EventMetadata;
 
 pub struct CxxLogEvent {
     pub log_event: LogEvent,
 }
 
 impl CxxLogEvent {
+
+    // new a vec of events for testing
+    pub fn new(kvs: &Vec<String>) -> Self {
+        let cnt = kvs.len();
+        let mut fields = BTreeMap::new();
+
+        for idx in (0..cnt).step_by(2) {
+            fields.insert(String::from(kvs[idx].clone()), Value::from(kvs[idx+1].clone()));
+        }
+        Self {
+            log_event: LogEvent::from_map(fields, EventMetadata::default()),
+        }
+    }
+
     pub fn get_string(&self, key: &str) -> &str {
         if self.log_event.get(key).is_some() {
             let value_ref = self.log_event.get(key).unwrap();

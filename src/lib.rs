@@ -39,6 +39,8 @@ mod ffi {
          */
         type CxxLogEvent;
 
+        fn new_cxx_log_events(inputs: Vec<String>, count: i32) -> Vec<CxxLogEvent>;
+
         unsafe fn get_string<'a>(self: &'a CxxLogEvent, key: &str) -> &'a str;
 
         unsafe fn get_value_type<'a>(self: &'a CxxLogEvent, key: &str) ->  &'a str;
@@ -70,6 +72,10 @@ mod ffi {
         type MemoryQueueClient;
 
         fn new_memory_queue_client() -> Box<MemoryQueueClient>;
+        
+        fn new_memory_queue_client_with_random_events(
+            queue_size: usize, events_count: usize, event_len: usize, batch_size: usize, is_json: bool
+        )-> Box<MemoryQueueClient>;
 
         fn poll(self: &mut MemoryQueueClient) -> Vec<CxxLogEvent>;
     }
@@ -96,4 +102,19 @@ pub fn new_one_shot_topology_controller() -> Box<OneShotTopologyController> {
 
 pub fn new_memory_queue_client() -> Box<MemoryQueueClient> {
     Box::new(MemoryQueueClient::new())
+}
+
+// this is an API for generating events to memory queue sink
+pub fn new_memory_queue_client_with_random_events(queue_size: usize, events_count: usize, event_len: usize, batch_size: usize, is_json: bool) -> Box<MemoryQueueClient> {
+    Box::new(MemoryQueueClient::new_with_random_events(queue_size, events_count, event_len, batch_size, is_json))
+}
+
+// this is an API just for generating benchmark testing events
+pub fn new_cxx_log_events(inputs: Vec<String>, count: i32) -> Vec<CxxLogEvent> {
+    let mut events: Vec<CxxLogEvent> = Vec::new();
+    for _i in 0..count {
+        let event = CxxLogEvent::new(&inputs);
+        events.push(event);
+    }
+    events
 }

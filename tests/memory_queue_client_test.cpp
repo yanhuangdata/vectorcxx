@@ -12,6 +12,67 @@ using vectorcxx::test::run;
 using vectorcxx::test::send_http_events;
 using nlohmann::json;
 
+TEST_CASE("consume events by constructor") {
+  auto events = vectorcxx::new_cxx_log_events({"message", "e0", "new_field", "new_value"}, 2);
+  REQUIRE(events.size() == 2);
+  auto event = &events[0];
+  auto const &message = event->get_string("message");
+  auto const &fields = event->fields();
+  REQUIRE(message == "e0");
+  REQUIRE(fields.size() == 2);
+  REQUIRE(fields[0] == "message");
+  REQUIRE(fields[1] == "new_field");
+  REQUIRE(event->get_string("new_field") == "new_value");
+}
+
+TEST_CASE("poll random generated events") {
+  auto events_total = 2000;
+  auto batch_size = 100;
+  auto batches_expected = (events_total - 1) / batch_size + 1;
+  auto memory_queue_client = vectorcxx::new_memory_queue_client_with_random_events(
+    2000, events_total, 100, batch_size, false);
+  rust::Vec<vectorcxx::CxxLogEvent> events;
+  uint32_t events_got = 0;
+  uint32_t batches_got = 0;
+  do {
+    events = memory_queue_client->poll();
+    events_got += events.size();
+    if (!events.empty()) {
+      batches_got += 1;
+      REQUIRE(events[0].get_string("_target_table") == "table_a");
+    }
+  } while (!events.empty());
+  REQUIRE(events_got == events_total);
+  REQUIRE(batches_got == batches_expected);
+}
+
+TEST_CASE("poll random generated json events") {
+  auto events_total = 100;
+  auto batch_size = 50;
+  auto batches_expected = (events_total - 1) / batch_size + 1;
+  auto event_len = 100;
+  // expected generated fields and "_message", "_target_table", "_datatype"
+  auto fields_expected = event_len / 50 + 3;
+  auto memory_queue_client = vectorcxx::new_memory_queue_client_with_random_events(
+    2000, events_total, event_len, batch_size, true);
+  rust::Vec<vectorcxx::CxxLogEvent> events;
+  uint32_t events_got = 0;
+  uint32_t batches_got = 0;
+  do {
+    events = memory_queue_client->poll();
+    events_got += events.size();
+    if (!events.empty()) {
+      batches_got += 1;
+      REQUIRE(events[0].get_string("_target_table") == "table_a");
+      REQUIRE(events[0].get_string("_datatype") == "json");
+      auto fields = events[0].fields();
+      REQUIRE(fields.size() == fields_expected);
+    }
+  } while (!events.empty());
+  REQUIRE(events_got == events_total);
+  REQUIRE(batches_got == batches_expected);
+}
+
 TEST_CASE("consume events from memory queue") {
   run("http_to_memory_queue", [](rust::Box<TopologyController> &tc) {
     send_http_events({"e0", "e1"});
