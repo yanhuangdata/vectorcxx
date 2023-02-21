@@ -5,7 +5,7 @@ jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     container:
-      image: debian:bullseye-20221024
+      image: probrian35/vectorcxx_dev:latest
       env:
         NODE_ENV: development
       ports:
@@ -13,5 +13,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Check for json file
-        run: (ls) || (echo No jsonfile)
+      - name: Update submodule
+        run: git submodule update --init --recursive
+      - name: Build
+        run: VECTORCXX_VCPKG_MANIFEST_DIR=$PWD/ci/dev_image just cmake && just build
+      - name: Test
+        run: cd build-cmake-debug-linux && ctest
