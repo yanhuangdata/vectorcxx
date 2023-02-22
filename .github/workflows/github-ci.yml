@@ -18,11 +18,11 @@ jobs:
       - name: Tracing
         env:
           RUST_TOOLCHAIN_VERSION: 1.64.0
-        run: 
-          rustup show
-          rustup toolchain list
-          rustup default
-          rustc --version
+        run: |
+          rustup show && \
+          rustup toolchain list && \
+          rustup default && \
+          rustc --version && \
           rustup --version
       # - name: Update submodule
       #   run: git submodule update --init --recursive
