@@ -26,9 +26,25 @@ jobs:
       #     rustup --version
       # - name: Update submodule
       #   run: git submodule update --init --recursive
+      - name: Cargo Cache
+        id: cache-build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            build-cmake-relwithdebinfo-linux/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - if: ${{ steps.cache-build.outputs.cache-hit != 'true' }}
+        name: Echo if build cache not hit
+        continue-on-error: true
+        run: echo "cargo build cache not hit"
       - name: Build
         env:
           RUST_TOOLCHAIN_VERSION: 1.64.0
+          BUILD_TYPE: relwithdebinfo
         run: rustup default 1.64.0-x86_64-unknown-linux-gnu && VECTORCXX_VCPKG_MANIFEST_DIR=$PWD/ci/dev_image just cmake && just build
       - name: Test
         run: cd build-cmake-debug-linux && ctest
