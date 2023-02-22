@@ -15,11 +15,15 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: true
-      # - name: Update submodule
-      #   run: git submodule update --init --recursive
-      - name: Build
+      - name: Tracing
         env:
           RUST_TOOLCHAIN_VERSION: 1.64.0
-        run: VECTORCXX_VCPKG_MANIFEST_DIR=$PWD/ci/dev_image just cmake && just build
-      - name: Test
-        run: cd build-cmake-debug-linux && ctest
+        run: env && rustup show && cat /etc/os-release
+      # - name: Update submodule
+      #   run: git submodule update --init --recursive
+      # - name: Build
+      #   env:
+      #     RUST_TOOLCHAIN_VERSION: 1.64.0
+      #   run: VECTORCXX_VCPKG_MANIFEST_DIR=$PWD/ci/dev_image just cmake && just build
+      # - name: Test
+      #   run: cd build-cmake-debug-linux && ctest
