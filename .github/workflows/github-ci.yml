@@ -13,8 +13,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Update submodule
-        run: git submodule update --init --recursive
+        with:
+          submodules: true
+      # - name: Update submodule
+      #   run: git submodule update --init --recursive
       - name: Build
         run: VECTORCXX_VCPKG_MANIFEST_DIR=$PWD/ci/dev_image just cmake && just build
       - name: Test
