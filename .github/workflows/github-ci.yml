@@ -26,16 +26,20 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
+            ~/.cache/sccache/
             build-cmake-relwithdebinfo-linux/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - if: ${{ steps.cache-build.outputs.cache-hit != 'true' }}
-        name: Echo if build cache not hit
+      - if: ${{ steps.cache-build.outputs.cache-hit == 'true' }}
+        name: Echo if build cache hit
         continue-on-error: true
-        run: echo "cargo build cache not hit"
+        run: echo "cargo build cache hit"
       - name: Build
         env:
           RUST_TOOLCHAIN_VERSION: 1.64.0
           BUILD_TYPE: relwithdebinfo
+          RUSTC_WRAPPER: /usr/local/bin/sccache
         run: rustup default 1.64.0-x86_64-unknown-linux-gnu && VECTORCXX_VCPKG_MANIFEST_DIR=$PWD/ci/dev_image just cmake && just build
       - name: Test
         run: cd build-cmake-relwithdebinfo-linux && ctest
+      - name: Clear Temp Files
+        run: rm -rf build-cmake-relwithdebinfo-linux/vcpkg_installed
