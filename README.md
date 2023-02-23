@@ -20,6 +20,9 @@ git submodule update --init --recursive
 ```
 * configure and build
 ```
+export VECTORCXX_VCPKG_MANIFEST_DIR=$PWD/ci/dev_image
+```
+```
 just cmake
 # this will use vcpkg manifest mode to install all the dependencies
 just build
