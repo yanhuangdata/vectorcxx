@@ -4,8 +4,12 @@ on:
   pull_request:
     branches:    
       - master
+  push:
+    branches:
+      - master
+    
 jobs:
-  Explore-GitHub-Actions:
+  pr_and_merge_ci:
     runs-on: ubuntu-latest
     container:
       image: probrian35/vectorcxx_dev:latest
