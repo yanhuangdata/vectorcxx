@@ -1,0 +1,13 @@
+version: "3"
+services:
+  bullseye:
+    image: 'vectorcxx_dev:latest'
+    environment:
+      - CURL_DOWNLOAD="curl --retry 5 --retry-delay 10 --retry-max-time 60 -fsSL"
+      - RUST_TOOLCHAIN_VERSION="1.64.0"
+      # - SCCACHE_VERSION="v0.3.0"
+      # - SCCACHE_ARTIFACT="sccache-${SCCACHE_VERSION}-x86_64-unknown-linux-musl"
+      # - RUSTC_WRAPPER="/usr/local/bin/sccache"
+    volumes:
+      - /root/code/vectorcxx:/usr/vectorcxx
+    tty: true

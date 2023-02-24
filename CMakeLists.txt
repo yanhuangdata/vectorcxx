@@ -14,6 +14,11 @@ if(DEFINED ENV{VCPKG_ROOT})
     message(STATUS "vcpkg found VCPKG_ROOT=$ENV{VCPKG_ROOT}")
     # https://github.com/microsoft/vcpkg/blob/master/docs/users/integration.md#changing-the-triplet-1
 
+    if(DEFINED ENV{VECTORCXX_VCPKG_MANIFEST_DIR})
+        message(STATUS "using VCPKG_MANIFEST_DIR from environment $ENV{VECTORCXX_VCPKG_MANIFEST_DIR}")
+        set(VCPKG_MANIFEST_DIR "$ENV{VECTORCXX_VCPKG_MANIFEST_DIR}")
+    endif()
+
     if(DEFINED ENV{VCPKG_DEFAULT_TRIPLET})
         message(STATUS "using VCPKG_DEFAULT_TRIPLET from environment $ENV{VCPKG_DEFAULT_TRIPLET}")
         set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}")
