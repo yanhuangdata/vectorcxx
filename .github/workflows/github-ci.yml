@@ -34,12 +34,19 @@ jobs:
         name: Echo if build cache hit
         continue-on-error: true
         run: echo "cargo build cache hit"
+      - name: Add rustup toolchain 
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: 1.64.0
+            target: x86_64-unknown-linux-gnu
+            default: true
+            components: rust-src
       - name: Build
         env:
           RUST_TOOLCHAIN_VERSION: 1.64.0
           BUILD_TYPE: relwithdebinfo
           RUSTC_WRAPPER: /usr/local/bin/sccache
-        run: rustup default 1.64.0-x86_64-unknown-linux-gnu && VECTORCXX_VCPKG_MANIFEST_DIR=$PWD/ci/dev_image just cmake && just build
+        run: VECTORCXX_VCPKG_MANIFEST_DIR=$PWD/ci/dev_image just cmake && just build
       - name: Test
         run: cd build-cmake-relwithdebinfo-linux && ctest
       - name: Clear Temp Files
