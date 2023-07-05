@@ -14,8 +14,10 @@ using nlohmann::json;
 
 TEST_CASE("consume events by constructor") {
   auto events = vectorcxx::new_cxx_log_events({"message", "e0", "new_field", "new_value"}, 2);
-  REQUIRE(events.size() == 2);
+  REQUIRE(events.size() == 4);
   auto event = &events[0];
+  auto non_utf_event = &events[2];
+  auto another_event = &events[3];
   auto const &message = event->get_string("message");
   auto const &fields = event->fields();
   REQUIRE(message == "e0");
@@ -23,6 +25,16 @@ TEST_CASE("consume events by constructor") {
   REQUIRE(fields[0] == "message");
   REQUIRE(fields[1] == "new_field");
   REQUIRE(event->get_string("new_field") == "new_value");
+
+  auto const &new_fields = non_utf_event->fields();
+  REQUIRE(new_fields.size() == 1);
+  REQUIRE(new_fields[0] == "invalid_key");
+  REQUIRE(non_utf_event->get_string("invalid_key") == "Hello �World");
+
+  auto const &another_fields = another_event->fields();
+  REQUIRE(another_fields.size() == 1);
+  REQUIRE(another_fields[0] == "invalid_key");
+  REQUIRE(another_event->get_string("invalid_key") == "Hello �World");
 }
 
 TEST_CASE("poll random generated events") {

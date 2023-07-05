@@ -3,10 +3,14 @@ mod topology_controller;
 mod model;
 mod memory_queue_client;
 
+use vector::event::LogEvent;
+use vector::event::Value;
+
 use crate::topology_controller::TopologyController;
 use crate::topology_controller::OneShotTopologyController;
 use crate::memory_queue_client::MemoryQueueClient;
 use crate::model::CxxLogEvent;
+use std::collections::BTreeMap;
 
 #[cxx::bridge(namespace = "vectorcxx")]
 mod ffi {
@@ -41,7 +45,7 @@ mod ffi {
 
         fn new_cxx_log_events(inputs: Vec<String>, count: i32) -> Vec<CxxLogEvent>;
 
-        unsafe fn get_string<'a>(self: &'a CxxLogEvent, key: &str) -> &'a str;
+        fn get_string(self: &CxxLogEvent, key: &str) -> String;
 
         unsafe fn get_value_type<'a>(self: &'a CxxLogEvent, key: &str) ->  &'a str;
 
@@ -116,5 +120,15 @@ pub fn new_cxx_log_events(inputs: Vec<String>, count: i32) -> Vec<CxxLogEvent> {
         let event = CxxLogEvent::new(&inputs);
         events.push(event);
     }
+    // test non-utf value parsed(use U+FFFD REPLACEMENT CHARACTER) before constructing LogEvent
+    let invalid_kv: Vec<String> = vec!("invalid_key".to_string(), "Hello �World".to_string());
+    let new_event = CxxLogEvent::new(&invalid_kv);
+    events.push(new_event);
+
+    // test non-utf value not parsed before constructing LogEvent
+    let invalid_value = Value::from(b"Hello \xF0\x90\x80World");
+    let another_kv = BTreeMap::from([("invalid_key".to_string(), invalid_value)]);
+    let another_event = CxxLogEvent {log_event: LogEvent::from(another_kv)};
+    events.push(another_event);
     events
 }
