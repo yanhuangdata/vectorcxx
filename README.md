@@ -54,3 +54,5 @@ just x64_toolchain
 # use direnv + .envrc is recommended for env var management
 export CMAKE_OSX_ARCHITECTURES=x86_64
 ```
+
+temptest
