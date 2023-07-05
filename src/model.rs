@@ -24,19 +24,21 @@ impl CxxLogEvent {
         }
     }
 
-    pub fn get_string(&self, key: &str) -> &str {
+    // return a String but not &str, because value string maybe not valid UTF, using as_str() to 
+    // handle invalid UTF string and return the correctly parsed string.
+    pub fn get_string(&self, key: &str) -> String {
         if self.log_event.get(key).is_some() {
             let value_ref = self.log_event.get(key).unwrap();
             if value_ref.is_bytes() {
-                return str::from_utf8(value_ref.as_bytes().unwrap()).unwrap();
+                return value_ref.as_str().unwrap().into_owned();
             }
         } else if self.log_event.get(event_path!(key)).is_some() {
             let value_ref = self.log_event.get(event_path!(key)).unwrap();
             if value_ref.is_bytes() {
-                return str::from_utf8(value_ref.as_bytes().unwrap()).unwrap();
+                return value_ref.as_str().unwrap().into_owned();
             }
         }
-        ""
+        "".to_string()
     }
 
     pub fn get_object_as_string(&self, key: &str) -> String {
