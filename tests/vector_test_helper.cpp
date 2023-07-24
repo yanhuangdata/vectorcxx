@@ -6,6 +6,10 @@
 #include <nlohmann/json.hpp>
 
 #include <spdlog/spdlog.h>
+#include <optional>
+#include <string>
+#include <functional>
+#include <vector>
 
 using std::filesystem::copy_options;
 using vectorcxx::CxxLogEvent;
