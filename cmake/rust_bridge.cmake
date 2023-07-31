@@ -127,7 +127,13 @@ endfunction(add_library_rust)
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     set(Rust_CARGO_TARGET "x86_64-pc-windows-gnu")
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
-    set(Rust_CARGO_TARGET "x86_64-unknown-linux-gnu")
+    execute_process(
+        COMMAND uname -m
+        RESULT_VARIABLE exit_code_or_error
+        OUTPUT_VARIABLE OS_ARCHITECTURE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    set(Rust_CARGO_TARGET "${OS_ARCHITECTURE}-unknown-linux-gnu")
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
     if("${CMAKE_OSX_ARCHITECTURES}" STREQUAL "x86_64")
         set(Rust_CARGO_TARGET "x86_64-apple-darwin")
