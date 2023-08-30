@@ -97,7 +97,7 @@ TEST_CASE("consume events from memory queue") {
     REQUIRE(events.size() == 1);
     REQUIRE(events[0].get_string("_target_table") == "main");
     REQUIRE(events[0].get_string("-Target-Es") == "table_a");
-    REQUIRE(events[0].get_string("source_type") == "http");
+    REQUIRE(events[0].get_string("source_type") == "http_server");
     REQUIRE(events[0].get_timestamp("timestamp") > 0);
     auto const &message = events[0].get_string("message");
     REQUIRE(message == "e0");
@@ -109,7 +109,7 @@ TEST_CASE("consume events from memory queue") {
     REQUIRE(events.size() == 1);
     REQUIRE(events[0].get_string("_target_table") == "main");
     REQUIRE(events[0].get_string("-Target-Es") == "table_a");
-    REQUIRE(events[0].get_string("source_type") == "http");
+    REQUIRE(events[0].get_string("source_type") == "http_server");
     auto const &message_1 = events[0].get_string("message");
     REQUIRE(message_1 == "e1");
   });
@@ -161,7 +161,7 @@ TEST_CASE("consume events containing different value types") {
     REQUIRE(events.size() == 1);
     REQUIRE(events[0].get_string("_target_table") == "main");
     REQUIRE(events[0].get_string("-Target-Es") == "table_a");
-    REQUIRE(events[0].get_string("source_type") == "http");
+    REQUIRE(events[0].get_string("source_type") == "http_server");
     REQUIRE(events[0].get_timestamp("timestamp") > 0);
     REQUIRE(events[0].get_value_type("age") == "integer");
     REQUIRE(events[0].get_integer("age") == 99);
