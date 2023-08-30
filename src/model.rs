@@ -43,18 +43,18 @@ impl CxxLogEvent {
 
     pub fn get_object_as_string(&self, key: &str) -> String {
         if self.log_event.get(key).is_some() {
-            return self.log_event.get(key).unwrap().to_string_lossy();
+            return self.log_event.get(key).unwrap().to_string_lossy().into_owned();
         }
-        self.log_event.get(event_path!(key)).unwrap().to_string_lossy()
+        self.log_event.get(event_path!(key)).unwrap().to_string_lossy().into_owned()
     }
 
     /* get array type field value in event, the whole array are dumped as string
      */
     pub fn get_array_as_string(&self, key: &str) -> String {
         if self.log_event.get(key).is_some() {
-            return self.log_event.get(key).unwrap().to_string_lossy();
+            return self.log_event.get(key).unwrap().to_string_lossy().into_owned();
         }
-        self.log_event.get(event_path!(key)).unwrap().to_string_lossy()
+        self.log_event.get(event_path!(key)).unwrap().to_string_lossy().into_owned()
     }
 
     /* get array type field value in event, returning an array, child values in array
@@ -68,7 +68,7 @@ impl CxxLogEvent {
                             else {None};
         if value.is_some() {
             let array = value.unwrap();
-            return array.iter().map(|v|v.to_string_lossy()).collect();
+            return array.iter().map(|v|v.to_string_lossy().into_owned()).collect();
             // return value.unwrap().as_array().unwrap().map(|v|v.to_string_lossy()).collect();
         }
         Vec::new()

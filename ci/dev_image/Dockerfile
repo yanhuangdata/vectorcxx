@@ -35,10 +35,10 @@ RUN ln -s /usr/bin/clang-format-11 /usr/bin/clang-format
 ARG CURL_DOWNLOAD="curl --retry 5 --retry-delay 10 --retry-max-time 60 -fsSL"
 
 # install rust compiler and cargo
-# 1.64.0 is consistent with rust-toolchain.toml in vector
-ARG RUST_TOOLCHAIN_VERSION=1.64.0
+# 1.71.1 is consistent with rust-toolchain.toml in vector
+ARG RUST_TOOLCHAIN_VERSION=1.71.1
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${RUST_TOOLCHAIN_VERSION} -y && \
-    rm -rf /root/.rustup/toolchains/1.64.0-x86_64-unknown-linux-gnu/share/doc/rust
+    rm -rf /root/.rustup/toolchains/1.71.1-x86_64-unknown-linux-gnu/share/doc/rust
 ARG SCCACHE_VERSION=v0.3.0
 ARG SCCACHE_ARTIFACT=sccache-${SCCACHE_VERSION}-x86_64-unknown-linux-musl
 RUN ${CURL_DOWNLOAD} https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/${SCCACHE_ARTIFACT}.tar.gz | bsdtar -xf- --strip-components 1 -C /usr/local/bin \
