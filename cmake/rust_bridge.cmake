@@ -96,7 +96,7 @@ function(add_library_rust)
     endif()
 
     execute_process(
-        COMMAND cargo install --locked cxxbridge-cmd --version ${cxx_required_version} --manifest-path ${CRATE_MANIFEST_PATH}
+        COMMAND cargo install --locked cxxbridge-cmd --version ${cxx_required_version}
         RESULT_VARIABLE cxx_version_result
         OUTPUT_VARIABLE cxx_version_output
     )
