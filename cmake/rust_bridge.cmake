@@ -82,7 +82,7 @@ function(add_library_rust)
 
     # install cxx before corrsoion setup to avoid reinstall cxx with cargo update
     execute_process(
-        COMMAND cargo tree -i cxx --depth=0
+        COMMAND cargo tree -i cxx --depth=0 --manifest-path ${CRATE_MANIFEST_PATH}
         RESULT_VARIABLE cxx_version_result
         OUTPUT_VARIABLE cxx_version_output
     )
@@ -96,7 +96,7 @@ function(add_library_rust)
     endif()
 
     execute_process(
-        COMMAND cargo install --locked cxxbridge-cmd --version ${cxx_required_version}
+        COMMAND cargo install --locked cxxbridge-cmd --version ${cxx_required_version} --manifest-path ${CRATE_MANIFEST_PATH}
         RESULT_VARIABLE cxx_version_result
         OUTPUT_VARIABLE cxx_version_output
     )
