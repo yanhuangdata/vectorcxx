@@ -9,16 +9,17 @@ default_build_type := env_var_or_default("BUILD_TYPE", "debug")
 default_build_jobs := env_var_or_default("BUILD_JOBS", "12")
 default_build_target := env_var_or_default("BUILD_TARGET", "all")
 default_distcc_jobs := env_var_or_default("DISTCC_JOBS", "24")
+default_profile_name := env_var_or_default("PROFILE_NAME", "")
 
 # configure the project using cmake
-cmake build_type=default_build_type:
+cmake build_type=default_build_type profile_name=default_profile_name:
   # set the OPENSSL_ROOT_DIR to the package installed via manifest mode,
   # so that `find_package(OpenSSL)` in CMake can find the OpenSSL lib with correct target architecture
-  OPENSSL_ROOT_DIR=./build-cmake-{{build_type}}-{{build_os}}/vcpkg_installed/{{vcpkg_default_triplet}} cmake . --preset={{build_type}}-{{build_os}} -DVCPKG_TARGET_TRIPLET={{vcpkg_default_triplet}}
+  PROFILE_NAME={{profile_name}} OPENSSL_ROOT_DIR=./build-cmake-{{build_type}}-{{build_os}}/vcpkg_installed/{{vcpkg_default_triplet}} cmake . --preset={{build_type}}-{{build_os}} -DVCPKG_TARGET_TRIPLET={{vcpkg_default_triplet}}
 
 # compile the project
-build build_type=default_build_type jobs=default_build_jobs target=default_build_target:
-	cmake --build --target {{target}} --preset={{build_type}}-{{build_os}}-build -j {{jobs}}
+build build_type=default_build_type jobs=default_build_jobs target=default_build_target profile_name=default_profile_name:
+	PROFILE_NAME={{profile_name}} cmake --build --target {{target}} --preset={{build_type}}-{{build_os}}-build -j {{jobs}}
 
 # install the project
 install build_type=default_build_type: 

@@ -111,11 +111,20 @@ function(add_library_rust)
     #     set(MEMORY_ALLOCATOR_FEATURE "")
     # endif()
 
+    message(STATUS "ENV PROFILE_NAME is $ENV{PROFILE_NAME}")
+    if(DEFINED ENV{PROFILE_NAME} AND NOT "$ENV{PROFILE_NAME}" STREQUAL "")
+        set(VECTOR_PROFILE_NAME $ENV{PROFILE_NAME})
+        message(STATUS "Use ${VECTOR_PROFILE_NAME} in environment var")
+    else()
+        set(VECTOR_PROFILE_NAME "")
+        message(STATUS "No ${VECTOR_PROFILE_NAME} in environment var")
+    endif()
     ## Import Rust target
     corrosion_import_crate(
         MANIFEST_PATH "${CRATE_MANIFEST_PATH}"
         FEATURES ${MEMORY_ALLOCATOR_FEATURE}
-        LOCKED)
+        LOCKED
+        PROFILE ${VECTOR_PROFILE_NAME})
 
     corrosion_add_cxxbridge(${CXXBRIDGE_TARGET} CRATE ${_LIB_NAME} FILES lib.rs)
     set_property(TARGET ${CXXBRIDGE_TARGET} PROPERTY POSITION_INDEPENDENT_CODE ON)

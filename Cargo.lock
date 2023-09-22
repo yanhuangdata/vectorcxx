@@ -342,13 +342,13 @@ dependencies = [
 
 [[package]]
 name = "async-graphql"
-version = "6.0.4"
+version = "6.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1a08c6aae08f17556577c8b6964f9a4e63dab9ebb42c6c27990d48c810292f9"
+checksum = "738953986114630243230d0961968972ac326530532dca8e46f085a42c26fc31"
 dependencies = [
- "async-graphql-derive 6.0.4",
- "async-graphql-parser 6.0.4",
- "async-graphql-value 6.0.4",
+ "async-graphql-derive 6.0.6",
+ "async-graphql-parser 6.0.6",
+ "async-graphql-value 6.0.6",
  "async-stream",
  "async-trait",
  "base64 0.13.1",
@@ -389,12 +389,12 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-derive"
-version = "6.0.4"
+version = "6.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37bef462c5729e53970def569499cfcad11e5019f634158d015b75ffbc4609c3"
+checksum = "a6f224b1a028d601e27c6fc8456eb580064cb20a58069c21e513b16d5d751e91"
 dependencies = [
  "Inflector",
- "async-graphql-parser 6.0.4",
+ "async-graphql-parser 6.0.6",
  "darling 0.20.3",
  "proc-macro-crate 1.3.1",
  "proc-macro2",
@@ -418,11 +418,11 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-parser"
-version = "6.0.4"
+version = "6.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b00b7296259479864a53dd32aa4dfbec8ed4c5d3b8c0337334a076fe0791935"
+checksum = "06a6788bfac416c4ef118d3314d603ace7bae4159cd453ad8b9d8b071efd6ce0"
 dependencies = [
- "async-graphql-value 6.0.4",
+ "async-graphql-value 6.0.6",
  "pest",
  "serde",
  "serde_json",
@@ -442,9 +442,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-value"
-version = "6.0.4"
+version = "6.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77ae89db8cdd72492b16a487649405296eee4e40e25620d17720656816c4503a"
+checksum = "c141bdc0b12f87ad76c963bf1bae5c04608e0547ad6831a86fbb8f753b2c438f"
 dependencies = [
  "bytes 1.4.0",
  "indexmap 2.0.0",
@@ -454,11 +454,11 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-warp"
-version = "6.0.4"
+version = "6.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de552e56fac73a4469fa36581c74db1d986f23e9cc046029f415642de2f86a0f"
+checksum = "dd455fda378adea721587b2e719c22240f4b4438aa7adb9e10645429ed496291"
 dependencies = [
- "async-graphql 6.0.4",
+ "async-graphql 6.0.6",
  "futures-util",
  "serde_json",
  "warp",
@@ -1722,9 +1722,9 @@ dependencies = [
 
 [[package]]
 name = "curve25519-dalek"
-version = "4.0.0"
+version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f711ade317dd348950a9910f81c5947e3d8907ebd2b83f76203ff1807e6a2bc2"
+checksum = "622178105f911d937a42cdb140730ba4a3ed2becd8ae6ce39c7d28b5d75d4588"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -2282,9 +2282,9 @@ checksum = "6999dc1837253364c2ebb0704ba97994bd874e8f195d665c50b7548f6ea92764"
 
 [[package]]
 name = "fiat-crypto"
-version = "0.1.20"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e825f6987101665dea6ec934c09ec6d721de7bc1bf92248e1d5810c8cd636b77"
+checksum = "d0870c84016d4b481be5c9f323c24f65e31e901ae618f0e80f4308fb00de1d2d"
 
 [[package]]
 name = "file-source"
@@ -3405,9 +3405,9 @@ dependencies = [
 
 [[package]]
 name = "lru"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eedb2bdbad7e0634f83989bf596f497b070130daaa398ab22d84c39e266deec5"
+checksum = "a4a83fb7698b3643a0e34f9ae6f2e8f0178c0fd42f8b59d493aa271ff3a5bf21"
 
 [[package]]
 name = "lua-src"
@@ -4602,9 +4602,9 @@ dependencies = [
 
 [[package]]
 name = "prost-reflect"
-version = "0.11.4"
+version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "000e1e05ebf7b26e1eba298e66fe4eee6eb19c567d0ffb35e0dd34231cdac4c8"
+checksum = "6b823de344848e011658ac981009100818b322421676740546f8b52ed5249428"
 dependencies = [
  "base64 0.21.3",
  "once_cell",
@@ -4892,9 +4892,9 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.23.2"
+version = "0.23.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffd6543a7bc6428396845f6854ccf3d1ae8823816592e2cbe74f20f50f209d02"
+checksum = "4f49cdc0bb3f412bf8e7d1bd90fe1d9eb10bc5c399ba90973c14662a27b3f8ba"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -6367,9 +6367,9 @@ dependencies = [
 
 [[package]]
 name = "tower-http"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55ae70283aba8d2a8b411c695c437fe25b8b5e44e23e780662002fc72fb47a82"
+checksum = "61c5bb1d698276a2443e5ecfabc1008bf15a36c12e6a7176e7bf089ea9131140"
 dependencies = [
  "async-compression",
  "bitflags 2.4.0",
@@ -6838,7 +6838,7 @@ dependencies = [
  "arc-swap",
  "arr_macro",
  "async-compression",
- "async-graphql 6.0.4",
+ "async-graphql 6.0.6",
  "async-graphql-warp",
  "async-nats",
  "async-stream",
@@ -7761,9 +7761,9 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.6.3"
+version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3b9c234616391070b0b173963ebc65a9195068e7ed3731c6edac2ec45ebe106"
+checksum = "20707b61725734c595e840fb3704378a0cd2b9c74cc9e6e20724838fc6a1e2f9"
 dependencies = [
  "byteorder",
  "zerocopy-derive",
@@ -7771,9 +7771,9 @@ dependencies = [
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.6.3"
+version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f7f3a471f98d0a61c34322fbbfd10c384b07687f680d4119813713f72308d91"
+checksum = "56097d5b91d711293a42be9289403896b68654625021732067eac7a4ca388a1f"
 dependencies = [
  "proc-macro2",
  "quote",
