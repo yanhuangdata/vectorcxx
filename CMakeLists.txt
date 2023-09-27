@@ -110,6 +110,9 @@ macro(setup_dependencies)
     
     
     find_package(OpenSSL REQUIRED)
+
+    # find_package(zstd REQUIRED)
+    
     
     if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
     find_library(RESOLV_LIBRARY NAMES resolv REQUIRED)
@@ -236,6 +239,8 @@ function(setup_src)
                 ${INTERFACE_LINKED_LIBRARIES}  
             PRIVATE
                 ${PRIVATE_LINKED_LIBRARIES}  
+            # zstd::libzstd_static
+
         )
 
         

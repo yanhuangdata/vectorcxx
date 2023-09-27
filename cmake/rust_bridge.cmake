@@ -80,6 +80,26 @@ function(add_library_rust)
     set(_LIB_NAME ${_RUST_LIB_NAME})
     set(CXXBRIDGE_TARGET ${_RUST_LIB_NAME}_bridge)
 
+    # install cxx before corrsoion setup to avoid reinstall cxx with cargo update
+    execute_process(
+        COMMAND cargo tree -i cxx --depth=0 --manifest-path ${CRATE_MANIFEST_PATH}
+        RESULT_VARIABLE cxx_version_result
+        OUTPUT_VARIABLE cxx_version_output
+    )
+    if(NOT "${cxx_version_result}" EQUAL "0")
+        message(FATAL_ERROR "Crate ${_arg_CRATE} does not depend on cxx.")
+    endif()
+    if(cxx_version_output MATCHES "cxx v([0-9]+.[0-9]+.[0-9]+)")
+        set(cxx_required_version "${CMAKE_MATCH_1}")
+    else()
+        message(FATAL_ERROR "Failed to parse cxx version from cargo tree output: `cxx_version_output`")
+    endif()
+
+    execute_process(
+        COMMAND cargo install --locked cxxbridge-cmd --version ${cxx_required_version}
+        RESULT_VARIABLE cxx_version_result
+        OUTPUT_VARIABLE cxx_version_output
+    )
     # TODO: disable using non system memory allocator until we can make it work with other jemalloc libraries such as pyarrow
     # use mimalloc for macOS so that we could avoid https://github.com/vectordotdev/vector/issues/14946 when using Rosetta
     # if(APPLE)
@@ -91,10 +111,20 @@ function(add_library_rust)
     #     set(MEMORY_ALLOCATOR_FEATURE "")
     # endif()
 
+    message(STATUS "ENV PROFILE_NAME is $ENV{PROFILE_NAME}")
+    if(DEFINED ENV{PROFILE_NAME} AND NOT "$ENV{PROFILE_NAME}" STREQUAL "")
+        set(VECTOR_PROFILE_NAME $ENV{PROFILE_NAME})
+        message(STATUS "Use ${VECTOR_PROFILE_NAME} in environment var")
+    else()
+        set(VECTOR_PROFILE_NAME "")
+        message(STATUS "No ${VECTOR_PROFILE_NAME} in environment var")
+    endif()
     ## Import Rust target
     corrosion_import_crate(
         MANIFEST_PATH "${CRATE_MANIFEST_PATH}"
-        FEATURES ${MEMORY_ALLOCATOR_FEATURE})
+        FEATURES ${MEMORY_ALLOCATOR_FEATURE}
+        LOCKED
+        PROFILE ${VECTOR_PROFILE_NAME})
 
     corrosion_add_cxxbridge(${CXXBRIDGE_TARGET} CRATE ${_LIB_NAME} FILES lib.rs)
     set_property(TARGET ${CXXBRIDGE_TARGET} PROPERTY POSITION_INDEPENDENT_CODE ON)
