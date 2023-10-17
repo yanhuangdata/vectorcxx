@@ -1,0 +1,25 @@
+{
+  "data_dir": "/tmp/vector/",
+  "sources": {
+    "source_internal_metrics": {
+      "type": "internal_metrics",
+      "scrape_interval_secs": 30
+    }
+  },
+  "transforms": {
+    "transform_remap_field": {
+      "type": "remap",
+      "inputs": ["source_*"],
+      "source": "._source = \"my_source\""
+    }
+  },
+  "sinks": {
+    "sink_memory_queue": {
+      "type": "memory_queue",
+      "inputs": [
+        "transform_*"
+      ],
+      "rate": null
+    }
+  }
+}

@@ -2,6 +2,8 @@ use tracing::trace;
 use vector::event::{EventArray, EventContainer, LogEvent, Value, EventMetadata};
 use vector::sinks::memory_queue::{MemoryQueueSink, MemoryQueueConfig};
 use vector::sinks::VectorSink;
+use vector::transforms::metric_to_log::{MetricToLog, MetricToLogConfig};
+use vector::LogNamespace;
 use vector::test_util::{random_events_with_stream, random_string};
 use futures::executor::block_on;
 use crate::CxxLogEvent;
@@ -10,6 +12,7 @@ use std::collections::BTreeMap;
 
 pub struct MemoryQueueClient {
     receiver: Option<futures::channel::mpsc::Receiver<EventArray>>,
+    metric_to_log: MetricToLog,
 }
 
 
@@ -74,11 +77,19 @@ impl MemoryQueueClient {
     // C++ side should cache this object and reuse it
     pub fn new() -> Self {
         let receiver = MemoryQueueSink::take_message_receiver();
+        let metric_config: MetricToLogConfig = Default::default();
+        let metric_to_log = MetricToLog::new(
+            metric_config.host_tag.as_deref(),
+            metric_config.timezone.unwrap_or_default(),
+            LogNamespace::Vector,
+            metric_config.metric_tag_values,
+        );
         if receiver.is_none() {
             panic!("memory queue receiver can only be taken once");
         } else {
             MemoryQueueClient {
                 receiver,
+                metric_to_log
             }
         }
     }
@@ -96,7 +107,14 @@ impl MemoryQueueClient {
         let (_input_lines, events) = 
             random_batches_with_stream(event_len, events_count, batch_size, is_json);
         let _ = block_on(stream_sink.run(Box::pin(events)));
-        MemoryQueueClient { receiver }
+        let metric_config: MetricToLogConfig = Default::default();
+        let metric_to_log = MetricToLog::new(
+            metric_config.host_tag.as_deref(),
+            metric_config.timezone.unwrap_or_default(),
+            LogNamespace::Legacy,
+            metric_config.metric_tag_values,
+        );
+        MemoryQueueClient { receiver, metric_to_log }
     }
 
     pub fn poll(&mut self) -> Vec<CxxLogEvent> {
@@ -106,8 +124,14 @@ impl MemoryQueueClient {
             match rx.try_next() {
                 Ok(Some(value)) => {
                     events.reserve(value.len());
-                    value.iter_events().for_each(|event_ref|
-                        events.push(CxxLogEvent { log_event: event_ref.into_log() })
+                    value.iter_events().for_each(|event_ref| {
+                        match event_ref
+                        {
+                            EventRef::Log(log) => events.push(CxxLogEvent { log_event: log.clone() }),
+                            EventRef::Metric(metric) => events.push(CxxLogEvent { log_event: self.metric_to_log.transform_one(metric.clone()).unwrap() }),
+                            _ => ()
+                        }
+                    }
                     );
                 }
                 Ok(None) => {}
