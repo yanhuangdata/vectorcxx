@@ -1,5 +1,5 @@
 use tracing::trace;
-use vector::event::{EventArray, EventContainer, LogEvent, Value, EventMetadata};
+use vector::event::{EventArray, EventContainer, LogEvent, Value, EventMetadata, EventRef};
 use vector::sinks::memory_queue::{MemoryQueueSink, MemoryQueueConfig};
 use vector::sinks::VectorSink;
 use vector::transforms::metric_to_log::{MetricToLog, MetricToLogConfig};
