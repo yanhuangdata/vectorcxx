@@ -115,6 +115,17 @@ TEST_CASE("consume events from memory queue") {
   });
 }
 
+TEST_CASE("consume metrics from memory queue") {
+  run("host_metrics_to_memory_queue", [](rust::Box<TopologyController> &tc) {
+    auto &memory_queue_client = CxxMemoryQueueClient::get_instance();
+    rust::Vec<vectorcxx::CxxLogEvent> events;
+    do {
+      events = memory_queue_client->poll();
+    } while (events.empty());
+    REQUIRE(events.size() > 0);
+  });
+}
+
 TEST_CASE("iterate field names from pulled events") {
   run("http_to_memory_queue", [](rust::Box<TopologyController> &tc) {
     send_http_events({"e0", "e1"});
