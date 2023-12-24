@@ -4,7 +4,7 @@ use std::sync::Once;
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use tracing::{debug, error, info, Level};
-use vector::config::{ConfigBuilder, Config, ComponentKey, ConfigDiff};
+use vector::config::{ConfigBuilder, Config, ComponentKey, ConfigDiff, load_from_str};
 use vector::topology::RunningTopology;
 use vector::{config, config::format, metrics, test_util::runtime};
 
@@ -25,7 +25,7 @@ static INIT: Once = Once::new();
 pub fn setup_logging() {
     let timer = tracing_subscriber::fmt::time::time();
     let collector = tracing_subscriber::fmt()
-        .with_max_level(Level::DEBUG)
+        .with_max_level(Level::INFO)
         // disable color to make CLion happy
         .with_ansi(false)
         .with_thread_ids(true)
@@ -136,6 +136,33 @@ async fn reload_vector(
     true
 }
 
+async fn reload_vector_from_str(config_str: &str, topology: &mut RunningTopology) -> Result<bool, String> {
+    match load_from_str(config_str, config::Format::Json) {
+        Ok(config) => {
+            info!("config str: {:?}", config_str);
+            match topology
+                .reload_config_and_respawn(config)
+                .await
+            {
+                Ok(true) => {
+                    info!("config reloaded succeed");
+                },
+                Ok(false) => {
+                    info!("reload and respawn failed, restore old config");
+                    return Err("reload and respawn failed, restored old config".to_string());
+                },
+                Err(()) => {
+                    return Err("reload and respawn failed, failed to restore old config".to_string());
+                }
+            }
+        }
+        Err(err) => {
+            return Err(format!("reload from str error: {:?}", err));
+        }
+    }
+    Ok(true)
+}
+
 fn advance_generation(result: bool, generation_id: &AtomicU32) -> bool {
     if result {
         generation_id.fetch_add(1, Ordering::Relaxed);
@@ -143,15 +170,14 @@ fn advance_generation(result: bool, generation_id: &AtomicU32) -> bool {
     result
 }
 
-pub fn init_config(config_str: &str) -> Option<ConfigBuilder> {
+pub fn init_config(config_str: &str) -> Result<ConfigBuilder, String> {
     START.call_once(|| {
         setup_logging();
     });
 
     let res = format::deserialize(config_str, config::Format::Json);
     if res.is_err() {
-        error!("deserialize error {:?}", res.unwrap_err());
-        return None;
+        return Err(format!("configuration error: {:?}", res.unwrap_err().join(",")));
     }
     let config_builder: ConfigBuilder = res.unwrap();
     debug!(
@@ -169,7 +195,7 @@ pub fn init_config(config_str: &str) -> Option<ConfigBuilder> {
     });
 
     info!("config constructed via config builder");
-    Some(config_builder)
+    Ok(config_builder)
 }
 
 impl TopologyController {
@@ -186,8 +212,8 @@ impl TopologyController {
     pub fn start(&mut self, topology_config: &str) -> Result<bool, String> {
 
         let builder = init_config(topology_config);
-        if builder.is_none() {
-            return Err("failed to init topology config".to_string());
+        if builder.is_err() {
+            return Err(builder.unwrap_err());
         }
         info!("start vector service");
 
@@ -278,6 +304,11 @@ impl TopologyController {
             config_str,
         }, self.config_builder.lock().unwrap().as_mut().unwrap(), self.topology.lock().unwrap().as_mut().unwrap()).await
     }
+
+    pub fn handle_config_reload(&self, config_str: &str) -> Result<bool, String> {
+        let res = self.rt.block_on(reload_vector_from_str(config_str, self.topology.lock().unwrap().as_mut().unwrap()));
+        res
+    }
 }
 
 impl OneShotTopologyController {
@@ -290,8 +321,8 @@ impl OneShotTopologyController {
     // run topology and return after finished, no need to maintain datas for long run
     pub fn start(&mut self, config_str: &str) -> Result<bool, String> {
         let config_builder = init_config(config_str);
-        if config_builder.is_none() {
-            return Err("failed to init topology config".to_string());
+        if config_builder.is_err() {
+            return Err(config_builder.unwrap_err());
         }
         info!("start one time vector topology");
 
