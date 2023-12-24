@@ -35,6 +35,8 @@ mod ffi {
         fn stop(self: &mut TopologyController) -> bool;
 
         fn get_generation_id(self: &mut TopologyController) -> u32;
+
+        fn handle_config_reload(self: &mut TopologyController, config: &str) -> Result<bool>;
     }
 
     extern "Rust" {

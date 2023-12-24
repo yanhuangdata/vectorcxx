@@ -7,6 +7,7 @@
 #include <exception>
 #include <regex>
 #include <string>
+#include <iostream>
 
 using Catch::Matchers::ContainsSubstring;
 using vectorcxx::test::run;
@@ -152,4 +153,149 @@ TEST_CASE("run vector service with one time topology") {
   });
   auto events = read_events_from_sink();
   REQUIRE(events.size() == 6);
+}
+
+TEST_CASE("test one shot topology with invalid source config") {
+  try {
+    run_one_shot("file_to_file_invalid", [](rust::Box<OneShotTopologyController> &tc) {});
+  } catch (std::exception &e) {
+    std::cout << "error: " << e.what() << std::endl;
+    REQUIRE_THAT(e.what(), ContainsSubstring("configuration error: \"unknown variant `beginnings`"));
+  }
+}
+
+TEST_CASE("test reload vector from valid config string can proceed") {
+  auto config_string = R"j(
+    {
+      "data_dir": "/tmp/vector/",
+      "sources": {
+        "source_http": {
+          "type": "http_server",
+          "address": "0.0.0.0:9999",
+          "encoding": "text"
+        }
+      },
+      "sinks": {
+        "sink_file": {
+          "type": "file",
+          "inputs": [
+            "transform_*"
+          ],
+          "encoding": {
+            "codec": "json"
+          },
+          "path": "/tmp/vector_test_sink.log"
+        }
+      },
+      "transforms": {
+        "transform_add_field": {
+          "type": "remap",
+          "inputs": ["source_*"],
+          "source": ".age = 99 \n .abc=1"
+        }
+      }
+    }
+  )j";
+  // start topology controller
+  run("http_to_file",
+    [&config_string](rust::Box<TopologyController> &tc) { 
+      send_http_events({"hello"}); 
+      // reload with config str
+      auto config_str = rust::String(config_string);
+      REQUIRE(tc->handle_config_reload(config_str));
+      send_http_events({"hello", "world"});
+  });
+  auto events = read_events_from_sink();
+  REQUIRE(events.size() == 3);
+  REQUIRE_THAT(events[0], !ContainsSubstring(R"("age")"));
+  REQUIRE_THAT(events[1], ContainsSubstring(R"("age")"));
+  REQUIRE_THAT(events[2], ContainsSubstring(R"("age")"));
+}
+
+TEST_CASE("test reload vector from invalid config string should fallback to existing topology config") {
+  auto config_string = R"j({"data_dir": "/tmp/vector/","sources": {"source_http": {"type": "http_server_invalid","address": "0.0.0.0:9999","encoding": "text"}},
+      "sinks": {
+        "sink_file": {
+          "type": "file",
+          "inputs": [
+            "transform_*"
+          ],
+          "encoding": {
+            "codec": "json"
+          },
+          "path": "/tmp/vector_test_sink.log"
+        }
+      },
+      "transforms": {
+        "transform_add_field": {
+          "type": "remap",
+          "inputs": ["source_*"],
+          "source": ".age = 42"
+        }
+      }
+    }
+  )j";
+  // start topology controller
+  run("http_to_file",
+    [&config_string](rust::Box<TopologyController> &tc) { 
+      send_http_events({"hello"}); 
+      // reload with config str
+      auto config_str = rust::String(config_string);
+      REQUIRE_THROWS(tc->handle_config_reload(config_str));
+      send_http_events({"hello", "world"});
+  });
+  auto events = read_events_from_sink();
+  REQUIRE(events.size() == 3);
+  REQUIRE_THAT(events[0], !ContainsSubstring(R"("age")"));
+  REQUIRE_THAT(events[1], !ContainsSubstring(R"("age")"));
+  REQUIRE_THAT(events[2], !ContainsSubstring(R"("age")"));
+}
+
+TEST_CASE("test reload vector from config string with health check") {
+  // source includes an invalid port `99999`, which should fail the health check and reload.
+  auto config_string = R"j(
+    {
+      "data_dir": "/tmp/vector/",
+      "sources": {
+        "source_http": {
+          "type": "http_server",
+          "address": "0.0.0.0:99999",
+          "encoding": "text"
+        }
+      },
+      "sinks": {
+        "sink_file": {
+          "type": "file",
+          "inputs": [
+            "transform_*"
+          ],
+          "encoding": {
+            "codec": "json"
+          },
+          "path": "/tmp/vector_test_sink.log"
+        }
+      },
+      "transforms": {
+        "transform_add_field": {
+          "type": "remap",
+          "inputs": ["source_*"],
+          "source": ".age = 42"
+        }
+      }
+    }
+  )j";
+  // start topology controller
+  run("http_to_file",
+    [&config_string](rust::Box<TopologyController> &tc) { 
+      send_http_events({"hello"}); 
+      // reload with config str
+      auto config_str = rust::String(config_string);
+      REQUIRE_THROWS(tc->handle_config_reload(config_str));
+      send_http_events({"hello", "world"});
+  });
+  auto events = read_events_from_sink();
+  REQUIRE(events.size() == 3);
+  REQUIRE_THAT(events[0], !ContainsSubstring(R"("age")"));
+  REQUIRE_THAT(events[1], !ContainsSubstring(R"("age")"));
+  REQUIRE_THAT(events[2], !ContainsSubstring(R"("age")"));
 }
