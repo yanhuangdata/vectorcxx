@@ -1,4 +1,5 @@
 [env]
 OPENSSL_NO_VENDOR = { value = "true", force = true }
 OPENSSL_STATIC = { value = "0", force = true }
+AM_CFLAGS = "-Wno-error=implicit-function-declaration"
 #OPENSSL_INCLUDE_DIR = { value = "${OPENSSL_INCLUDE_DIR}", force = true }
