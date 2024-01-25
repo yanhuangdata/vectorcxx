@@ -2,6 +2,7 @@
 
 #include "vectorcxx_bridge/lib.h"
 #include <filesystem>
+#include <functional>
 
 namespace vectorcxx::test {
   // this is the default file sink used by all testing configs
