@@ -4,7 +4,7 @@
   "version": "0.2.1",
   "port-version": 0,
   "description": "vectorcxx vector",
-  "builtin-baseline": "4340582bc30f3e539bd4f52e26418f7d62145956",
+  "builtin-baseline": "1751f9f8c732c2e6f9e81ce56c10e4c4aa265b4a",
   "dependencies": [
     "zlib",
     "catch2",
@@ -15,6 +15,7 @@
     "spdlog",
     "fmt",
     "openssl",
-    "cpr"
+    "cpr",
+    "zstd"
   ]
 }
