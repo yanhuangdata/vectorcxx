@@ -89,8 +89,10 @@ RUN mkdir -p /root/downloads && \
     curl -L https://github.com/Kitware/CMake/releases/download/v3.24.3/cmake-3.24.3-linux-x86_64.tar.gz -o cmake-3.24.3.tar.gz && \
     tar xzvf cmake-3.24.3.tar.gz && \
     rm /usr/bin/cmake && \
+    rm /usr/bin/ctest && \
     rm -rf /usr/share/cmake-3.18 && \
     mv /root/downloads/cmake-3.24.3-linux-x86_64/bin/cmake /usr/bin/ && \
+    mv /root/downloads/cmake-3.24.3-linux-x86_64/bin/ctest /usr/bin/ && \
     mv /root/downloads/cmake-3.24.3-linux-x86_64/share/cmake-3.24 /usr/share/ && \
     rm -rf /root/downloads
 
